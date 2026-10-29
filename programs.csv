@@ -3,6 +3,7 @@
 # segments = daftar "bulan:bunga" dipisah tanda pipe (|). Contoh 36:4 = 36 bulan @ 4%.
 # CATATAN: bunga floating setelah masa fixed (12.5%) adalah asumsi — sesuaikan bila ada ketentuan resmi.
 tier,key,name,min_months,segments
+no_tier,kawan,"Kawan Fixed All Tenor (SB 5,00%)",12,300:5
 no_tier,fixed1,Fixed 1 Thn (min 5 Thn),60,12:1.31|288:12.5
 no_tier,fixed3_10,Fixed 3 Thn (min 10 Thn),120,36:3.0|264:12.5
 no_tier,fixed3_5,Fixed 3 Thn (min 5 Thn),60,36:5.0|264:12.5

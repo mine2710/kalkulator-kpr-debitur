@@ -596,7 +596,7 @@ function renderCharts(sim, to) {
         if (to.meets.length) {
       to.meets.forEach((mp, idx) => {
         const x = Math.round(mp);
-        annos['bep' + idx] = { type: 'line', xMin: x, xMax: x, borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [6, 4], label: { display: true, content: 'Titik Impas', position: idx % 2 ? 'end' : 'start', backgroundColor: 'rgba(100,116,139,0.9)', color: '#fff', font: { size: 10 } } };
+        annos['bep' + idx] = { type: 'line', xMin: x, xMax: x, borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [6, 4], label: { display: true, content: to.meets.length > 1 ? 'BEP ' + (idx + 1) : 'BEP', position: idx % 2 ? 'end' : 'start', backgroundColor: 'rgba(100,116,139,0.9)', color: '#fff', font: { size: 10 } } };
       });
     }
   }
