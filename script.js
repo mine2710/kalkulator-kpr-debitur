@@ -16,6 +16,11 @@ let state = {
   ],
   toEnabled: false,
   feeMode: 'persen',
+  oldStagedEnabled: false,
+  oldSteps: [
+    { months: 36, rate: 9.0, payment: 0 },
+    { months: 64, rate: 11.5, payment: 0 },
+  ],
 };
 let saldoChart = null;
 let kumulatifChart = null;
@@ -313,6 +318,70 @@ function toggleCustomPlafon() {
   document.getElementById('plafonField').classList.toggle('hidden', !c);
   scheduleCalc();
 }
+
+// ─── Take Over: suku bunga lama bertahap (opsional) ───
+function toggleOldStaged() {
+  state.oldStagedEnabled = document.getElementById('oldStagedToggle').checked;
+  document.getElementById('oldStepsFields').classList.toggle('hidden', !state.oldStagedEnabled);
+  document.getElementById('oldSimpleFields').classList.toggle('hidden', state.oldStagedEnabled);
+  if (state.oldStagedEnabled) { renderOldSteps(); recalcOld(); }
+  scheduleCalc();
+}
+function renderOldSteps() {
+  const c = document.getElementById('oldStepsContainer');
+  if (!c) return;
+  const n = state.oldSteps.length;
+  const inp = 'num w-full px-2 py-2 bg-orange-50 dark:bg-slate-800 border border-orange-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-briorange focus:bg-white dark:focus:bg-slate-900 transition';
+  const lab = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1';
+  c.innerHTML = state.oldSteps.map((s, i) => `
+    <div class="bg-orange-50/60 dark:bg-slate-700/50 border border-orange-100 dark:border-slate-600 border-l-[3px] border-l-briorange rounded-lg p-3 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-briorange text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
+        </span>
+        ${n > 1 ? `<button onclick="removeOldStep(${i})" class="text-slate-400 hover:text-briorange text-sm leading-none transition">✕</button>` : ''}
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div><label class="${lab}">Bulan</label><input type="number" value="${s.months}" min="1" step="1" onchange="updateOldStep(${i},'months',this.value); recalcOld(); scheduleCalc()" class="${inp}"></div>
+        <div><label class="${lab}">Bunga %</label><input type="number" value="${s.rate}" min="0" step="0.01" onchange="updateOldStep(${i},'rate',this.value); recalcOld(); scheduleCalc()" class="${inp}"></div>
+        <div><label class="${lab}">Angsuran</label><input type="text" value="${formatThousands(s.payment)}" inputmode="numeric" oninput="formatField(this); updateOldStep(${i},'payment',parseNum(this.value)); scheduleCalc()" class="${inp}"></div>
+      </div>
+    </div>`).join('');
+}
+function addOldStep() {
+  if (state.oldSteps.length >= 7) return;
+  const last = state.oldSteps.length ? state.oldSteps[state.oldSteps.length - 1].rate : 0;
+  state.oldSteps.push({ months: 12, rate: last, payment: 0 });
+  renderOldSteps(); recalcOld(); scheduleCalc();
+}
+function removeOldStep(i) {
+  if (state.oldSteps.length <= 1) return;
+  state.oldSteps.splice(i, 1); renderOldSteps(); recalcOld(); scheduleCalc();
+}
+function updateOldStep(i, key, val) {
+  if (key === 'months') state.oldSteps[i].months = Math.max(1, Math.round(Number(val) || 1));
+  else if (key === 'rate') state.oldSteps[i].rate = Number(val) || 0;
+  else if (key === 'payment') state.oldSteps[i].payment = Number(val) || 0;
+}
+function oldPrincipalValue() {
+  return document.getElementById('customPlafon').checked
+    ? parseNum(document.getElementById('oldPlafon').value)
+    : parseNum(document.getElementById('principal').value);
+}
+function recalcOld() {
+  const principal = oldPrincipalValue();
+  if (principal <= 0) return;
+  let balance = principal;
+  for (let i = 0; i < state.oldSteps.length; i++) {
+    const monthsOwn = Math.max(1, state.oldSteps[i].months);
+    const remaining = state.oldSteps.slice(i).reduce((a, s) => a + Math.max(1, s.months), 0);
+    const r = (state.oldSteps[i].rate || 0) / 100 / 12;
+    const pmt = Math.round(standardPayment(balance, r, remaining));
+    state.oldSteps[i].payment = pmt;
+    for (let m = 0; m < monthsOwn; m++) { const interest = balance * r; balance -= pmt - interest; }
+  }
+  renderOldSteps();
+}
 function onFeeModeChange() {
   state.feeMode = document.getElementById('feeMode').value;
   const inp = document.getElementById('feeVal'), suf = document.getElementById('feeSuffix');
@@ -347,19 +416,47 @@ function toggleAmort() {
 }
 
 // ─── Take Over computation ───
-function computeTakeover(principal, sim) {
-  const oldPrincipal = document.getElementById('customPlafon').checked ? parseNum(document.getElementById('oldPlafon').value) : principal;
+// bangun jadwal pembayaran bulanan skema lama (array panjang = jumlah bulan)
+function buildOldSchedule(oldPrincipal) {
+  if (state.oldStagedEnabled) {
+    const cleanSteps = state.oldSteps.map(st => ({ months: Math.max(1, Math.round(st.months)), rate: st.rate || 0, payment: st.payment || 0 }));
+    const simOld = simulateFull(oldPrincipal, cleanSteps);
+    const payments = simOld.rows.map(r => r.payment);
+    const saldo = [oldPrincipal];
+    simOld.rows.forEach(r => saldo.push(Math.max(0, r.endBalance)));
+    return {
+      months: simOld.totalMonths,
+      payments,
+      saldo,
+      totalBunga: simOld.totalInterest,
+      firstPmt: simOld.stepSummaries[0] ? simOld.stepSummaries[0].payment : 0,
+      endingBalance: simOld.endingBalance,
+    };
+  }
   const oldRate = Number(document.getElementById('oldRate').value) || 0;
   const oldMonths = Math.max(1, Math.round(Number(document.getElementById('oldTerm').value) || 1));
-  const oldAmort = amortizeSingle(oldPrincipal, oldRate, oldMonths);
-  const oldPmt = oldAmort.pmt;
+  const a = amortizeSingle(oldPrincipal, oldRate, oldMonths);
+  return {
+    months: oldMonths,
+    payments: new Array(oldMonths).fill(a.pmt),
+    saldo: a.saldo,
+    totalBunga: a.totalBunga,
+    firstPmt: a.pmt,
+    endingBalance: 0,
+  };
+}
+function computeTakeover(principal, sim) {
+  const oldPrincipal = document.getElementById('customPlafon').checked ? parseNum(document.getElementById('oldPlafon').value) : principal;
+  const old = buildOldSchedule(oldPrincipal);
+  const oldMonths = old.months;
+  const oldPmt = old.firstPmt;
   const fee = getFee(principal);
 
   const horizon = Math.max(oldMonths, sim.totalMonths);
   const cumOld = [0], cumNew = [fee];
   let runOld = 0, runNew = fee;
   for (let t = 1; t <= horizon; t++) {
-    if (t <= oldMonths) runOld += oldPmt;
+    if (t <= oldMonths) runOld += old.payments[t - 1];
     cumOld.push(runOld);
     if (t <= sim.totalMonths) {
       runNew += sim.rows[t - 1].payment;
@@ -376,11 +473,12 @@ function computeTakeover(principal, sim) {
   crossings.sort((a, b) => a - b);
   const meets = crossings.filter((m, i) => i === 0 || Math.abs(m - crossings[i - 1]) > 1e-4);
 
-  const oldTotal = cumOld[oldMonths];
+    const oldTotal = cumOld[oldMonths];
   const newTotal = cumNew[sim.totalMonths];
   return {
-    oldPrincipal, oldRate, oldMonths, oldPmt, fee, horizon, cumOld, cumNew,
-    oldSaldo: oldAmort.saldo, oldTotalBunga: oldAmort.totalBunga,
+    oldPrincipal, oldMonths, oldPmt, fee, horizon, cumOld, cumNew,
+    oldStaged: state.oldStagedEnabled,
+    oldSaldo: old.saldo, oldTotalBunga: old.totalBunga,
     meets, oldTotal, newTotal, efisiensi: oldTotal - newTotal,
   };
 }
@@ -699,8 +797,9 @@ function saveState() {
       v: 1,
       principal: v('principal'), program: v('program'), tenor: v('tenor'),
       steps: state.steps,
-      toEnabled: state.toEnabled, oldRate: v('oldRate'), oldTerm: v('oldTerm'),
+            toEnabled: state.toEnabled, oldRate: v('oldRate'), oldTerm: v('oldTerm'),
       customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'),
+      oldStagedEnabled: state.oldStagedEnabled, oldSteps: state.oldSteps,
       feeMode: state.feeMode, feeVal: v('feeVal'),
     }));
   } catch (e) {}
@@ -731,9 +830,17 @@ function restoreState() {
     set('feeVal', s.feeVal);
   }
 
-  state.toEnabled = !!s.toEnabled;
+    state.toEnabled = !!s.toEnabled;
   document.getElementById('toToggle').checked = state.toEnabled;
   document.getElementById('toFields').classList.toggle('hidden', !state.toEnabled);
+
+  if (validSteps(s.oldSteps)) {
+    state.oldSteps = s.oldSteps.map(x => ({ months: Math.round(+x.months), rate: +x.rate, payment: +x.payment }));
+  }
+  state.oldStagedEnabled = !!s.oldStagedEnabled;
+  document.getElementById('oldStagedToggle').checked = state.oldStagedEnabled;
+  document.getElementById('oldStepsFields').classList.toggle('hidden', !state.oldStagedEnabled);
+  document.getElementById('oldSimpleFields').classList.toggle('hidden', state.oldStagedEnabled);
 
   if (validSteps(s.steps)) {
     state.steps = s.steps.map(x => ({ months: Math.round(+x.months), rate: +x.rate, payment: +x.payment }));
@@ -761,10 +868,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const restored = restoreState();
   renderSteps();
   if (!restored) recalcAll();
-  updatePrincipalWords();
+    updatePrincipalWords();
   updateFeeHint();
+  renderOldSteps();
+  if (state.oldStagedEnabled) recalcOld();
 
   ['oldRate', 'oldTerm'].forEach(id => document.getElementById(id).addEventListener('input', scheduleCalc));
+  // plafon lama berubah → hitung ulang angsuran bertahap skema lama
+  ['principal', 'oldPlafon'].forEach(id => document.getElementById(id).addEventListener('input', () => { if (state.oldStagedEnabled) recalcOld(); }));
 
   calculate();
   loadPrograms().finally(() => {

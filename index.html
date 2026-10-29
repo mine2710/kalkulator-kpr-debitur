@@ -241,7 +241,7 @@
           <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Bandingkan dengan skema KPR sebelumnya.</p>
 
           <div id="toFields" class="hidden space-y-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div class="grid grid-cols-2 gap-3">
+                        <div id="oldSimpleFields" class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Bunga Lama
                   (%)</label>
@@ -253,6 +253,30 @@
                   (bln)</label>
                 <input type="number" id="oldTerm" value="100" step="1" min="1"
                   class="num w-full px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-briorange/20 transition">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Suku bunga lama bertahap?
+                (opsional)</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="oldStagedToggle" class="sr-only peer" onchange="toggleOldStaged()">
+                <div
+                  class="w-9 h-5 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-checked:bg-briorange after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
+                </div>
+              </label>
+            </div>
+            <div id="oldStepsFields" class="hidden space-y-2.5">
+              <p class="text-[11px] text-slate-400 dark:text-slate-500">Rincian tahapan bunga KPR sebelumnya — angsuran
+                terhitung otomatis.</p>
+              <div id="oldStepsContainer" class="space-y-2.5"></div>
+              <div class="flex gap-2">
+                <button onclick="addOldStep()"
+                  class="flex-1 text-xs font-semibold text-briorange border border-slate-200 dark:border-slate-600 hover:border-briorange hover:bg-orange-50 dark:hover:bg-slate-700 rounded-lg py-2 transition-all">+
+                  Tambah Tahap</button>
+                <button onclick="recalcOld(); scheduleCalc()"
+                  class="flex-1 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg py-2 transition-all">⟲
+                  Hitung Ulang</button>
               </div>
             </div>
 
