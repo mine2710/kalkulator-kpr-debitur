@@ -1,15 +1,17 @@
 # Program KPR BRI — sumber: spreadsheet suku bunga resmi (Untitled spreadsheet (1).xlsx)
 # Format: tier,key,name,min_months,segments
 # segments = daftar "bulan:bunga" dipisah tanda pipe (|). Contoh 36:4 = 36 bulan @ 4%.
-# CATATAN: bunga floating setelah masa fixed (12.5%) adalah asumsi — sesuaikan bila ada ketentuan resmi.
+# Semua program (kecuali Fixed All Tenor) total 300 bulan; setelah masa fixed memakai counter rate 12.5%.
 tier,key,name,min_months,segments
 no_tier,kawan,"Kawan Fixed All Tenor (SB 5,00%)",12,300:5
 no_tier,fixed1,Fixed 1 Thn (min 5 Thn),60,12:1.31|288:12.5
 no_tier,fixed3_10,Fixed 3 Thn (min 10 Thn),120,36:3.0|264:12.5
 no_tier,fixed3_5,Fixed 3 Thn (min 5 Thn),60,36:5.0|264:12.5
-no_tier,berjenjang10,Berjenjang 10 Thn,120,36:4.0|36:8.5|48:10.0
-no_tier,berjenjang15,Berjenjang 15 Thn,180,36:3.51|36:8.5|108:10.5
-no_tier,berjenjang20,Berjenjang 20 Thn,240,36:3.51|36:7.5|168:9.75
+no_tier,fixed5_10,Fixed 5 Thn (min 10 Thn),120,60:3.85|240:12.5
+no_tier,fixed5_15,Fixed 5 Thn (min 15 Thn),180,60:4.71|240:12.5
+no_tier,berjenjang10,Berjenjang 10 Thn,120,36:4.0|36:8.5|48:10.0|180:12.5
+no_tier,berjenjang15,Berjenjang 15 Thn,180,36:3.51|36:8.5|108:10.5|120:12.5
+no_tier,berjenjang20,Berjenjang 20 Thn,240,36:3.51|36:7.5|168:9.75|60:12.5
 no_tier,alltenor5,"Fixed All Tenor (s.d 5 Thn, 7,25%)",12,60:7.25
 no_tier,alltenor10,"Fixed All Tenor (>5 s.d 10 Thn, 7,75%)",61,120:7.75
 no_tier,alltenor25,"Fixed All Tenor (>10 s.d 25 Thn, 8,00%)",121,300:8.0
