@@ -348,58 +348,65 @@ function infoList(title, items, dot) {
 function infoLists(m) {
   return infoList('Untuk siapa', m.who, m.ui.dot) + infoList('Yang dihitung', m.calc, m.ui.dot) + infoList('Data yang disiapkan', m.need, m.ui.dot);
 }
-function renderMenu() {
-  document.getElementById('menuCards').innerHTML = MODE_ORDER.map((k, i) => {
-    const m = MODES[k];
-    return `
-    <article class="flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 border-t-4 ${m.ui.border} p-6 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-      <div class="flex items-center gap-3 mb-3">
-        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${m.ui.badge}" aria-hidden="true">${m.icon}</span>
-        <div>
-          <p class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Program ${i + 1}</p>
-          <h3 class="text-base font-bold text-slate-800 dark:text-white leading-tight">${m.title}</h3>
-        </div>
-      </div>
-      <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${m.tagline}</p>
-      <div class="space-y-4 mb-6">${infoLists(m)}</div>
-      <a href="#${k}" class="mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${m.ui.btn}">Mulai Simulasi →</a>
-    </article>`;
-  }).join('');
+// ikon garis (stroke) per program, gaya aplikasi BRI
+const MODE_ICONS = {
+  'kpr-baru': '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/>',
+  'to-float': '<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>',
+  'to-fix': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+};
+function modeIcon(k, cls) {
+  return `<svg class="${cls || 'h-5 w-5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MODE_ICONS[k]}</svg>`;
 }
+const INFO_SVG = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
 function renderTabs() {
   document.getElementById('modeTabs').innerHTML = MODE_ORDER.map(k => {
-    const on = k === state.mode;
-    return `<a href="#${k}" ${on ? 'aria-current="page"' : ''} class="rounded-xl px-4 py-2 text-sm font-semibold transition ${on ? MODES[k].ui.tab : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}">${MODES[k].icon} ${MODES[k].short}</a>`;
+    const m = MODES[k], on = k === state.mode;
+    const tabCls = on
+      ? 'bg-bri text-white shadow-sm'
+      : 'text-slate-600 dark:text-slate-300 hover:bg-bri-light dark:hover:bg-slate-700';
+    const infoCls = on
+      ? 'text-white/80 hover:text-white hover:bg-white/15'
+      : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
+    return `<div class="relative">
+      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl px-2 pt-2.5 pb-2 sm:py-3 text-[11px] sm:text-sm font-semibold transition ${tabCls}">
+        ${modeIcon(k)}<span class="text-center leading-tight">${m.short}</span>
+      </a>
+      <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.short}" title="Info program"
+        class="absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full transition ${infoCls}">${INFO_SVG}</button>
+    </div>`;
   }).join('');
 }
-function renderProgramInfo() {
-  const m = MODES[state.mode];
-  document.getElementById('programInfo').innerHTML = `
-    <details open class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 border-l-4 ${m.ui.borderL} p-5">
-      <summary class="cursor-pointer select-none list-none flex items-start gap-3">
-        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${m.ui.badge}" aria-hidden="true">${m.icon}</span>
-        <span class="flex-1">
-          <span class="block text-base font-bold text-slate-800 dark:text-white">${m.title}</span>
-          <span class="block text-sm text-slate-500 dark:text-slate-400">${m.tagline}</span>
-        </span>
-        <span class="text-xs font-semibold text-slate-400 mt-1">Info ▾</span>
-      </summary>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">${infoLists(m)}</div>
-    </details>`;
+// dialog info program (tombol i)
+function openInfo(k) {
+  const m = MODES[k];
+  document.getElementById('infoBody').innerHTML = `
+    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,#00529C,#0072C6)">
+      <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${modeIcon(k)}</span>
+      <div class="flex-1">
+        <h3 id="infoTitle" class="text-base font-bold leading-tight">${m.title}</h3>
+        <p class="mt-1 text-xs text-blue-100">${m.tagline}</p>
+      </div>
+      <button type="button" onclick="closeInfo()" aria-label="Tutup" class="h-8 w-8 shrink-0 rounded-lg hover:bg-white/15 transition">✕</button>
+    </div>
+    <div class="space-y-4 px-5 py-5">${infoLists(m)}</div>
+    <div class="flex gap-2 px-5 pb-5">
+      ${k !== state.mode ? `<a href="#${k}" onclick="closeInfo()" class="flex-1 text-center rounded-xl bg-bri hover:bg-blue-800 px-4 py-2.5 text-sm font-semibold text-white transition">Buka simulasi</a>` : ''}
+      <button type="button" onclick="closeInfo()" class="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Tutup</button>
+    </div>`;
+  const d = document.getElementById('infoDialog');
+  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
 }
-// URL hash menentukan halaman: #kpr-baru, #to-float, #to-fix; selain itu menu
+function closeInfo() {
+  const d = document.getElementById('infoDialog');
+  if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
+}
+// URL hash menentukan program: #kpr-baru (default), #to-float, #to-fix
 function route() {
   const h = location.hash.replace('#', '');
-  const isMenu = !MODES[h];
-  document.getElementById('menuPage').classList.toggle('hidden', !isMenu);
-  document.getElementById('appPage').classList.toggle('hidden', isMenu);
-  window.scrollTo(0, 0);
-  if (isMenu) return;
-  state.mode = h;
+  state.mode = MODES[h] ? h : 'kpr-baru';
   renderTabs();
-  renderProgramInfo();
-  document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(h)));
-  document.getElementById('mainCardTitle').textContent = MODES[h].mainTitle;
+  document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
+  document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
   try { calculate(); } catch (e) { console.error(e); }
 }
 
@@ -978,7 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   ['oldRate', 'oldTerm', 'fixTotal', 'fixLeft', 'fixRate', 'floatRate'].forEach(id => document.getElementById(id).addEventListener('input', scheduleCalc));
 
-  renderMenu();
+    // klik di luar dialog info → tutup
+  document.getElementById('infoDialog').addEventListener('click', e => { if (e.target.id === 'infoDialog') closeInfo(); });
   window.addEventListener('hashchange', route);
   route();
   loadPrograms().finally(() => {
