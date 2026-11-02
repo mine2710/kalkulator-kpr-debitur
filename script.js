@@ -262,12 +262,12 @@ function renderSteps() {
   const inp = 'num w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:bg-white dark:focus:bg-slate-900 transition';
   const lab = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1';
   c.innerHTML = state.steps.map((s, i) => `
-    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3 transition-all hover:border-l-briorange">
+    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3 transition-all hover:border-l-sky-500">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+        <span class="text-xs font-bold text-slate-600 da1rk:text-slate-300 flex items-center gap-1.5">
           <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
         </span>
-        ${n > 1 ? `<button onclick="removeStep(${i})" class="text-slate-400 hover:text-briorange text-sm leading-none transition">✕</button>` : ''}
+        ${n > 1 ? `<button onclick="removeStep(${i})" class="text-slate-400 hover:text-sky-500 text-sm leading-none transition">✕</button>` : ''}
       </div>
       <div class="grid grid-cols-3 gap-2">
         <div><label class="${lab}">Bulan</label><input type="number" value="${s.months}" min="1" step="1" onchange="updateStep(${i},'months',this.value); recalcAll(); scheduleCalc()" class="${inp}"></div>
@@ -432,15 +432,17 @@ function renderRpc(sim) {
     ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40'
     : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/40';
   const msg = ok
-    ? `✅ <b>Mampu bayar</b> — angsuran masih di bawah sisa kemampuan bayar (sisa ruang ${fmtMoney(Math.round(sisa - pmt))}/bln).`
-    : `⚠️ <b>Belum mampu bayar</b> — angsuran melebihi sisa kemampuan bayar sebesar ${fmtMoney(Math.round(pmt - Math.max(0, sisa)))}/bln. Coba perpanjang tenor atau kurangi plafon.`;
-  el.innerHTML = `
-    <div class="rounded-xl border border-slate-100 dark:border-slate-700 px-4 py-1 divide-y divide-slate-100 dark:divide-slate-700">
-      ${row('Batas angsuran (' + Math.round(ratio * 100) + '% pendapatan)', fmtMoney(Math.round(maxAng)))}
-      ${row('Dikurangi angsuran berjalan', '− ' + fmtMoney(debt))}
-      ${row('Sisa kemampuan bayar', fmtMoney(Math.round(sisa)), 'text-bri dark:text-blue-300')}
-      ${row('Angsuran KPR' + (multi ? ' (Tahap 1)' : ''), fmtMoney(Math.round(pmt)))}
-    </div>
+    ? `✅ <b>Mampu bayar</b> — angsuran masih di bawah batas kemampuan bayar.`
+    : `⚠️ <b>Belum mampu bayar</b> — angsuran melebihi kemampuan bayar. Coba perpanjang tenor atau kurangi plafon.`;
+  // el.innerHTML = `
+  //   <div class="rounded-xl border border-slate-100 dark:border-slate-700 px-4 py-1 divide-y divide-slate-100 dark:divide-slate-700">
+  //     ${row('Batas angsuran (' + Math.round(ratio * 100) + '% pendapatan)', fmtMoney(Math.round(maxAng)))}
+  //     ${row('Dikurangi angsuran berjalan', '− ' + fmtMoney(debt))}
+  //     ${row('Sisa kemampuan bayar', fmtMoney(Math.round(sisa)), 'text-bri dark:text-blue-300')}
+  //     ${row('Angsuran KPR' + (multi ? ' (Tahap 1)' : ''), fmtMoney(Math.round(pmt)))}
+  //   </div>
+  //   <div role="status" class="mt-3 rounded-xl border px-4 py-3 text-sm font-medium ${cls}">${msg}${note}</div>`;
+    el.innerHTML = `
     <div role="status" class="mt-3 rounded-xl border px-4 py-3 text-sm font-medium ${cls}">${msg}${note}</div>`;
 }
 
@@ -483,8 +485,10 @@ function renderFixOutputs(fx) {
     <span class="num text-sm font-bold text-slate-800 dark:text-slate-100 text-right">${v}</span></div>`;
   document.getElementById('fixOutputs').innerHTML =
     row('Angsuran saat ini', fmtMoney(fx.curPmt) + ' /bln', f.left > 0 ? 'Bunga fix ' + fmtPct(f.rFix) + ', ' + f.left + ' bln lagi' : 'Masa fix sudah habis') +
-    row('Angsuran float', fx.floatMonths > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.floatMonths > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ', mulai bulan ke-' + (f.left + 1) : '') +
-    row('Tenor float', fx.floatMonths + ' bln', monthsToText(fx.floatMonths));
+    row('Angsuran float', fx.floatMonths > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.floatMonths > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ', mulai bulan ke-' + (f.left + 1) : '') 
+    // +
+    // row('Tenor float', fx.floatMonths + ' bln', monthsToText(fx.floatMonths))
+    ;
 }
 
 function toggleCustomPlafon() {
