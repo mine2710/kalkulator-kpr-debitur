@@ -1173,7 +1173,7 @@ function renderMetrics(sim, to, principal) {
     //   balloon ? { vc: 'text-orange-600 dark:text-orange-400' } : { vc: 'text-emerald-600 dark:text-emerald-400' })
       ;
   if (to) more += metricCell('Biaya Tambahan Take Over', fmtCompact(to.fee), { vc: 'text-bri dark:text-blue-300' });
-  html += `<div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+  html += `<div class="hidden pt-4 border-t border-slate-100 dark:border-slate-700">
     <p class="text-xs font-bold text-slate-400 dark:text-slate-500 mb-2">Detail Lainnya</p>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">${more}</div></div>`;
 
