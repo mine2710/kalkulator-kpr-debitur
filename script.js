@@ -160,11 +160,12 @@ function monthsToText(m) {
 
 // ─── Program KPR — dimuat dari programs.csv (edit file itu untuk ubah konfigurasi) ───
 let PROGRAMS = {};
-let currentTier = 'no_tier';
+let currentTier = 'Bukan Tier 1';
 
 function currentProgram() {
   const key = document.getElementById('program').value;
-  return key ? PROGRAMS[currentTier][key] : null;
+  const list = PROGRAMS[currentTier] || {};
+  return key && list[key] ? list[key] : null;
 }
 function programMaxMonths(p) { return p.segments.reduce((a, s) => a + s[0], 0); }
 function buildProgramSteps(p, tenor) {
@@ -204,22 +205,83 @@ function parseProgramsCsv(text) {
   });
   return res;
 }
+function parseProgramsJson(items) {
+  const res = {};
+  if (!Array.isArray(items)) return res;
+  items.forEach(row => {
+    let segments = [];
+    if (Array.isArray(row.segments)) {
+      segments = row.segments;
+    } else if (typeof row.segments === 'string') {
+      segments = row.segments.split('|').map(s => s.split(':').map(Number)).filter(x => x.length === 2 && x[0] > 0 && isFinite(x[1]));
+    }
+    if (!row.key || !segments.length) return;
+    const tier = row.tier || 'no_tier';
+    (res[tier] = res[tier] || {})[row.key] = {
+      name: row.name || row.key,
+      min_months: Number(row.min_months) || 1,
+      segments: segments
+    };
+  });
+  return res;
+}
 async function loadPrograms() {
   const sel = document.getElementById('program'), hint = document.getElementById('programHint');
-  try {
-    const r = await fetch('programs.csv', { cache: 'no-cache' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    PROGRAMS = parseProgramsCsv(await r.text());
-    const list = PROGRAMS[currentTier] || {};
-    Object.keys(list).forEach(k => {
-      const o = document.createElement('option');
-      o.value = k; o.textContent = list[k].name;
-      sel.appendChild(o);
-    });
-  } catch (e) {
-    console.error(e);
-    hint.textContent = 'programs.csv gagal dimuat — buka lewat web server (mis. python -m http.server), bukan klik dua kali.';
+  let loadedFromApi = false;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceCsv = urlParams.get('source') === 'csv';
+
+  const endpoint = window.KPRConfig && typeof window.KPRConfig.getApiEndpoint === 'function' ? window.KPRConfig.getApiEndpoint() : '';
+  const token = window.KPRConfig && typeof window.KPRConfig.getApiToken === 'function' ? window.KPRConfig.getApiToken() : '';
+
+  // 1. Coba muat data via HTTP POST dengan Token di dalam amplop (Body payload)
+  if (endpoint && !endpoint.includes('GANTI_DENGAN_DEPLOYMENT_ID_ANDA') && !forceCsv) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ token: token, type: 'kpr' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'error' || data.error) {
+          console.warn('Otorisasi POST API ditolak oleh Google Apps Script:', data.message);
+        } else if (data && Array.isArray(data.programs) && data.programs.length) {
+          PROGRAMS = parseProgramsJson(data.programs);
+          loadedFromApi = true;
+          console.log(`Database program KPR berhasil dimuat via POST dari Google Spreadsheet (${data.programs.length} program).`);
+        }
+      }
+    } catch (apiErr) {
+      console.warn('Gagal memuat via POST dari Google Spreadsheet, beralih ke cadangan lokal:', apiErr);
+    }
   }
+
+  // 2. Fallback cadangan ke file programs.csv lokal
+  if (!loadedFromApi) {
+    try {
+      const r = await fetch('programs.csv', { cache: 'no-cache' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      PROGRAMS = parseProgramsCsv(await r.text());
+      console.log('Database program KPR dimuat dari cadangan lokal (programs.csv).');
+    } catch (e) {
+      console.error(e);
+      hint.textContent = 'Data program KPR gagal dimuat — buka lewat web server (mis. Live Server atau python -m http.server), bukan klik dua kali.';
+      return;
+    }
+  }
+
+  if (!PROGRAMS[currentTier]) {
+    currentTier = Object.keys(PROGRAMS)[0] || 'Bukan Tier 1';
+  }
+  sel.innerHTML = '<option value="">Manual (custom)</option>';
+  const list = PROGRAMS[currentTier] || {};
+  Object.keys(list).forEach(k => {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = list[k].name;
+    sel.appendChild(o);
+  });
 }
 function updateProgramHint() {
   const p = currentProgram(), hint = document.getElementById('programHint'), t = document.getElementById('tenor');
@@ -264,7 +326,7 @@ function renderSteps() {
   c.innerHTML = state.steps.map((s, i) => `
     <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3 transition-all hover:border-l-sky-500">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold text-slate-600 da1rk:text-slate-300 flex items-center gap-1.5">
+        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
           <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
         </span>
         ${n > 1 ? `<button onclick="removeStep(${i})" class="text-slate-400 hover:text-sky-500 text-sm leading-none transition">✕</button>` : ''}
@@ -357,7 +419,9 @@ const MODE_ICONS = {
 function modeIcon(k, cls) {
   return `<svg class="${cls || 'h-5 w-5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MODE_ICONS[k]}</svg>`;
 }
-const INFO_SVG = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
+function infoIcon(cls) {
+  return `<svg class="${cls || 'h-3.5 w-3.5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`;
+}
 function renderTabs() {
   document.getElementById('modeTabs').innerHTML = MODE_ORDER.map(k => {
     const m = MODES[k], on = k === state.mode;
@@ -368,13 +432,53 @@ function renderTabs() {
       ? 'text-white/80 hover:text-white hover:bg-white/15'
       : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
     return `<div class="relative">
-      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl px-2 pt-2.5 pb-2 sm:py-3 text-[11px] sm:text-sm font-semibold transition ${tabCls}">
+      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-2 rounded-xl px-8 py-3 text-sm font-semibold transition ${tabCls}">
         ${modeIcon(k)}<span class="text-center leading-tight">${m.short}</span>
       </a>
       <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.short}" title="Info program"
-        class="absolute top-1 right-1 inline-flex h-6 w-6 items-center justify-center rounded-full transition ${infoCls}">${INFO_SVG}</button>
+        class="absolute top-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full transition ${infoCls}">${infoIcon()}</button>
     </div>`;
   }).join('');
+
+  const cur = MODES[state.mode];
+  const mobileBar = document.getElementById('mobileModeBar');
+  if (mobileBar) {
+    mobileBar.innerHTML = `
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bri-light dark:bg-blue-900/30 text-bri dark:text-blue-300">
+          ${modeIcon(state.mode, 'h-5 w-5')}
+        </span>
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Program Simulasi</p>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-white leading-snug">${cur.title}</h2>
+        </div>
+      </div>
+      <button type="button" onclick="openInfo('${state.mode}')" aria-label="Info program ${cur.short}" title="Info program"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 dark:border-slate-600 bg-bri-light/70 dark:bg-slate-700 text-bri dark:text-blue-300 hover:bg-bri hover:text-white active:scale-95 transition">
+        ${infoIcon('h-5 w-5')}
+      </button>`;
+  }
+
+  const bottomNav = document.getElementById('bottomNavItems');
+  if (bottomNav) {
+    bottomNav.innerHTML = MODE_ORDER.map(k => {
+      const m = MODES[k], on = k === state.mode;
+      const linkCls = on
+        ? 'text-bri dark:text-blue-300 font-bold'
+        : 'text-slate-400 dark:text-slate-400 font-medium hover:text-slate-600 dark:hover:text-slate-200';
+      const pillCls = on
+        ? 'bg-bri-light dark:bg-blue-900/40 text-bri dark:text-blue-300'
+        : 'text-current';
+      return `<a href="#${k}" ${on ? 'aria-current="page"' : ''}
+        class="relative flex flex-col items-center justify-center gap-1 py-2 px-1 text-[11px] leading-tight transition active:scale-95 ${linkCls}">
+        ${on ? '<span class="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-b-full bg-bri dark:bg-blue-400" aria-hidden="true"></span>' : ''}
+        <span class="inline-flex items-center justify-center rounded-xl px-3.5 py-1 transition ${pillCls}">
+          ${modeIcon(k, 'h-5 w-5')}
+        </span>
+        <span class="text-center leading-tight">${m.short}</span>
+      </a>`;
+    }).join('');
+  }
 }
 // dialog info program (tombol i)
 function openInfo(k) {
@@ -401,12 +505,16 @@ function closeInfo() {
   if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
 }
 // URL hash menentukan program: #kpr-baru (default), #to-float, #to-fix
-function route() {
+function route(fromHashChange) {
   const h = location.hash.replace('#', '');
   state.mode = MODES[h] ? h : 'kpr-baru';
   renderTabs();
   document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
   document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
+  if (fromHashChange === true && window.innerWidth < 768) {
+    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    window.scrollTo({ top: 0, behavior });
+  }
   try { calculate(); } catch (e) { console.error(e); }
 }
 
@@ -991,8 +1099,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // klik di luar dialog info → tutup
   document.getElementById('infoDialog').addEventListener('click', e => { if (e.target.id === 'infoDialog') closeInfo(); });
-  window.addEventListener('hashchange', route);
-  route();
+  window.addEventListener('hashchange', () => route(true));
+  route(false);
   loadPrograms().finally(() => {
     applySavedProgram();
     _stateReady = true;
