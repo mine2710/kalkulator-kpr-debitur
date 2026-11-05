@@ -17,6 +17,10 @@ let state = {
     mode: 'kpr-baru',
   feeMode: 'persen',
   oldPmtCustom: false,
+  fixSyncPlafon: true,
+  fixAmortOpen: false,
+  fixAmortAll: false,
+  userPrincipal: 1000000000,
   lastTenor: null, // tenor terakhir yang diisi user (dipertahankan saat ganti program)
 };
 let saldoChart = null;
@@ -133,9 +137,13 @@ function restoreCursor(el, fmt, before) {
 }
 function formatPrincipal(el) {
   const before = el.value.slice(0, el.selectionStart).replace(/[^0-9]/g, '').length;
-  const fmt = formatThousands(parseNum(el.value));
+  const val = parseNum(el.value);
+  const fmt = formatThousands(val);
   el.value = fmt; restoreCursor(el, fmt, before);
-  updatePrincipalWords(); recalcAll(); scheduleCalc();
+  if (val > 0 && !(state.mode === 'to-fix' && state.fixSyncPlafon)) {
+    state.userPrincipal = val;
+  }
+  updatePrincipalWords(); updateFeeHint(); recalcAll(); scheduleCalc();
 }
 function formatField(el) {
   const before = el.value.slice(0, el.selectionStart).replace(/[^0-9]/g, '').length;
@@ -397,10 +405,10 @@ const MODES = {
   'to-fix': {
     short: 'Take Over Fix', icon: '📌', mainTitle: '② KPR Simulasi Take Over',
     title: 'Take Over Fix',
-    tagline: 'Simulasi pindah KPR dari bank lain ke BRI ketika bunga di bank sebelumnya masih fix dan nantinya akan berubah menjadi floating.',
-    who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: pindah ke BRI sekarang, atau bertahan dan menanggung bunga floating setelah masa fix habis.'],
-    calc: ['<b>① KPR Sebelumnya</b>: angsuran saat ini, angsuran setelah float, dan tenor float.', '<b>② KPR Simulasi Take Over</b>: angsuran sesuai plafon, tenor, dan program BRI yang diajukan.', 'Perbandingan total pembayaran &amp; titik impas (BEP).'],
-    need: ['Sisa pokok, sisa tenor total, dan sisa masa fix.', 'Bunga fix saat ini &amp; perkiraan bunga floating.', 'Tenor &amp; program yang diajukan ke BRI.'],
+    tagline: 'Simulasi pindah KPR dari bank lain ke BRI dengan menghitung amortisasi lengkap dari plafon awal hingga bulan take over untuk memperoleh Sisa OS otomatis.',
+    who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: pindah ke BRI pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
+    calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR BRI dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
+    need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program yang diajukan ke BRI.'],
     ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
   },
 };
@@ -506,12 +514,30 @@ function closeInfo() {
   if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
 }
 // URL hash menentukan program: #kpr-baru (default), #to-float, #to-fix
+function syncPrincipalInputState() {
+  const pEl = document.getElementById('principal');
+  if (!pEl) return;
+  const locked = state.mode === 'to-fix' && state.fixSyncPlafon;
+  pEl.readOnly = locked;
+  pEl.classList.toggle('opacity-80', locked);
+  pEl.classList.toggle('cursor-not-allowed', locked);
+}
+
 function route(fromHashChange) {
+  const prevMode = state.mode;
   const h = location.hash.replace('#', '');
   state.mode = MODES[h] ? h : 'kpr-baru';
   renderTabs();
   document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
   document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
+  syncPrincipalInputState();
+  if (prevMode === 'to-fix' && state.mode !== 'to-fix' && state.fixSyncPlafon && state.userPrincipal > 0) {
+    const pEl = document.getElementById('principal');
+    pEl.value = formatThousands(state.userPrincipal);
+    updatePrincipalWords();
+    updateFeeHint();
+    recalcAll();
+  }
   if (fromHashChange === true && window.innerWidth < 768) {
     const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
     window.scrollTo({ top: 0, behavior });
@@ -555,49 +581,166 @@ function renderRpc(sim) {
     <div role="status" class="mt-3 rounded-xl border px-4 py-3 text-sm font-medium ${cls}">${msg}${note}</div>`;
 }
 
-// ─── Take Over Fix: skema KPR sebelumnya (fix → float) ───
+// ─── Take Over Fix: amortisasi lengkap dari plafon awal → Saldo Akhir bulan take over (Sisa OS) ───
+let _lastFixFx = null;
+
 function readFixInputs() {
-  const total = Math.max(1, Math.round(Number(document.getElementById('fixTotal').value) || 1));
-  const leftRaw = Math.max(0, Math.round(Number(document.getElementById('fixLeft').value) || 0));
+  const plafonAwal = parseNum(document.getElementById('fixOS').value);
+  const total = Math.max(2, Math.round(Number(document.getElementById('fixTotal').value) || 240));
+  const fixRaw = Math.max(0, Math.round(Number(document.getElementById('fixLeft').value) || 0));
+  const fixMonths = Math.min(total, fixRaw);
+  const toRawEl = document.getElementById('fixTakeoverMonth');
+  const toRaw = toRawEl ? Math.max(1, Math.round(Number(toRawEl.value) || 1)) : 1;
+  const toMonth = Math.min(Math.max(1, toRaw), total - 1);
   return {
-    os: parseNum(document.getElementById('fixOS').value),
-    total, leftRaw, left: Math.min(total, leftRaw),
+    plafonAwal,
+    total,
+    fixRaw,
+    fixMonths,
+    toRaw,
+    toMonth,
     rFix: Number(document.getElementById('fixRate').value) || 0,
     rFloat: Number(document.getElementById('floatRate').value) || 0,
   };
 }
+
 function buildFixSchedule() {
   const f = readFixInputs();
-  const floatMonths = f.total - f.left;
-  const steps = [];
-  let curPmt = 0, floatPmt = 0, bal = f.os;
-  if (f.left > 0) {
-    // angsuran masa fix dihitung atas seluruh sisa tenor
-    curPmt = Math.round(standardPayment(f.os, f.rFix / 1200, f.total));
-    steps.push({ months: f.left, rate: f.rFix, payment: curPmt });
-    for (let m = 0; m < f.left; m++) bal -= curPmt - bal * f.rFix / 1200;
+  const floatAwalMonths = f.total - f.fixMonths;
+  const fullSteps = [];
+  let fixPmt = 0, floatPmt = 0, bal = f.plafonAwal;
+
+  if (f.fixMonths > 0) {
+    fixPmt = Math.round(standardPayment(f.plafonAwal, f.rFix / 1200, f.total));
+    fullSteps.push({ months: f.fixMonths, rate: f.rFix, payment: fixPmt });
+    for (let m = 0; m < f.fixMonths; m++) {
+      bal -= fixPmt - bal * (f.rFix / 1200);
+    }
   }
-  if (floatMonths > 0) {
-    // setelah fix habis, angsuran dihitung ulang dari sisa saldo dengan bunga float
-    floatPmt = Math.round(standardPayment(bal, f.rFloat / 1200, floatMonths));
-    steps.push({ months: floatMonths, rate: f.rFloat, payment: floatPmt });
+  if (floatAwalMonths > 0) {
+    floatPmt = Math.round(standardPayment(Math.max(0, bal), f.rFloat / 1200, floatAwalMonths));
+    fullSteps.push({ months: floatAwalMonths, rate: f.rFloat, payment: floatPmt });
   }
-  if (f.left === 0) curPmt = floatPmt;
-  return { f, floatMonths, curPmt, floatPmt, sim: simulateFull(f.os, steps) };
+
+  const fullSim = simulateFull(f.plafonAwal, fullSteps);
+  const toRow = fullSim.rows[f.toMonth - 1];
+  const sisaOS = toRow ? Math.max(0, Math.round(toRow.endBalance)) : f.plafonAwal;
+  const remRows = fullSim.rows.slice(f.toMonth);
+  const sisaTenor = remRows.length;
+  const sisaFix = Math.max(0, f.fixMonths - f.toMonth);
+  const sisaFloat = Math.max(0, sisaTenor - sisaFix);
+  const curPmt = sisaFix > 0 ? fixPmt : floatPmt;
+  const remTotalBunga = remRows.reduce((acc, r) => acc + r.interest, 0);
+
+  return {
+    f,
+    fixPmt,
+    floatPmt,
+    curPmt,
+    sisaOS,
+    sisaTenor,
+    sisaFix,
+    sisaFloat,
+    fullSim,
+    remRows,
+    remTotalBunga,
+  };
 }
+
+function toggleFixAmort() {
+  state.fixAmortOpen = !state.fixAmortOpen;
+  if (_lastFixFx) renderFixOutputs(_lastFixFx);
+}
+
+function showAllFixAmort() {
+  state.fixAmortAll = true;
+  if (_lastFixFx) renderFixOutputs(_lastFixFx);
+}
+
+function onFixSyncPlafonChange() {
+  const cb = document.getElementById('fixSyncPlafon');
+  state.fixSyncPlafon = !!(cb && cb.checked);
+  syncPrincipalInputState();
+  if (!state.fixSyncPlafon) {
+    state.userPrincipal = parseNum(document.getElementById('principal').value) || state.userPrincipal;
+  }
+  scheduleCalc();
+}
+
 function renderFixOutputs(fx) {
+  _lastFixFx = fx;
   const f = fx.f;
-  document.getElementById('fixHint').textContent = f.leftRaw > f.total
-    ? 'Sisa masa fix melebihi tenor total, dianggap ' + f.total + ' bln.' : '';
-  const row = (l, v, sub) => `<div class="flex justify-between gap-3 py-2 border-b last:border-b-0 border-emerald-100 dark:border-emerald-900/40">
-    <span class="text-xs text-slate-500 dark:text-slate-400">${l}${sub ? `<span class="block text-[10px] text-slate-400 dark:text-slate-500">${sub}</span>` : ''}</span>
-    <span class="num text-sm font-bold text-slate-800 dark:text-slate-100 text-right">${v}</span></div>`;
-  document.getElementById('fixOutputs').innerHTML =
-    row('Angsuran saat ini', fmtMoney(fx.curPmt) + ' /bln', f.left > 0 ? 'Bunga fix ' + fmtPct(f.rFix) + ', ' + f.left + ' bln lagi' : 'Masa fix sudah habis') +
-    row('Angsuran float', fx.floatMonths > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.floatMonths > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ', mulai bulan ke-' + (f.left + 1) : '') 
-    // +
-    // row('Tenor float', fx.floatMonths + ' bln', monthsToText(fx.floatMonths))
-    ;
+  const hints = [];
+  if (f.fixRaw > f.total) hints.push('Masa fix awal melebihi tenor awal, disesuaikan menjadi ' + f.total + ' bln.');
+  if (f.toRaw >= f.total) hints.push('Bulan take over dibatasi maksimal bulan ke-' + (f.total - 1) + '.');
+  document.getElementById('fixHint').textContent = hints.join(' ');
+
+  const row = (l, v, sub) => `<div class="flex items-center justify-between gap-2 py-2 border-b last:border-b-0 border-sky-100 dark:border-sky-900/40">
+    <span class="text-xs text-slate-500 dark:text-slate-400 leading-snug">${l}${sub ? `<span class="block text-[10px] text-slate-400 dark:text-slate-500">${sub}</span>` : ''}</span>
+    <span class="num text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 text-right whitespace-nowrap shrink-0">${v}</span></div>`;
+
+  let amortHtml = '';
+  if (state.fixAmortOpen) {
+    const allRows = fx.fullSim.rows;
+    let displayRows = allRows;
+    let slicedNote = '';
+    if (!state.fixAmortAll && allRows.length > 36) {
+      const startIdx = Math.max(0, f.toMonth - 6);
+      const endIdx = Math.min(allRows.length, startIdx + 18);
+      displayRows = allRows.slice(startIdx, endIdx);
+      slicedNote = `<div class="p-2 text-center border-t border-slate-100 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800">
+        <button type="button" onclick="showAllFixAmort()" class="text-[11px] font-semibold text-bri dark:text-blue-300 hover:underline">Tampilkan seluruh ${allRows.length} bulan amortisasi</button>
+      </div>`;
+    }
+    const trs = displayRows.map(r => {
+      const isTO = r.month === f.toMonth;
+      const trCls = isTO
+        ? 'bg-amber-100/80 dark:bg-amber-900/40 font-bold text-amber-900 dark:text-amber-200'
+        : 'hover:bg-sky-50/60 dark:hover:bg-slate-700/50';
+      return `<tr class="${trCls}">
+        <td class="px-2 py-1.5 border-t border-slate-100 dark:border-slate-700 whitespace-nowrap">${r.month}${isTO ? ' ★' : ''}</td>
+        <td class="px-2 py-1.5 border-t border-slate-100 dark:border-slate-700 whitespace-nowrap">${fmtMoney(Math.round(r.payment))}</td>
+        <td class="px-2 py-1.5 border-t border-slate-100 dark:border-slate-700 whitespace-nowrap">${fmtMoney(Math.round(r.interest))}</td>
+        <td class="px-2 py-1.5 border-t border-slate-100 dark:border-slate-700 whitespace-nowrap font-semibold">${fmtMoney(Math.round(r.endBalance))}</td>
+      </tr>`;
+    }).join('');
+    amortHtml = `
+      <div class="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-800">
+        <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700/60 text-[10px] text-slate-500 dark:text-slate-300 flex items-center justify-between">
+          <span>★ Bulan ke-${f.toMonth} = Bulan Take Over (Sisa OS)</span>
+          <span>Total ${allRows.length} bln</span>
+        </div>
+        <div class="max-h-56 overflow-auto">
+          <table class="num w-full text-left text-[11px] text-slate-600 dark:text-slate-300">
+            <thead class="sticky top-0 bg-slate-100 dark:bg-slate-700 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-300">
+              <tr><th class="px-2 py-1.5">Bln</th><th class="px-2 py-1.5">Angsuran</th><th class="px-2 py-1.5">Bunga</th><th class="px-2 py-1.5">Saldo Akhir</th></tr>
+            </thead>
+            <tbody>${trs}</tbody>
+          </table>
+        </div>
+        ${slicedNote}
+      </div>`;
+  }
+
+  document.getElementById('fixOutputs').innerHTML = `
+    <div class="rounded-xl bg-amber-50/90 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-3.5 py-3">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Saldo Akhir Bulan ke-${f.toMonth} (Sisa OS)</span>
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200">Sisa ${fx.sisaTenor} bln</span>
+      </div>
+      <p class="num text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">${fmtMoney(fx.sisaOS)}</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sisa masa fix: <b>${fx.sisaFix} bln</b> · Masa float: <b>${fx.sisaFloat} bln</b></p>
+    </div>
+    <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-1">
+      ${row('Angsuran masa fix', fx.fixPmt > 0 ? fmtMoney(fx.fixPmt) + ' /bln' : '—', f.fixMonths > 0 ? 'Bunga ' + fmtPct(f.rFix) + ' (bln 1–' + f.fixMonths + ')' : 'Tanpa masa fix')}
+      ${row('Angsuran masa float', fx.sisaFloat > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.sisaFloat > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ' (mulai bln ke-' + (f.fixMonths + 1) + ')' : '')}
+    </div>
+    <button type="button" onclick="toggleFixAmort()"
+      class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-bri dark:text-blue-300 transition">
+      <span>${state.fixAmortOpen ? 'Sembunyikan' : 'Lihat'} Tabel Amortisasi KPR Sebelumnya</span>
+      <span>${state.fixAmortOpen ? '▲' : '▼'}</span>
+    </button>
+    ${amortHtml}`;
 }
 
 function toggleCustomPlafon() {
@@ -661,17 +804,17 @@ function toggleAmort() {
 
 // ─── Take Over computation ───
 // bangun jadwal pembayaran bulanan skema lama (array panjang = jumlah bulan)
-function buildOldSchedule(principal) {
+function buildOldSchedule(principal, prebuiltFx) {
   if (state.mode === 'to-fix') {
-    const fx = buildFixSchedule();
-    const saldo = [fx.f.os];
-    fx.sim.rows.forEach(r => saldo.push(Math.max(0, r.endBalance)));
+    const fx = prebuiltFx || buildFixSchedule();
+    const saldo = [fx.sisaOS];
+    fx.remRows.forEach(r => saldo.push(Math.max(0, r.endBalance)));
     return {
-      principal: fx.f.os,
-      months: fx.sim.totalMonths,
-      payments: fx.sim.rows.map(r => r.payment),
+      principal: fx.sisaOS,
+      months: fx.sisaTenor,
+      payments: fx.remRows.map(r => r.payment),
       saldo,
-      totalBunga: fx.sim.totalInterest,
+      totalBunga: fx.remTotalBunga,
       firstPmt: fx.curPmt,
       fx,
     };
@@ -715,8 +858,8 @@ function buildOldSchedule(principal) {
     firstPmt: a.pmt,
   };
 }
-function computeTakeover(principal, sim) {
-    const old = buildOldSchedule(principal);
+function computeTakeover(principal, sim, prebuiltFx) {
+  const old = buildOldSchedule(principal, prebuiltFx);
   const oldPrincipal = old.principal;
   const oldMonths = old.months;
   const oldPmt = old.firstPmt;
@@ -755,10 +898,27 @@ function computeTakeover(principal, sim) {
 
 // ─── Main calculate (real-time) ───
 function calculate() {
-  const principal = parseNum(document.getElementById('principal').value);
   const s = sym();
   document.getElementById('curr1').textContent = s;
   document.getElementById('curr2').textContent = s;
+
+  let prebuiltFx = null;
+  if (state.mode === 'to-fix') {
+    prebuiltFx = buildFixSchedule();
+    renderFixOutputs(prebuiltFx);
+    if (state.fixSyncPlafon && prebuiltFx.sisaOS > 0) {
+      const pEl = document.getElementById('principal');
+      const curP = parseNum(pEl.value);
+      if (curP !== prebuiltFx.sisaOS) {
+        pEl.value = formatThousands(prebuiltFx.sisaOS);
+        updatePrincipalWords();
+        updateFeeHint();
+        recalcAll();
+      }
+    }
+  }
+
+  const principal = parseNum(document.getElementById('principal').value);
   if (principal <= 0) return;
 
   const cleanSteps = state.steps.map(st => ({ months: Math.max(1, Math.round(st.months)), rate: st.rate || 0, payment: st.payment || 0 }));
@@ -770,8 +930,7 @@ function calculate() {
   sim.irrNominal = mIRR !== null ? mIRR * 12 * 100 : null;
   sim.irrEfektif = mIRR !== null ? (Math.pow(1 + mIRR, 12) - 1) * 100 : null;
 
-    const to = state.mode !== 'kpr-baru' ? computeTakeover(principal, sim) : null;
-  if (to && to.fx) renderFixOutputs(to.fx);
+  const to = state.mode !== 'kpr-baru' ? computeTakeover(principal, sim, prebuiltFx) : null;
   if (state.mode === 'kpr-baru') renderRpc(sim);
 
 
@@ -893,7 +1052,7 @@ function renderMetrics(sim, to, principal) {
       bigCell('Total Jangka Waktu Sebelum', to.oldMonths + ' bln', Object.assign({ sub: monthsToText(to.oldMonths) }, org)) +
       bigCell('Total Pembayaran Sebelum', fmtMoney(Math.round(to.oldTotal)), org) +
       bigCell('Total Bunga Sebelum', fmtMoney(Math.round(to.oldTotalBunga)), Object.assign({ sub: to.oldPrincipal > 0 ? fmtPct(to.oldTotalBunga / to.oldPrincipal * 100, 1) + ' dari pokok' : '' }, org)) +
-      bigCell('Angsuran Sebelum', fmtMoney(Math.round(to.oldPmt)) + ' /bln', Object.assign({ sub: 'Plafon sebelumnya ' + fmtCompact(to.oldPrincipal) }, org)));
+      bigCell('Angsuran Sebelum', fmtMoney(Math.round(to.oldPmt)) + ' /bln', Object.assign({ sub: 'Sisa OS ' + fmtCompact(to.oldPrincipal) }, org)));
 
     // 3) Perbandingan
     const selPmt = to.oldPmt - firstPmt;
@@ -1078,7 +1237,7 @@ function saveState() {
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
                   customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
                   rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'),
-                  fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'),
+                  fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
 
       feeMode: state.feeMode, feeVal: v('feeVal'),
     }));
@@ -1096,7 +1255,10 @@ function restoreState() {
   _saved = s;
   const set = (id, val) => { const el = document.getElementById(id); if (el && val != null && val !== '') el.value = val; };
 
-  if (parseNum(s.principal) > 0) set('principal', formatThousands(parseNum(s.principal)));
+  if (parseNum(s.principal) > 0) {
+    set('principal', formatThousands(parseNum(s.principal)));
+    state.userPrincipal = parseNum(s.userPrincipal) || parseNum(s.principal);
+  }
   set('oldRate', s.oldRate); set('oldTerm', s.oldTerm);
 
   document.getElementById('customPlafon').checked = !!s.customPlafon;
@@ -1117,6 +1279,12 @@ function restoreState() {
       if (s.rpcDebt != null && s.rpcDebt !== '') set('rpcDebt', formatThousands(parseNum(s.rpcDebt)));
       if (parseNum(s.fixOS) > 0) set('fixOS', formatThousands(parseNum(s.fixOS)));
       set('fixTotal', s.fixTotal); set('fixLeft', s.fixLeft); set('fixRate', s.fixRate); set('floatRate', s.floatRate);
+      set('fixTakeoverMonth', s.fixTakeoverMonth);
+      if (typeof s.fixSyncPlafon === 'boolean') {
+        state.fixSyncPlafon = s.fixSyncPlafon;
+        const syncEl = document.getElementById('fixSyncPlafon');
+        if (syncEl) syncEl.checked = s.fixSyncPlafon;
+      }
 
   if (validSteps(s.steps)) {
     state.steps = s.steps.map(x => ({ months: Math.round(+x.months), rate: +x.rate, payment: +x.payment }));
@@ -1147,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePrincipalWords();
   updateFeeHint();
   
-  ['oldRate', 'oldTerm', 'fixTotal', 'fixLeft', 'fixRate', 'floatRate'].forEach(id => document.getElementById(id).addEventListener('input', scheduleCalc));
+  ['oldRate', 'oldTerm', 'fixTotal', 'fixLeft', 'fixRate', 'floatRate', 'fixTakeoverMonth'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { state.fixAmortAll = false; scheduleCalc(); }); });
 
     // klik di luar dialog info → tutup
   document.getElementById('infoDialog').addEventListener('click', e => { if (e.target.id === 'infoDialog') closeInfo(); });
