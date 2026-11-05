@@ -1136,12 +1136,10 @@ function renderMetrics(sim, to, principal) {
   const totalBayarSub = to
     ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')')
     : ('Pokok ' + fmtCompact(principal) + ' + Bunga ' + fmtCompact(sim.totalInterest));
-  const totalBungaSub = to ? (fmtPct(pctBunga, 1) + ' dari pokok') : '';
-
   let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-bri',
     bigCell('Total Jangka Waktu', sim.totalMonths + ' bln', Object.assign({ sub: monthsToText(sim.totalMonths) }, blue)) +
     bigCell('Total Pembayaran', fmtMoney(Math.round(totalBayarVal)), Object.assign({ sub: totalBayarSub }, blue)) +
-    bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), Object.assign({ sub: totalBungaSub }, blue)) +
+    bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), blue) +
     bigCell(multi ? 'Angsuran (Tahap 1)' : 'Angsuran', fmtMoney(Math.round(firstPmt)) + ' /bln', Object.assign({ sub: multi ? 'Tahap akhir ' + fmtMoney(Math.round(lastPmt)) + ' /bln' : '' }, blue)));
 
   if (to) {
@@ -1149,7 +1147,7 @@ function renderMetrics(sim, to, principal) {
     html += metricSection('Skema Sebelumnya (Sebelum Take Over)', 'bg-briorange',
       bigCell('Total Jangka Waktu Sebelum', to.oldMonths + ' bln', Object.assign({ sub: monthsToText(to.oldMonths) }, org)) +
       bigCell('Total Pembayaran Sebelum', fmtMoney(Math.round(to.oldTotal)), org) +
-      bigCell('Total Bunga Sebelum', fmtMoney(Math.round(to.oldTotalBunga)), Object.assign({ sub: to.oldPrincipal > 0 ? fmtPct(to.oldTotalBunga / to.oldPrincipal * 100, 1) + ' dari pokok' : '' }, org)) +
+      bigCell('Total Bunga Sebelum', fmtMoney(Math.round(to.oldTotalBunga)), org) +
       bigCell('Angsuran Sebelum', fmtMoney(Math.round(to.oldPmt)) + ' /bln', Object.assign({ sub: 'Sisa OS ' + fmtCompact(to.oldPrincipal) }, org)));
 
     // 3) Perbandingan
