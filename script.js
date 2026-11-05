@@ -171,9 +171,16 @@ function monthsToText(m) {
 let PROGRAMS = {};
 let currentTier = 'Bukan Tier 1';
 
+function activeTier() {
+  if (state.mode !== 'kpr-baru') {
+    return PROGRAMS['Bukan Tier 1'] ? 'Bukan Tier 1' : (Object.keys(PROGRAMS)[0] || 'Bukan Tier 1');
+  }
+  return currentTier;
+}
+
 function currentProgram() {
   const key = document.getElementById('program').value;
-  const list = PROGRAMS[currentTier] || {};
+  const list = PROGRAMS[activeTier()] || {};
   return key && list[key] ? list[key] : null;
 }
 function programMaxMonths(p) { return p.segments.reduce((a, s) => a + s[0], 0); }
@@ -281,16 +288,66 @@ async function loadPrograms() {
     }
   }
 
-  if (!PROGRAMS[currentTier]) {
-    currentTier = Object.keys(PROGRAMS)[0] || 'Bukan Tier 1';
+  populateTierDropdown();
+  populateProgramDropdown();
+}
+function populateTierDropdown() {
+  const tierSel = document.getElementById('tierSelect');
+  const tiers = Object.keys(PROGRAMS);
+  if (!tiers.length) return;
+  const ordered = ['Bukan Tier 1', 'Tier 1'].filter(t => tiers.includes(t))
+    .concat(tiers.filter(t => t !== 'Bukan Tier 1' && t !== 'Tier 1'));
+  if (!PROGRAMS[currentTier]) currentTier = ordered[0] || 'Bukan Tier 1';
+  if (tierSel) {
+    tierSel.innerHTML = '';
+    ordered.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t;
+      o.textContent = t;
+      tierSel.appendChild(o);
+    });
+    tierSel.value = currentTier;
   }
+}
+function populateProgramDropdown(preserveKey) {
+  const sel = document.getElementById('program');
+  if (!sel) return;
+  const prevKey = preserveKey !== undefined ? preserveKey : sel.value;
   sel.innerHTML = '<option value="">Manual (custom)</option>';
-  const list = PROGRAMS[currentTier] || {};
+  const list = PROGRAMS[activeTier()] || {};
   Object.keys(list).forEach(k => {
     const o = document.createElement('option');
-    o.value = k; o.textContent = list[k].name;
+    o.value = k;
+    o.textContent = list[k].name;
     sel.appendChild(o);
   });
+  if (prevKey && list[prevKey]) sel.value = prevKey;
+  else sel.value = '';
+}
+function syncProgramDropdownForMode() {
+  if (!Object.keys(PROGRAMS).length) return;
+  const sel = document.getElementById('program');
+  const prevKey = sel ? sel.value : '';
+  populateProgramDropdown(prevKey);
+  if (sel && sel.value !== prevKey) {
+    updateProgramHint();
+  }
+}
+function onTierChange() {
+  if (state.mode !== 'kpr-baru') return;
+  const tierSel = document.getElementById('tierSelect');
+  if (!tierSel) return;
+  const prevKey = document.getElementById('program').value;
+  currentTier = tierSel.value;
+  populateProgramDropdown(prevKey);
+  const p = currentProgram();
+  if (p) {
+    const cur = Number(document.getElementById('tenor').value) || state.lastTenor;
+    applyProgram(cur > 0 ? cur : programMaxMonths(p));
+  } else {
+    updateProgramHint();
+    saveState();
+  }
 }
 function updateProgramHint() {
   const p = currentProgram(), hint = document.getElementById('programHint'), t = document.getElementById('tenor');
@@ -531,6 +588,7 @@ function route(fromHashChange) {
   document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
   document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
   syncPrincipalInputState();
+  syncProgramDropdownForMode();
   if (prevMode === 'to-fix' && state.mode !== 'to-fix' && state.fixSyncPlafon && state.userPrincipal > 0) {
     const pEl = document.getElementById('principal');
     pEl.value = formatThousands(state.userPrincipal);
@@ -552,33 +610,49 @@ function renderRpc(sim) {
   const el = document.getElementById('rpcResult');
   const income = parseNum(document.getElementById('rpcIncome').value);
   const debt = parseNum(document.getElementById('rpcDebt').value);
-  if (income <= 0) { el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan untuk melihat kemampuan bayar.</p>'; return; }
+  const maxCustomEl = document.getElementById('rpcMaxInstallment');
+  const customMax = maxCustomEl ? parseNum(maxCustomEl.value) : 0;
+
+  if (income <= 0 && customMax <= 0) {
+    el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan atau maksimal angsuran untuk melihat kemampuan bayar.</p>';
+    return;
+  }
+
   const ratio = rpcRatio(income);
   const maxAng = income * ratio;
-  const sisa = maxAng - debt;
+  const sisaBank = Math.max(0, maxAng - debt);
+  const limitToUse = customMax > 0 ? customMax : sisaBank;
   const multi = sim.stepSummaries.length > 1;
   const pmt = sim.stepSummaries[0] ? sim.stepSummaries[0].payment : 0;
   const peak = Math.max(0, ...sim.stepSummaries.map(s => s.payment));
-  const ok = sisa >= pmt;
-  const row = (l, v, cls) => `<div class="flex justify-between gap-3 py-1.5 text-sm"><span class="text-slate-500 dark:text-slate-400">${l}</span><span class="num font-semibold text-right ${cls || 'text-slate-800 dark:text-slate-100'}">${v}</span></div>`;
-  const note = ok && peak > sisa
-    ? `<p class="mt-1 text-xs">Catatan: angsuran tahap berikutnya naik hingga ${fmtMoney(Math.round(peak))}/bln, melebihi sisa kemampuan bayar.</p>` : '';
+  const ok = limitToUse >= pmt;
+
+  const row = (l, v, cls) => `<div class="flex items-center justify-between gap-2 py-2 text-xs"><span class="text-slate-500 dark:text-slate-400 leading-snug">${l}</span><span class="num font-bold text-right whitespace-nowrap shrink-0 ${cls || 'text-slate-800 dark:text-slate-100'}">${v}</span></div>`;
+  const note = ok && peak > limitToUse
+    ? `<p class="mt-1.5 text-[11px] opacity-90">Catatan: angsuran tahap berikutnya naik hingga <b>${fmtMoney(Math.round(peak))}/bln</b>, melebihi batas maksimal angsuran.</p>` : '';
   const cls = ok
-    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40'
-    : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/40';
+    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40'
+    : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40';
   const msg = ok
-    ? `✅ <b>Mampu bayar</b> — angsuran masih di bawah batas kemampuan bayar.`
-    : `⚠️ <b>Belum mampu bayar</b> — angsuran melebihi kemampuan bayar. Coba perpanjang tenor atau kurangi plafon.`;
-  // el.innerHTML = `
-  //   <div class="rounded-xl border border-slate-100 dark:border-slate-700 px-4 py-1 divide-y divide-slate-100 dark:divide-slate-700">
-  //     ${row('Batas angsuran (' + Math.round(ratio * 100) + '% pendapatan)', fmtMoney(Math.round(maxAng)))}
-  //     ${row('Dikurangi angsuran berjalan', '− ' + fmtMoney(debt))}
-  //     ${row('Sisa kemampuan bayar', fmtMoney(Math.round(sisa)), 'text-bri dark:text-blue-300')}
-  //     ${row('Angsuran KPR' + (multi ? ' (Tahap 1)' : ''), fmtMoney(Math.round(pmt)))}
-  //   </div>
-  //   <div role="status" class="mt-3 rounded-xl border px-4 py-3 text-sm font-medium ${cls}">${msg}${note}</div>`;
-    el.innerHTML = `
-    <div role="status" class="mt-3 rounded-xl border px-4 py-3 text-sm font-medium ${cls}">${msg}${note}</div>`;
+    ? `✅ <b>Mampu bayar</b> — angsuran berada di bawah batas maksimal (${fmtMoney(Math.round(limitToUse))}/bln).`
+    : `⚠️ <b>Belum mampu bayar</b> — angsuran melebihi batas maksimal (${fmtMoney(Math.round(limitToUse))}/bln). Coba perpanjang tenor atau kurangi plafon.`;
+
+  let breakdown = '';
+  if (income > 0) {
+    breakdown += row('Batas angsuran (' + Math.round(ratio * 100) + '% pendapatan)', fmtMoney(Math.round(maxAng)));
+    breakdown += row('Dikurangi angsuran berjalan', '− ' + fmtMoney(debt));
+    breakdown += row('Sisa kemampuan bayar (RPC)', fmtMoney(Math.round(sisaBank)), customMax > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-bri dark:text-blue-300');
+  }
+  if (customMax > 0) {
+    breakdown += row('Maks. angsuran pilihan Anda', fmtMoney(Math.round(customMax)), 'text-bri dark:text-blue-300');
+  }
+  breakdown += row('Angsuran KPR' + (multi ? ' (Tahap 1)' : ''), fmtMoney(Math.round(pmt)), ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400');
+
+  el.innerHTML = `
+    <div class="rounded-xl bg-slate-50/80 dark:bg-slate-700/30 border border-slate-200/80 dark:border-slate-700 px-3.5 py-1 divide-y divide-slate-200/60 dark:divide-slate-700/70">
+      ${breakdown}
+    </div>
+    <div role="status" class="mt-3 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
 }
 
 // ─── Take Over Fix: amortisasi lengkap dari plafon awal → Saldo Akhir bulan take over (Sisa OS) ───
@@ -978,15 +1052,19 @@ function renderSummaryCards(sim, to, principal) {
       </div>`;
   } else {
     html += `
-      <div class="${whiteCard}">
-        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
-        <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 num">${fmtCompact(sim.totalPayments)}</h3>
-        <p class="text-[11px] text-slate-400 dark:text-slate-500">${sim.totalMonths} bulan</p>
+      <div class="${whiteCard} flex flex-col justify-between">
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
+          <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 num">${fmtCompact(sim.totalPayments)}</h3>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(principal)}</span> + Bunga <span class="font-semibold text-bri dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
       </div>
-      <div class="${whiteCard}">
-        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Bunga</p>
-        <h3 class="text-xl font-bold text-bri dark:text-blue-300 num">${fmtCompact(sim.totalInterest)}</h3>
-        <p class="text-[11px] text-slate-400 dark:text-slate-500">${fmtPct(pctBunga, 1)} dari pokok</p>
+      <div class="${whiteCard} flex flex-col justify-between">
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Bunga</p>
+          <h3 class="text-2xl font-bold text-bri dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
+        </div>
+        <p class="text-[11px] text-slate-400 dark:text-slate-500">Akumulasi selama ${sim.totalMonths} bulan</p>
       </div>`;
   }
   document.getElementById('summaryCards').innerHTML = html;
@@ -1038,12 +1116,13 @@ function renderMetrics(sim, to, principal) {
   const totalBayarVal = to ? (sim.totalPayments + to.fee) : sim.totalPayments;
   const totalBayarSub = to
     ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')' + (balloon ? ' · Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : ''))
-    : (balloon ? 'Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : '');
+    : ('Pokok ' + fmtCompact(principal) + ' + Bunga ' + fmtCompact(sim.totalInterest) + (balloon ? ' · Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : ''));
+  const totalBungaSub = to ? (fmtPct(pctBunga, 1) + ' dari pokok') : '';
 
   let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-bri',
     bigCell('Total Jangka Waktu', sim.totalMonths + ' bln', Object.assign({ sub: monthsToText(sim.totalMonths) }, blue)) +
     bigCell('Total Pembayaran', fmtMoney(Math.round(totalBayarVal)), Object.assign({ sub: totalBayarSub }, blue)) +
-    bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), Object.assign({ sub: fmtPct(pctBunga, 1) + ' dari pokok' }, blue)) +
+    bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), Object.assign({ sub: totalBungaSub }, blue)) +
     bigCell(multi ? 'Angsuran (Tahap 1)' : 'Angsuran', fmtMoney(Math.round(firstPmt)) + ' /bln', Object.assign({ sub: multi ? 'Tahap akhir ' + fmtMoney(Math.round(lastPmt)) + ' /bln' : '' }, blue)));
 
   if (to) {
@@ -1116,24 +1195,60 @@ function downsample(arr, maxN) {
   if (out[out.length - 1].x !== n - 1) out.push({ x: n - 1, y: arr[n - 1] });
   return out;
 }
+function toggleChartDataset(idx, visible) {
+  if (!kumulatifChart || !kumulatifChart.data.datasets[idx]) return;
+  kumulatifChart.setDatasetVisibility(idx, visible);
+  syncTogglePillStyle(idx, visible);
+  kumulatifChart.update();
+}
+
+function syncTogglePillStyle(idx, visible) {
+  const ids = ['toggleTotal', 'togglePokok', 'toggleBunga'];
+  const cb = document.getElementById(ids[idx]);
+  if (!cb || !cb.parentElement) return;
+  cb.parentElement.classList.toggle('opacity-50', !visible);
+}
+
 function renderCharts(sim, to) {
   const balBaru = [parseNum(document.getElementById('principal').value)];
   sim.rows.forEach(r => balBaru.push(Math.max(0, r.endBalance)));
-  const cumBaru = [0]; let run = 0;
-  sim.rows.forEach(r => { run += r.payment; cumBaru.push(run); });
 
-  const dsSaldo = [{ label: 'Saldo Take Over', data: downsample(balBaru, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.08)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
-  const dsKum = [{ label: to ? 'Kumulatif Take Over' : 'Kumulatif Pembayaran', data: downsample(to ? to.cumNew : cumBaru, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.06)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
+  const dsSaldo = [{ label: to ? 'Saldo Take Over' : 'Saldo Pokok', data: downsample(balBaru, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.08)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
+  let dsKum = [];
   let annos = {};
+
   if (to) {
     dsSaldo.push({ label: 'Saldo Sebelumnya', data: downsample(to.oldSaldo, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 });
-    dsKum.push({ label: 'Kumulatif Sebelumnya', data: downsample(to.cumOld, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 });
-        if (to.meets.length) {
+    dsKum = [
+      { label: 'Kumulatif Take Over', data: downsample(to.cumNew, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.06)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
+      { label: 'Kumulatif Sebelumnya', data: downsample(to.cumOld, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
+    ];
+    if (to.meets.length) {
       to.meets.forEach((mp, idx) => {
         const x = Math.round(mp);
         annos['bep' + idx] = { type: 'line', xMin: x, xMax: x, borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [6, 4], label: { display: true, content: to.meets.length > 1 ? 'BEP ' + (idx + 1) : 'BEP', position: idx % 2 ? 'end' : 'start', backgroundColor: 'rgba(100,116,139,0.9)', color: '#fff', font: { size: 10 } } };
       });
     }
+  } else {
+    const cumTotal = [0], cumPokok = [0], cumBunga = [0];
+    let runT = 0, runP = 0, runB = 0;
+    sim.rows.forEach(r => {
+      runT += r.payment; cumTotal.push(runT);
+      runP += r.principal; cumPokok.push(runP);
+      runB += r.interest; cumBunga.push(runB);
+    });
+    const showTotal = document.getElementById('toggleTotal') ? document.getElementById('toggleTotal').checked : true;
+    const showPokok = document.getElementById('togglePokok') ? document.getElementById('togglePokok').checked : true;
+    const showBunga = document.getElementById('toggleBunga') ? document.getElementById('toggleBunga').checked : true;
+    syncTogglePillStyle(0, showTotal);
+    syncTogglePillStyle(1, showPokok);
+    syncTogglePillStyle(2, showBunga);
+
+    dsKum = [
+      { label: 'Total Pembayaran (Pokok + Bunga)', data: downsample(cumTotal, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.06)', borderWidth: 2.5, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showTotal },
+      { label: 'Kumulatif Pokok', data: downsample(cumPokok, 220), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.05)', borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showPokok },
+      { label: 'Kumulatif Bunga', data: downsample(cumBunga, 220), borderColor: '#F58220', backgroundColor: 'rgba(245,130,32,0.05)', borderWidth: 2, borderDash: [5, 4], fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showBunga },
+    ];
   }
 
   const dark = isDark();
@@ -1144,9 +1259,25 @@ function renderCharts(sim, to) {
   const baseOpts = (withAnno) => ({
     responsive: true, maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
-    animation: { duration: 500 },
+    animation: { duration: 400 },
     plugins: {
-      legend: { display: !!to, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 }, color: legendColor, usePointStyle: true } },
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: { boxWidth: 12, padding: 14, font: { size: 11 }, color: legendColor, usePointStyle: true },
+        onClick: (e, legendItem, legend) => {
+          const idx = legendItem.datasetIndex;
+          const ci = legend.chart;
+          const nextVisible = !ci.isDatasetVisible(idx);
+          ci.setDatasetVisibility(idx, nextVisible);
+          ci.update();
+          if (!to) {
+            const ids = ['toggleTotal', 'togglePokok', 'toggleBunga'];
+            const cb = document.getElementById(ids[idx]);
+            if (cb) { cb.checked = nextVisible; syncTogglePillStyle(idx, nextVisible); }
+          }
+        },
+      },
       tooltip: { callbacks: { title: (it) => 'Bulan ' + it[0].parsed.x, label: (it) => it.dataset.label + ': ' + fmtMoney(it.parsed.y) } },
       annotation: { annotations: withAnno ? annos : {} },
     },
@@ -1156,11 +1287,17 @@ function renderCharts(sim, to) {
     },
   });
 
-  const saldoEl = document.getElementById('saldoChart'); // bisa tidak ada (dikomentari di HTML)
+  const saldoEl = document.getElementById('saldoChart');
   if (saldoChart) { saldoChart.data.datasets = dsSaldo; saldoChart.options = baseOpts(false); saldoChart.update(); }
   else if (saldoEl) { saldoChart = new Chart(saldoEl, { type: 'line', data: { datasets: dsSaldo }, options: baseOpts(false) }); }
-  if (kumulatifChart) { kumulatifChart.data.datasets = dsKum; kumulatifChart.options = baseOpts(true); kumulatifChart.update(); }
-  else { kumulatifChart = new Chart(document.getElementById('kumulatifChart'), { type: 'line', data: { datasets: dsKum }, options: baseOpts(true) }); }
+  if (kumulatifChart) {
+    kumulatifChart.data.datasets = dsKum;
+    kumulatifChart.options = baseOpts(true);
+    dsKum.forEach((d, idx) => kumulatifChart.setDatasetVisibility(idx, !d.hidden));
+    kumulatifChart.update();
+  } else {
+    kumulatifChart = new Chart(document.getElementById('kumulatifChart'), { type: 'line', data: { datasets: dsKum }, options: baseOpts(true) });
+  }
 }
 
 // ─── Render: step table ───
@@ -1232,11 +1369,11 @@ function saveState() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       v: 1,
-      principal: v('principal'), program: v('program'), tenor: v('tenor'),
+      principal: v('principal'), tier: currentTier, program: v('program'), tenor: v('tenor'),
       steps: state.steps,
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
                   customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
-                  rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'),
+                  rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'), rpcMaxInstallment: v('rpcMaxInstallment'),
                   fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
 
       feeMode: state.feeMode, feeVal: v('feeVal'),
@@ -1275,8 +1412,10 @@ function restoreState() {
     set('feeVal', s.feeVal);
   }
 
+    if (s.tier) currentTier = s.tier;
     if (parseNum(s.rpcIncome) > 0) set('rpcIncome', formatThousands(parseNum(s.rpcIncome)));
       if (s.rpcDebt != null && s.rpcDebt !== '') set('rpcDebt', formatThousands(parseNum(s.rpcDebt)));
+      if (parseNum(s.rpcMaxInstallment) > 0) set('rpcMaxInstallment', formatThousands(parseNum(s.rpcMaxInstallment)));
       if (parseNum(s.fixOS) > 0) set('fixOS', formatThousands(parseNum(s.fixOS)));
       set('fixTotal', s.fixTotal); set('fixLeft', s.fixLeft); set('fixRate', s.fixRate); set('floatRate', s.floatRate);
       set('fixTakeoverMonth', s.fixTakeoverMonth);
@@ -1294,10 +1433,17 @@ function restoreState() {
 }
 // program dipulihkan setelah programs.csv termuat; tahapan dibangun ulang dari CSV terbaru
 function applySavedProgram() {
-  if (!_saved || !_saved.program) return;
+  if (!_saved) return;
+  if (_saved.tier && PROGRAMS[_saved.tier]) {
+    currentTier = _saved.tier;
+    const tierSel = document.getElementById('tierSelect');
+    if (tierSel) tierSel.value = currentTier;
+  }
+  populateProgramDropdown();
+  if (!_saved.program) return;
   const sel = document.getElementById('program');
   sel.value = _saved.program;
-  if (sel.value !== _saved.program) { sel.value = ''; return; }  // program sudah dihapus dari CSV
+  if (sel.value !== _saved.program) { sel.value = ''; return; }  // program sudah dihapus dari CSV/Sheet
   applyProgram(_saved.tenor);
 }
 function resetSaved() {

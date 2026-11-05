@@ -392,9 +392,18 @@
                     class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
               </div>
+              <div data-modes="kpr-baru" class="hidden">
+                <label for="tierSelect"
+                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kategori Program (Tier)</label>
+                <select id="tierSelect" onchange="onTierChange()"
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  <option value="Bukan Tier 1">Bukan Tier 1</option>
+                  <option value="Tier 1">Tier 1</option>
+                </select>
+              </div>
               <div>
                 <label for="program"
-                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Program</label>
+                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Program Suku Bunga</label>
                 <select id="program" onchange="onProgramChange()"
                   class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
                   <option value="">Manual (custom)</option>
@@ -470,29 +479,43 @@
               </svg>
               Cek Kemampuan Bayar (RPC)
             </h2>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Cek apakah Pendapatan Anda mencukupi untuk angsuran KPR baru.</p>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label for="rpcIncome"
-                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Pendapatan
-                  / Bulan</label>
-                <div class="relative">
-                  <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
-                  <input type="text" id="rpcIncome" value="10.000.000" inputmode="numeric"
-                    class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
-                    oninput="formatField(this); scheduleCalc()">
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Cek apakah pendapatan Anda mencukupi untuk angsuran KPR baru.</p>
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col justify-between">
+                  <label for="rpcIncome"
+                    class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Pendapatan / Bulan</label>
+                  <div class="relative">
+                    <span
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-xs">Rp</span>
+                    <input type="text" id="rpcIncome" value="10.000.000" inputmode="numeric"
+                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      oninput="formatField(this); scheduleCalc()">
+                  </div>
+                </div>
+                <div class="flex flex-col justify-between">
+                  <label for="rpcDebt"
+                    class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Angsuran Berjalan</label>
+                  <div class="relative">
+                    <span
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-xs">Rp</span>
+                    <input type="text" id="rpcDebt" value="2.000.000" inputmode="numeric"
+                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      oninput="formatField(this); scheduleCalc()">
+                  </div>
                 </div>
               </div>
               <div>
-                <label for="rpcDebt"
-                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Angsuran
-                  Berjalan / Bulan</label>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <label for="rpcMaxInstallment"
+                    class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran yang Harus Dibayarkan</label>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">Opsional</span>
+                </div>
                 <div class="relative">
                   <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
-                  <input type="text" id="rpcDebt" value="2.000.000" inputmode="numeric"
-                    class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-xs">Rp</span>
+                  <input type="text" id="rpcMaxInstallment" value="" placeholder="Kosongkan untuk otomatis sesuai RPC" inputmode="numeric"
+                    class="num w-full pl-9 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-xs placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
                     oninput="formatField(this); scheduleCalc()">
                 </div>
               </div>
@@ -522,8 +545,26 @@
               Visualisasi Data
             </h2>
             <div>
-              <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">Kumulatif Pembayaran (Pokok +
-                Bunga)</p>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-3">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Kumulatif Pembayaran (Pokok + Bunga)</p>
+                <div id="chartToggles" data-modes="kpr-baru" class="hidden flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-slate-600 bg-blue-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-bri transition">
+                    <input type="checkbox" id="toggleTotal" checked onchange="toggleChartDataset(0, this.checked)" class="rounded accent-[#00529C] h-3.5 w-3.5 cursor-pointer">
+                    <span class="inline-block w-2 h-2 rounded-full bg-[#00529C]"></span>
+                    <span>Total</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-slate-600 bg-emerald-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-emerald-500 transition">
+                    <input type="checkbox" id="togglePokok" checked onchange="toggleChartDataset(1, this.checked)" class="rounded accent-emerald-600 h-3.5 w-3.5 cursor-pointer">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
+                    <span>Pokok</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-200 dark:border-slate-600 bg-orange-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-briorange transition">
+                    <input type="checkbox" id="toggleBunga" checked onchange="toggleChartDataset(2, this.checked)" class="rounded accent-[#F58220] h-3.5 w-3.5 cursor-pointer">
+                    <span class="inline-block w-2 h-2 rounded-full bg-[#F58220]"></span>
+                    <span>Bunga</span>
+                  </label>
+                </div>
+              </div>
               <div class="relative h-72 md:h-80"><canvas id="kumulatifChart"
                   aria-label="Grafik kumulatif pembayaran pokok dan bunga" role="img"></canvas></div>
             </div>
