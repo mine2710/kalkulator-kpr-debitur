@@ -74,11 +74,13 @@ function simulateFull(principal, steps) {
     }
     stepSummaries.push({ step: stepIdx + 1, months: s.months, rate: s.rate, payment: s.payment, startBalance: startBal, interest: stepInt, principal: stepPrinc, endBalance: balance });
   });
+  if (rows.length) rows[rows.length - 1].endBalance = 0;
+  if (stepSummaries.length) stepSummaries[stepSummaries.length - 1].endBalance = 0;
   return {
     rows, stepSummaries,
     totalInterest: rows.reduce((a, r) => a + r.interest, 0),
     totalPayments: rows.reduce((a, r) => a + r.payment, 0),
-    endingBalance: balance,
+    endingBalance: 0,
     totalMonths: monthCounter,
   };
 }
@@ -605,54 +607,72 @@ function route(fromHashChange) {
 
 // ─── RPC: cek kemampuan bayar (KPR Baru) ───
 // rasio maksimal angsuran terhadap pendapatan: <15jt 50%, 15–25jt 55%, >25jt 60%
+let _rpcCustomEdited = false;
+
 function rpcRatio(income) { return income < 15e6 ? 0.50 : income <= 25e6 ? 0.55 : 0.60; }
+
+function onRpcInputChange() {
+  _rpcCustomEdited = false;
+  syncRpcMaxField();
+}
+
+function onRpcMaxCustomInput() {
+  _rpcCustomEdited = true;
+}
+
+function syncRpcMaxField() {
+  const maxEl = document.getElementById('rpcMaxInstallment');
+  if (!maxEl) return;
+  if (_rpcCustomEdited && parseNum(maxEl.value) > 0) return;
+  const income = parseNum(document.getElementById('rpcIncome').value);
+  const debt = parseNum(document.getElementById('rpcDebt').value);
+  if (income > 0) {
+    const ratio = rpcRatio(income);
+    const maxAng = income * ratio;
+    const sisaBank = Math.max(0, Math.round(maxAng - debt));
+    maxEl.value = formatThousands(sisaBank);
+  }
+}
+
 function renderRpc(sim) {
   const el = document.getElementById('rpcResult');
+  syncRpcMaxField();
+
   const income = parseNum(document.getElementById('rpcIncome').value);
   const debt = parseNum(document.getElementById('rpcDebt').value);
   const maxCustomEl = document.getElementById('rpcMaxInstallment');
-  const customMax = maxCustomEl ? parseNum(maxCustomEl.value) : 0;
-
-  if (income <= 0 && customMax <= 0) {
-    el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan atau maksimal angsuran untuk melihat kemampuan bayar.</p>';
-    return;
-  }
+  const customVal = maxCustomEl ? parseNum(maxCustomEl.value) : 0;
 
   const ratio = rpcRatio(income);
   const maxAng = income * ratio;
   const sisaBank = Math.max(0, maxAng - debt);
-  const limitToUse = customMax > 0 ? customMax : sisaBank;
+  const limitToUse = customVal > 0 ? customVal : sisaBank;
+
+  if (limitToUse <= 0 && income <= 0) {
+    el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan atau maksimal angsuran untuk melihat kemampuan bayar.</p>';
+    return;
+  }
+
   const multi = sim.stepSummaries.length > 1;
   const pmt = sim.stepSummaries[0] ? sim.stepSummaries[0].payment : 0;
   const peak = Math.max(0, ...sim.stepSummaries.map(s => s.payment));
   const ok = limitToUse >= pmt;
 
-  const row = (l, v, cls) => `<div class="flex items-center justify-between gap-2 py-2 text-xs"><span class="text-slate-500 dark:text-slate-400 leading-snug">${l}</span><span class="num font-bold text-right whitespace-nowrap shrink-0 ${cls || 'text-slate-800 dark:text-slate-100'}">${v}</span></div>`;
-  const note = ok && peak > limitToUse
-    ? `<p class="mt-1.5 text-[11px] opacity-90">Catatan: angsuran tahap berikutnya naik hingga <b>${fmtMoney(Math.round(peak))}/bln</b>, melebihi batas maksimal angsuran.</p>` : '';
   const cls = ok
     ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40'
     : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40';
   const msg = ok
-    ? `✅ <b>Mampu bayar</b> — angsuran berada di bawah batas maksimal (${fmtMoney(Math.round(limitToUse))}/bln).`
-    : `⚠️ <b>Belum mampu bayar</b> — angsuran melebihi batas maksimal (${fmtMoney(Math.round(limitToUse))}/bln). Coba perpanjang tenor atau kurangi plafon.`;
-
-  let breakdown = '';
-  if (income > 0) {
-    breakdown += row('Batas angsuran (' + Math.round(ratio * 100) + '% pendapatan)', fmtMoney(Math.round(maxAng)));
-    breakdown += row('Dikurangi angsuran berjalan', '− ' + fmtMoney(debt));
-    breakdown += row('Sisa kemampuan bayar (RPC)', fmtMoney(Math.round(sisaBank)), customMax > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-bri dark:text-blue-300');
-  }
-  if (customMax > 0) {
-    breakdown += row('Maks. angsuran pilihan Anda', fmtMoney(Math.round(customMax)), 'text-bri dark:text-blue-300');
-  }
-  breakdown += row('Angsuran KPR' + (multi ? ' (Tahap 1)' : ''), fmtMoney(Math.round(pmt)), ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400');
+    ? `✅ <b>Mampu bayar</b> — Angsuran KPR (${fmtMoney(Math.round(pmt))}/bln) masih di bawah batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln).`
+    : `⚠️ <b>Belum mampu bayar</b> — Angsuran KPR (${fmtMoney(Math.round(pmt))}/bln) melebihi batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln). Coba perpanjang tenor atau kurangi plafon.`;
+  const note = ok && peak > limitToUse
+    ? `<p class="mt-1.5 text-[11px] opacity-90">Catatan: angsuran tahap berikutnya naik hingga <b>${fmtMoney(Math.round(peak))}/bln</b>, melebihi batas maksimal angsuran.</p>` : '';
 
   el.innerHTML = `
-    <div class="rounded-xl bg-slate-50/80 dark:bg-slate-700/30 border border-slate-200/80 dark:border-slate-700 px-3.5 py-1 divide-y divide-slate-200/60 dark:divide-slate-700/70">
-      ${breakdown}
+    <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran</span>
+      <span class="num text-sm font-bold text-bri dark:text-blue-300">${fmtMoney(Math.round(limitToUse))} /bln</span>
     </div>
-    <div role="status" class="mt-3 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
+    <div role="status" class="mt-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
 }
 
 // ─── Take Over Fix: amortisasi lengkap dari plafon awal → Saldo Akhir bulan take over (Sisa OS) ───
@@ -1115,8 +1135,8 @@ function renderMetrics(sim, to, principal) {
   // 1) Skema baru
   const totalBayarVal = to ? (sim.totalPayments + to.fee) : sim.totalPayments;
   const totalBayarSub = to
-    ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')' + (balloon ? ' · Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : ''))
-    : ('Pokok ' + fmtCompact(principal) + ' + Bunga ' + fmtCompact(sim.totalInterest) + (balloon ? ' · Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : ''));
+    ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')')
+    : ('Pokok ' + fmtCompact(principal) + ' + Bunga ' + fmtCompact(sim.totalInterest));
   const totalBungaSub = to ? (fmtPct(pctBunga, 1) + ' dari pokok') : '';
 
   let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-bri',
@@ -1143,7 +1163,7 @@ function renderMetrics(sim, to, principal) {
     bigCell('Keunggulan Angsuran (vs Skema Sebelumnya)', (pmtGood ? '▼ ' : '▲ ') + fmtMoney(Math.round(Math.abs(selPmt))) + ' /bln',
     Object.assign({ sub: (pmtGood ? 'Angsuran lebih ringan' : 'Angsuran lebih tinggi di awal') + (multi ? ' (acuan Tahap 1)' : '') }, pmtGood ? good : bad)) +
     bigCell('Selisih Total Dibayar', (effGood ? 'Hemat ' : 'Lebih ') + fmtMoney(Math.round(Math.abs(to.efisiensi))),
-    Object.assign({ sub: 'Selisih total skema sebelumnya dengan take over, termasuk biaya tambahan take over ' + fmtCompact(to.fee) + (balloon ? ' & sisa saldo' : '') }, effGood ? good : bad)),
+    Object.assign({ sub: 'Selisih total skema sebelumnya dengan take over, termasuk biaya tambahan take over ' + fmtCompact(to.fee) }, effGood ? good : bad)),
   'lg:grid-cols-2');
   }
 
@@ -1319,7 +1339,7 @@ function renderStepTable(sim) {
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.totalPayments))}</td>
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.totalPayments - sim.totalInterest))}</td>
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600 text-bri dark:text-blue-300">${fmtMoney(Math.round(sim.totalInterest))}</td>
-      <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.endingBalance))}</td>
+      <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(0)}</td>
     </tr>`;
   document.getElementById('stepTable').innerHTML = `
     <table class="num w-full text-left text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">
@@ -1415,7 +1435,10 @@ function restoreState() {
     if (s.tier) currentTier = s.tier;
     if (parseNum(s.rpcIncome) > 0) set('rpcIncome', formatThousands(parseNum(s.rpcIncome)));
       if (s.rpcDebt != null && s.rpcDebt !== '') set('rpcDebt', formatThousands(parseNum(s.rpcDebt)));
-      if (parseNum(s.rpcMaxInstallment) > 0) set('rpcMaxInstallment', formatThousands(parseNum(s.rpcMaxInstallment)));
+      if (parseNum(s.rpcMaxInstallment) > 0) {
+        set('rpcMaxInstallment', formatThousands(parseNum(s.rpcMaxInstallment)));
+        _rpcCustomEdited = true;
+      }
       if (parseNum(s.fixOS) > 0) set('fixOS', formatThousands(parseNum(s.fixOS)));
       set('fixTotal', s.fixTotal); set('fixLeft', s.fixLeft); set('fixRate', s.fixRate); set('floatRate', s.floatRate);
       set('fixTakeoverMonth', s.fixTakeoverMonth);
