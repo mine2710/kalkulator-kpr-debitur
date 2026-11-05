@@ -16,6 +16,7 @@ let state = {
   ],
     mode: 'kpr-baru',
   feeMode: 'persen',
+  oldPmtCustom: false,
   lastTenor: null, // tenor terakhir yang diisi user (dipertahankan saat ganti program)
 };
 let saldoChart = null;
@@ -605,6 +606,24 @@ function toggleCustomPlafon() {
   scheduleCalc();
 }
 
+function syncOldPmtCustomUI() {
+  const isCustom = !!state.oldPmtCustom;
+  const field = document.getElementById('oldCustomPmtField');
+  const btnMatch = document.getElementById('btnOldPmtMatch');
+  const btnCustom = document.getElementById('btnOldPmtCustom');
+  if (field) field.classList.toggle('hidden', !isCustom);
+  const activeCls = 'px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-bri dark:text-blue-300 shadow-sm transition';
+  const idleCls = 'px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition';
+  if (btnMatch) btnMatch.className = isCustom ? idleCls : activeCls;
+  if (btnCustom) btnCustom.className = isCustom ? activeCls : idleCls;
+}
+
+function setOldPmtCustom(isCustom) {
+  state.oldPmtCustom = !!isCustom;
+  syncOldPmtCustomUI();
+  scheduleCalc();
+}
+
 
 
 function onFeeModeChange() {
@@ -662,7 +681,32 @@ function buildOldSchedule(principal) {
   const oldRate = Number(document.getElementById('oldRate').value) || 0;
   const oldMonths = Math.max(1, Math.round(Number(document.getElementById('oldTerm').value) || 1));
   const a = amortizeSingle(oldPrincipal, oldRate, oldMonths);
+
+  const calcDisp = document.getElementById('oldCalcPmtDisplay');
+  if (calcDisp) calcDisp.textContent = fmtMoney(Math.round(a.pmt)) + ' /bln';
+
+  const customPmtEl = document.getElementById('oldCustomPmt');
+  const customPmtVal = state.oldPmtCustom && customPmtEl ? parseNum(customPmtEl.value) : 0;
+  if (customPmtVal > 0) {
+    const r = (oldRate || 0) / 100 / 12;
+    const saldo = [oldPrincipal];
+    let bal = oldPrincipal;
+    for (let i = 0; i < oldMonths; i++) {
+      const interest = bal * r;
+      bal = Math.max(0, bal - (customPmtVal - interest));
+      saldo.push(bal);
+    }
     return {
+      principal: oldPrincipal,
+      months: oldMonths,
+      payments: new Array(oldMonths).fill(customPmtVal),
+      saldo,
+      totalBunga: Math.max(0, customPmtVal * oldMonths - oldPrincipal),
+      firstPmt: customPmtVal,
+    };
+  }
+
+  return {
     principal: oldPrincipal,
     months: oldMonths,
     payments: new Array(oldMonths).fill(a.pmt),
@@ -832,9 +876,14 @@ function renderMetrics(sim, to, principal) {
   const org = { bg: 'bg-orange-50 dark:bg-orange-900/20', lc: 'text-orange-600 dark:text-orange-300', vc: 'text-slate-800 dark:text-slate-100', sc: 'text-slate-500 dark:text-slate-400' };
 
   // 1) Skema baru
+  const totalBayarVal = to ? (sim.totalPayments + to.fee) : sim.totalPayments;
+  const totalBayarSub = to
+    ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')' + (balloon ? ' · Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : ''))
+    : (balloon ? 'Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : '');
+
   let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-bri',
     bigCell('Total Jangka Waktu', sim.totalMonths + ' bln', Object.assign({ sub: monthsToText(sim.totalMonths) }, blue)) +
-    bigCell('Total Pembayaran', fmtMoney(Math.round(sim.totalPayments)), Object.assign({ sub: balloon ? 'Belum termasuk sisa saldo ' + fmtCompact(sim.endingBalance) : '' }, blue)) +
+    bigCell('Total Pembayaran', fmtMoney(Math.round(totalBayarVal)), Object.assign({ sub: totalBayarSub }, blue)) +
     bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), Object.assign({ sub: fmtPct(pctBunga, 1) + ' dari pokok' }, blue)) +
     bigCell(multi ? 'Angsuran (Tahap 1)' : 'Angsuran', fmtMoney(Math.round(firstPmt)) + ' /bln', Object.assign({ sub: multi ? 'Tahap akhir ' + fmtMoney(Math.round(lastPmt)) + ' /bln' : '' }, blue)));
 
@@ -1027,7 +1076,7 @@ function saveState() {
       principal: v('principal'), program: v('program'), tenor: v('tenor'),
       steps: state.steps,
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
-                  customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'),
+                  customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
                   rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'),
                   fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'),
 
@@ -1053,6 +1102,9 @@ function restoreState() {
   document.getElementById('customPlafon').checked = !!s.customPlafon;
   document.getElementById('plafonField').classList.toggle('hidden', !s.customPlafon);
   if (parseNum(s.oldPlafon) > 0) set('oldPlafon', formatThousands(parseNum(s.oldPlafon)));
+  state.oldPmtCustom = !!s.oldPmtCustom;
+  if (parseNum(s.oldCustomPmt) > 0) set('oldCustomPmt', formatThousands(parseNum(s.oldCustomPmt)));
+  syncOldPmtCustomUI();
 
   if (s.feeMode === 'persen' || s.feeMode === 'nominal') {
     state.feeMode = s.feeMode;

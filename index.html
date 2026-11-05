@@ -308,6 +308,37 @@
                     oninput="formatField(this); scheduleCalc()">
                 </div>
               </div>
+
+              <!-- Angsuran Eksisting + Opsi Sesuai / Input Manual -->
+              <div class="pt-3 border-t border-orange-100 dark:border-slate-700 space-y-3">
+                <div class="flex items-center justify-between gap-2 rounded-xl bg-orange-50/70 dark:bg-orange-900/15 border border-orange-100 dark:border-orange-900/40 px-3.5 py-2.5">
+                  <div>
+                    <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Angsuran Eksisting</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500">Estimasi dari Sisa OS &amp; bunga float</p>
+                  </div>
+                  <p id="oldCalcPmtDisplay" class="num text-sm font-bold text-orange-600 dark:text-orange-300 whitespace-nowrap">Rp —</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Apakah angsuran sudah sesuai?</span>
+                  <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-600 p-0.5 bg-slate-100 dark:bg-slate-700/70 text-[11px] font-semibold shrink-0">
+                    <button type="button" id="btnOldPmtMatch" onclick="setOldPmtCustom(false)"
+                      class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-bri dark:text-blue-300 shadow-sm transition">Sesuai</button>
+                    <button type="button" id="btnOldPmtCustom" onclick="setOldPmtCustom(true)"
+                      class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">Tidak Sesuai</button>
+                  </div>
+                </div>
+
+                <div id="oldCustomPmtField" class="hidden">
+                  <label for="oldCustomPmt" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Input Angsuran Eksisting / Bulan</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600 dark:text-orange-300 font-bold text-xs">Rp</span>
+                    <input type="text" id="oldCustomPmt" value="" placeholder="Masukkan angsuran eksisting Anda" inputmode="numeric"
+                      class="num w-full pl-9 pr-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-xs placeholder:text-slate-400 focus:outline-none focus:border-briorange focus:ring-2 focus:ring-briorange/20 transition"
+                      oninput="formatField(this); scheduleCalc()">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -382,6 +413,38 @@
                   Hitung Ulang</button>
               </div>
             </div>
+
+            <!-- Biaya Take Over (di dalam kartu Skema Take Over paling bawah) -->
+            <div data-modes="to-float to-fix" class="hidden mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#00529C" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="9" cy="9" r="7" />
+                  <path d="M9 5v8M6.5 7.5h4a1.5 1.5 0 0 1 0 3h-3" />
+                </svg>
+                Biaya Take Over
+              </h3>
+              <div>
+                <label for="feeVal" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Biaya
+                  Tambahan Take Over (bulan ke-0)</label>
+                <div class="flex gap-2">
+                  <select id="feeMode" onchange="onFeeModeChange()" aria-label="Jenis biaya take over"
+                    class="w-1/3 px-2 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition">
+                    <option value="persen">Persen</option>
+                    <option value="nominal">Nominal</option>
+                  </select>
+                  <div class="relative w-2/3">
+                    <input type="text" id="feeVal" value="5"
+                      class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition"
+                      oninput="onFeeInput(this)">
+                    <span
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium"
+                      id="feeSuffix">%</span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="feeHint"></p>
+              </div>
+            </div>
           </div>
 
           <!-- RPC: Cek Kemampuan Bayar (khusus KPR Baru) -->
@@ -425,39 +488,7 @@
             <div id="rpcResult" class="mt-4" aria-live="polite"></div>
           </div>
 
-          <!-- Plafon & Biaya Take Over (kedua mode Take Over) -->
-          <div data-modes="to-float to-fix"
-            class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md space-y-4">
-            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" aria-hidden="true">
-                <circle cx="9" cy="9" r="7" />
-                <path d="M9 5v8M6.5 7.5h4a1.5 1.5 0 0 1 0 3h-3" />
-              </svg>
-              Biaya Take Over
-            </h2>
 
-            <div>
-              <label for="feeVal" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Biaya
-                Tambahan Take Over (bulan ke-0)</label>
-              <div class="flex gap-2">
-                <select id="feeMode" onchange="onFeeModeChange()" aria-label="Jenis biaya take over"
-                  class="w-1/3 px-2 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition">
-                  <option value="persen">Persen</option>
-                  <option value="nominal">Nominal</option>
-                </select>
-                <div class="relative w-2/3">
-                  <input type="text" id="feeVal" value="5"
-                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition"
-                    oninput="onFeeInput(this)">
-                  <span
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium"
-                    id="feeSuffix">%</span>
-                </div>
-              </div>
-              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="feeHint"></p>
-            </div>
-          </div>
         </div>
 
         <!-- ─── RIGHT: OUTPUTS ─── -->
