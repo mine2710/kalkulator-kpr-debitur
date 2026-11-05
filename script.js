@@ -838,8 +838,6 @@ function renderFixOutputs(fx) {
 }
 
 function toggleCustomPlafon() {
-  const c = document.getElementById('customPlafon').checked;
-  document.getElementById('plafonField').classList.toggle('hidden', !c);
   scheduleCalc();
 }
 
@@ -914,7 +912,8 @@ function buildOldSchedule(principal, prebuiltFx) {
     };
   }
   // Take Over Float: bunga float tunggal sepanjang sisa tenor
-  const oldPrincipal = document.getElementById('customPlafon').checked ? parseNum(document.getElementById('oldPlafon').value) : principal;
+  const oldPlafonEl = document.getElementById('oldPlafon');
+  const oldPrincipal = (oldPlafonEl && parseNum(oldPlafonEl.value) > 0) ? parseNum(oldPlafonEl.value) : principal;
   const oldRate = Number(document.getElementById('oldRate').value) || 0;
   const oldMonths = Math.max(1, Math.round(Number(document.getElementById('oldTerm').value) || 1));
   const a = amortizeSingle(oldPrincipal, oldRate, oldMonths);
@@ -1160,7 +1159,7 @@ function renderMetrics(sim, to, principal) {
     const good = { bg: 'bg-emerald-50 dark:bg-emerald-900/20', lc: 'text-emerald-600 dark:text-emerald-300', vc: 'text-emerald-600 dark:text-emerald-300', sc: 'text-slate-500 dark:text-slate-400' };
     const bad = { bg: 'bg-amber-50 dark:bg-amber-900/20', lc: 'text-amber-600 dark:text-amber-300', vc: 'text-amber-600 dark:text-amber-300', sc: 'text-slate-500 dark:text-slate-400' };
     html += metricSection('Perbandingan Take Over', 'bg-emerald-500',
-    bigCell('Keunggulan Angsuran (vs Skema Sebelumnya)', (pmtGood ? '▼ ' : '▲ ') + fmtMoney(Math.round(Math.abs(selPmt))) + ' /bln',
+    bigCell('Kondisi Angsuran (vs Skema Sebelumnya)', (pmtGood ? '▼ ' : '▲ ') + fmtMoney(Math.round(Math.abs(selPmt))) + ' /bln',
     Object.assign({ sub: (pmtGood ? 'Angsuran lebih ringan' : 'Angsuran lebih tinggi di awal') + (multi ? ' (acuan Tahap 1)' : '') }, pmtGood ? good : bad)) +
     bigCell('Selisih Total Dibayar', (effGood ? 'Hemat ' : 'Lebih ') + fmtMoney(Math.round(Math.abs(to.efisiensi))),
     Object.assign({ sub: 'Selisih total skema sebelumnya dengan take over, termasuk biaya tambahan take over ' + fmtCompact(to.fee) }, effGood ? good : bad)),
@@ -1392,7 +1391,7 @@ function saveState() {
       principal: v('principal'), tier: currentTier, program: v('program'), tenor: v('tenor'),
       steps: state.steps,
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
-                  customPlafon: c('customPlafon'), oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
+                  oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
                   rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'), rpcMaxInstallment: v('rpcMaxInstallment'),
                   fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
 
@@ -1418,8 +1417,7 @@ function restoreState() {
   }
   set('oldRate', s.oldRate); set('oldTerm', s.oldTerm);
 
-  document.getElementById('customPlafon').checked = !!s.customPlafon;
-  document.getElementById('plafonField').classList.toggle('hidden', !s.customPlafon);
+
   if (parseNum(s.oldPlafon) > 0) set('oldPlafon', formatThousands(parseNum(s.oldPlafon)));
   state.oldPmtCustom = !!s.oldPmtCustom;
   if (parseNum(s.oldCustomPmt) > 0) set('oldCustomPmt', formatThousands(parseNum(s.oldCustomPmt)));
