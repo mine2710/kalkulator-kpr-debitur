@@ -237,18 +237,16 @@ function renderDinSteps() {
   document.getElementById('dinSteps').innerHTML = din.steps.map((s, i) => {
     const from = cum + 1; cum += s.months;
     return `
-    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
-          <span id="dinStepRange-${i}" class="font-medium text-[10px] text-slate-400 dark:text-slate-500">bln ${from}–${cum}</span>
+    <div class="flex items-end gap-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3">
+      <div class="w-16 shrink-0 pb-1">
+        <span class="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap
         </span>
-        ${n > 1 ? `<button type="button" onclick="removeDinStep(${i})" aria-label="Hapus tahap ${i + 1}" class="text-slate-400 hover:text-sky-500 text-sm leading-none transition">✕</button>` : ''}
+        <span id="dinStepRange-${i}" class="block mt-1 num text-[10px] text-slate-400 dark:text-slate-500">bln ${from}–${cum}</span>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div><label class="${DIN_LAB}" for="dinStepM-${i}">Durasi (bulan)</label><input id="dinStepM-${i}" type="number" value="${s.months}" min="1" step="1" oninput="updateDinStep(${i},'months',this.value)" class="${DIN_INP}"></div>
-        <div><label class="${DIN_LAB}" for="dinStepR-${i}">Bunga dasar (% p.a.)</label><input id="dinStepR-${i}" type="number" value="${s.rate}" min="0" step="0.01" oninput="updateDinStep(${i},'rate',this.value)" class="${DIN_INP}"></div>
-      </div>
+      <div class="flex-1 min-w-0"><label class="${DIN_LAB}" for="dinStepM-${i}">Durasi (bulan)</label><input id="dinStepM-${i}" type="number" value="${s.months}" min="1" step="1" oninput="updateDinStep(${i},'months',this.value)" class="${DIN_INP}"></div>
+      <div class="flex-1 min-w-0"><label class="${DIN_LAB}" for="dinStepR-${i}">Bunga dasar (% p.a.)</label><input id="dinStepR-${i}" type="number" value="${s.rate}" min="0" step="0.01" oninput="updateDinStep(${i},'rate',this.value)" class="${DIN_INP}"></div>
+      ${n > 1 ? `<button type="button" onclick="removeDinStep(${i})" aria-label="Hapus tahap ${i + 1}" class="shrink-0 h-9 w-7 text-slate-400 hover:text-red-500 text-sm leading-none transition">✕</button>` : ''}
     </div>`;
   }).join('');
   document.getElementById('dinAddStep').disabled = din.steps.length >= DIN_MAX_STEPS;
@@ -265,11 +263,11 @@ function renderDinVars() {
         <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
           <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-bold">${i + 1}</span> Variasi ${i + 1}
         </span>
-        <button type="button" onclick="removeDinVar(${i})" aria-label="Hapus variasi ${i + 1}" class="text-slate-400 hover:text-sky-500 text-sm leading-none transition">✕</button>
+        <button type="button" onclick="removeDinVar(${i})" aria-label="Hapus variasi ${i + 1}" class="text-slate-400 hover:text-red-500 text-sm leading-none transition">✕</button>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <div class="col-span-2 sm:col-span-1 xl:col-span-2"><label class="${DIN_LAB}" for="dinVarA-${i}">Jumlah dana (Rp)</label><input id="dinVarA-${i}" type="text" inputmode="numeric" value="${formatThousands(v.amount)}" oninput="formatField(this); updateDinVar(${i},'amount',this.value)" class="${DIN_INP}"></div>
-        <div class="col-span-2 sm:col-span-1 xl:col-span-2"><label class="${DIN_LAB}" for="dinVarJ-${i}">Jenis dana</label>
+        <div class="col-span-2 sm:col-span-1"><label class="${DIN_LAB}" for="dinVarA-${i}">Jumlah dana (Rp)</label><input id="dinVarA-${i}" type="text" inputmode="numeric" value="${formatThousands(v.amount)}" oninput="formatField(this); updateDinVar(${i},'amount',this.value)" class="${DIN_INP}"></div>
+        <div class="col-span-2 sm:col-span-1"><label class="${DIN_LAB}" for="dinVarJ-${i}">Jenis dana</label>
           <select id="dinVarJ-${i}" onchange="updateDinVar(${i},'jenis',this.value)" class="w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition">
             ${DIN_JENIS.map(j => `<option ${j === v.jenis ? 'selected' : ''}>${j}</option>`).join('')}
           </select></div>
@@ -380,25 +378,25 @@ function renderDinSummary(sim, base, plafon) {
   const third = din.method === 'tetap'
     ? `<div class="${card}">
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Lunas di Bulan ke</p>
-        <h3 class="text-2xl font-bold mb-1 num ${faster > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${sim.paidOff}<span class="text-xs font-normal text-slate-400"> / ${sim.tenor} bln</span></h3>
+        <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap ${faster > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${sim.paidOff}<span class="text-xs font-normal text-slate-400"> / ${sim.tenor} bln</span></h3>
         <p class="text-[11px] text-slate-400 dark:text-slate-500">${faster > 0 ? `${monthsToText(faster)} lebih cepat dari tenor` : 'Sesuai tenor'}</p>
       </div>`
     : `<div class="${card}">
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
-        <h3 class="text-2xl font-bold mb-1 num text-slate-800 dark:text-slate-100">${fmtCompact(sim.totalPayment)}</h3>
+        <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap text-slate-800 dark:text-slate-100">${fmtCompact(sim.totalPayment)}</h3>
         <p class="text-[11px] text-slate-400 dark:text-slate-500">Pokok ${fmtCompact(plafon)} + Bunga ${fmtCompact(sim.totalInterest)}</p>
       </div>`;
   document.getElementById('dinSummary').innerHTML = `
     <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,#0072C6,#00529C)">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
       <p class="text-blue-100 text-xs font-semibold mb-1">Angsuran Bulan ke-1</p>
-      <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
+      <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
       <p class="text-[11px] text-blue-200">${Math.round(baseFirst) !== Math.round(first) ? 'Tanpa dana pengurang ' + fmtMoney(Math.round(baseFirst)) : 'Bunga efektif ' + fmtPct(sim.rows[0] ? sim.rows[0].eff : 0)}</p>
     </div>
     <div class="${card}">
       <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Hemat Bunga</p>
-      <h3 class="text-2xl font-bold mb-1 num ${hemat > 0.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${fmtCompact(Math.max(0, hemat))}</h3>
-      <p class="text-[11px] text-slate-400 dark:text-slate-500">Total bunga ${fmtCompact(sim.totalInterest)} (tanpa dana ${fmtCompact(base.totalInterest)})</p>
+      <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap ${hemat > 0.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${fmtCompact(Math.max(0, hemat))}</h3>
+      <p class="text-[11px] text-slate-400 dark:text-slate-500">Bunga ${fmtCompact(base.totalInterest)} → ${fmtCompact(sim.totalInterest)}</p>
     </div>
     ${third}`;
 
@@ -426,12 +424,12 @@ function renderDinMetrics(sim, base, plafon, vars) {
       bigCell('Total Pembayaran', fmtMoney(Math.round(sim.totalPayment)), Object.assign({ sub: 'Pokok ' + fmtCompact(plafon) + ' + Bunga ' + fmtCompact(sim.totalInterest) }, blue)) +
       bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), blue) +
       bigCell('Rentang Angsuran', fmtCompact(minP) + ' – ' + fmtCompact(maxP), Object.assign({ sub: 'Terendah – tertinggi per bulan' }, blue)) +
-      bigCell('Bunga Efektif Rata-rata', fmtPct(avgEff), Object.assign({ sub: 'Bunga dasar rata-rata ' + fmtPct(avgBase) + ' · pengurang aktif ' + monthsActive + ' bln' }, blue))) +
+      bigCell('Bunga Efektif Rata-rata', fmtPct(avgEff), Object.assign({ sub: 'Bunga dasar rata-rata ' + fmtPct(avgBase) + ' · pengurang aktif ' + monthsActive + ' bln' }, blue)), 'lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4') +
     metricSection('Tanpa Dana Pengurang (Pembanding)', 'bg-briorange',
       bigCell('Total Pembayaran', fmtMoney(Math.round(base.totalPayment)), org) +
       bigCell('Total Bunga', fmtMoney(Math.round(base.totalInterest)), org) +
       bigCell('Rentang Angsuran', fmtCompact(Math.min(...basePm)) + ' – ' + fmtCompact(Math.max(...basePm)), Object.assign({ sub: 'Terendah – tertinggi per bulan' }, org)) +
-      bigCell('Jangka Waktu', base.paidOff + ' bln', Object.assign({ sub: monthsToText(base.paidOff) }, org)));
+      bigCell('Jangka Waktu', base.paidOff + ' bln', Object.assign({ sub: monthsToText(base.paidOff) }, org)), 'lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4');
 }
 
 function renderDinChart(sim, base, plafon) {

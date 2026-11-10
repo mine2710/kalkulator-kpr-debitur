@@ -609,10 +609,10 @@
       </div>
 
       <!-- ═══════════ KPR DINAMIS (dana pengurang bunga) ═══════════ -->
-      <div data-modes="kpr-dinamis" class="hidden grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div data-modes="kpr-dinamis" class="hidden grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
         <!-- ─── LEFT: INPUTS ─── -->
-        <div class="xl:col-span-4 space-y-6">
+        <div class="xl:col-span-5 space-y-6">
 
           <!-- Data kredit + metode -->
           <div
@@ -649,7 +649,7 @@
 
           <!-- Tahapan suku bunga dasar -->
           <div
-            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-orange-900/60 border-l-4 border-l-briorange transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#F58220" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -706,7 +706,7 @@
         </div>
 
         <!-- ─── RIGHT: OUTPUTS ─── -->
-        <div class="xl:col-span-8 space-y-6">
+        <div class="xl:col-span-7 space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="dinSummary"></div>
           <div id="dinBanner" aria-live="polite"></div>
 
