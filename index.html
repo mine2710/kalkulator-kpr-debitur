@@ -612,9 +612,9 @@
       <div data-modes="kpr-dinamis" class="hidden grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
         <!-- ─── LEFT: INPUTS ─── -->
-        <div class="xl:col-span-5 space-y-6">
+        <div class="xl:col-span-4 space-y-6">
 
-          <!-- Data kredit + metode -->
+          <!-- Skema KPR Dinamis + Tahapan Suku Bunga (Sejajar & Identik dengan KPR Baru) -->
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
@@ -623,19 +623,34 @@
                 <path d="M2 14V6l7-4 7 4v8" />
                 <path d="M7 16v-5h4v5" />
               </svg>
-              Data Kredit
+              <span>Skema KPR Dinamis</span>
             </h2>
+
             <div class="space-y-4">
-              <div>
-                <label for="dinPlafon" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Plafon Kredit</label>
-                <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
-                  <input type="text" id="dinPlafon" value="1.000.000.000" inputmode="numeric"
-                    class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
-                    oninput="onDinPlafon(this)">
+              <!-- Plafon & Tenor (grid cols-5 persis KPR Baru) -->
+              <div class="grid grid-cols-5 gap-3">
+                <div class="col-span-3">
+                  <label for="dinPlafon"
+                    class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Jumlah
+                    Pinjaman (Plafon)</label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
+                    <input type="text" id="dinPlafon" value="1.000.000.000" inputmode="numeric"
+                      class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      oninput="onDinPlafon(this)">
+                  </div>
+                  <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinPlafonWords"></p>
                 </div>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinPlafonWords"></p>
+                <div class="col-span-2">
+                  <label for="dinTenor" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Tenor
+                    (bulan)</label>
+                  <input type="number" id="dinTenor" step="1" disabled
+                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition disabled:opacity-75 disabled:cursor-not-allowed">
+                  <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinTenorWords"></p>
+                </div>
               </div>
+
+              <!-- Metode Angsuran -->
               <div>
                 <p class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Metode Angsuran</p>
                 <div class="flex rounded-lg border border-slate-200 dark:border-slate-600 p-0.5 bg-slate-100 dark:bg-slate-700/70 text-xs font-semibold" role="group" aria-label="Metode angsuran">
@@ -644,37 +659,51 @@
                 </div>
                 <p id="dinMethodHint" class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed"></p>
               </div>
+
+              <!-- Dropdown 1: Kategori Program (Tier) -->
+              <div>
+                <label for="dinTierSelect"
+                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kategori Program (Tier)</label>
+                <select id="dinTierSelect" onchange="onDinTierChange()"
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  <option value="Bukan Tier 1">Bukan Tier 1</option>
+                  <option value="Tier 1">Tier 1</option>
+                </select>
+              </div>
+
+              <!-- Dropdown 2: Program Suku Bunga -->
+              <div>
+                <label for="dinProgram"
+                  class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Program Suku Bunga</label>
+                <select id="dinProgram" onchange="onDinProgramChange()"
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  <option value="">Manual (custom)</option>
+                </select>
+              </div>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 -mt-2" id="dinProgramHint"></p>
+            </div>
+
+            <!-- Tahapan Suku Bunga -->
+            <div class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#F58220" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 14 L6 9 L10 11 L16 3" />
+                  <path d="M12 3h4v4" />
+                </svg>
+                Tahapan Suku Bunga Dasar
+              </h3>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Bunga sebelum dikurangi dana nasabah. Memilih program akan otomatis mengisi durasi dan bunga.</p>
+              <div id="dinSteps" class="space-y-2.5"></div>
+              <div class="flex gap-2 mt-3">
+                <button type="button" id="dinAddStep" onclick="addDinStep()"
+                  class="flex-1 text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-bri hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+
+                  Tambah Tahap</button>
+              </div>
             </div>
           </div>
 
-          <!-- Tahapan suku bunga dasar -->
-          <div
-            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-orange-900/60 border-l-4 border-l-briorange transition-all duration-200 hover:shadow-md">
-            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#F58220" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M2 14 L6 9 L10 11 L16 3" />
-                <path d="M12 3h4v4" />
-              </svg>
-              Tahapan Suku Bunga Dasar
-            </h2>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Bunga sebelum dikurangi dana nasabah. Total tenor = jumlah durasi semua tahap.</p>
-            <div class="mb-3">
-              <label for="dinProgram" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Salin dari program KPR (opsional)</label>
-              <select id="dinProgram" onchange="onDinProgram()"
-                class="w-full px-3 py-2 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
-                <option value="">— Isi manual —</option>
-              </select>
-            </div>
-            <div id="dinSteps" class="space-y-2.5"></div>
-            <div class="flex items-center justify-between gap-3 mt-3">
-              <p id="dinTenorInfo" class="text-xs text-slate-500 dark:text-slate-400"></p>
-              <button type="button" id="dinAddStep" onclick="addDinStep()"
-                class="shrink-0 text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-bri hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg px-3 py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+ Tambah Tahap</button>
-            </div>
-          </div>
-
-          <!-- Dana pengurang (variasi) -->
+          <!-- Card 2: Dana Pengurang Bunga -->
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-emerald-800 border-l-4 border-l-emerald-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
@@ -706,25 +735,30 @@
         </div>
 
         <!-- ─── RIGHT: OUTPUTS ─── -->
-        <div class="xl:col-span-7 space-y-6">
+        <div class="xl:col-span-8 space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="dinSummary"></div>
           <div id="dinBanner" aria-live="polite"></div>
 
+          <!-- Charts -->
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
-            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
               <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 3v14h14" />
                 <path d="M6 12l3-4 3 2 4-6" />
               </svg>
-              Sisa Pokok &amp; Bunga Efektif
+              Visualisasi Data
             </h2>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Garis hijau (sumbu kanan) menunjukkan bunga efektif setelah dikurangi dana nasabah.</p>
+            <div class="mb-3">
+              <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Sisa Pokok &amp; Bunga Efektif</p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500">Garis hijau (sumbu kanan) menunjukkan bunga efektif setelah dikurangi dana nasabah.</p>
+            </div>
             <div class="relative h-72 md:h-80"><canvas id="dinChart"
                 aria-label="Grafik sisa pokok dengan dan tanpa dana pengurang, serta bunga efektif per bulan" role="img"></canvas></div>
           </div>
 
+          <!-- Metrics grid -->
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">

@@ -497,7 +497,7 @@ const MODES = {
     who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: pindah ke BRI pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
     calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR BRI dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
     need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program yang diajukan ke BRI.'],
-    ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
+    ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-blue-50 text-bri dark:bg-slate-700 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-bri-dark', tab: 'bg-bri text-white' },
   },
   'kpr-dinamis': {
     short: 'KPR Dinamis', icon: '📉', mainTitle: 'KPR Dinamis',
@@ -539,7 +539,7 @@ function renderTabs() {
       ? 'text-white/80 hover:text-white hover:bg-white/15'
       : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
     return `<div class="relative">
-      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition ${tabCls}">
+      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-1.5 md:gap-2 rounded-xl px-3 sm:px-4 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-semibold transition ${tabCls}">
         ${modeIcon(k)}<span class="text-center leading-tight">${m.short}</span>
       </a>
       <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.short}" title="Info program"

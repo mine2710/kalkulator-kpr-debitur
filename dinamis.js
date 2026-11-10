@@ -160,20 +160,20 @@ function updateDinStep(i, key, val) {
   if (!din.steps[i]) return;
   if (key === 'months') din.steps[i].months = dinNum(val, 1, 1);
   else din.steps[i].rate = Math.max(0, Number(val) || 0);
-  document.getElementById('dinProgram').value = '';
+  const selP = document.getElementById('dinProgram'); if (selP) selP.value = ''; updateDinProgramHint();
   dinSchedule();
 }
 function addDinStep() {
   if (din.steps.length >= DIN_MAX_STEPS) return;
   const last = din.steps[din.steps.length - 1];
   din.steps.push({ months: 12, rate: last ? last.rate : 10 });
-  document.getElementById('dinProgram').value = '';
+  const selP = document.getElementById('dinProgram'); if (selP) selP.value = ''; updateDinProgramHint();
   renderDinSteps(); dinSchedule();
 }
 function removeDinStep(i) {
   if (din.steps.length <= 1) return;
   din.steps.splice(i, 1);
-  document.getElementById('dinProgram').value = '';
+  const selP = document.getElementById('dinProgram'); if (selP) selP.value = ''; updateDinProgramHint();
   renderDinSteps(); dinSchedule();
 }
 
@@ -198,20 +198,84 @@ function removeDinVar(i) {
   renderDinVars(); dinSchedule();
 }
 
-function onDinProgram() {
-  const sel = document.getElementById('dinProgram');
-  const [tier, key] = (sel.value || '').split('::');
-  const p = PROGRAMS[tier] && PROGRAMS[tier][key];
-  if (!p) return;
-  din.steps = p.segments.slice(0, DIN_MAX_STEPS).map(([months, rate]) => ({ months, rate: +Number(rate).toFixed(4) }));
-  renderDinSteps(); dinSchedule();
+let dinCurrentTier = 'Bukan Tier 1';
+
+function onDinTierChange() {
+  const tierSel = document.getElementById('dinTierSelect');
+  if (!tierSel) return;
+  dinCurrentTier = tierSel.value;
+  populateDinProgramDropdown();
+  onDinProgramChange();
 }
-function populateDinProgram() {
+
+function onDinProgramChange() {
   const sel = document.getElementById('dinProgram');
   if (!sel) return;
-  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-  sel.innerHTML = '<option value="">— Isi manual —</option>' + Object.keys(PROGRAMS).map(t =>
-    `<optgroup label="${esc(t)}">${Object.keys(PROGRAMS[t]).map(k => `<option value="${esc(t + '::' + k)}">${esc(PROGRAMS[t][k].name)}</option>`).join('')}</optgroup>`).join('');
+  const key = sel.value;
+  updateDinProgramHint();
+  if (!key) return; // manual
+  const list = (typeof PROGRAMS !== 'undefined' && PROGRAMS[dinCurrentTier]) ? PROGRAMS[dinCurrentTier] : {};
+  const p = list[key];
+  if (!p) return;
+  din.steps = p.segments.slice(0, DIN_MAX_STEPS).map(([months, rate]) => ({ months, rate: +Number(rate).toFixed(4) }));
+  renderDinSteps();
+  dinSchedule();
+}
+
+function populateDinTierDropdown() {
+  const tierSel = document.getElementById('dinTierSelect');
+  if (!tierSel) return;
+  const tiers = typeof PROGRAMS !== 'undefined' ? Object.keys(PROGRAMS) : [];
+  if (!tiers.length) return;
+  const ordered = ['Bukan Tier 1', 'Tier 1'].filter(t => tiers.includes(t))
+    .concat(tiers.filter(t => t !== 'Bukan Tier 1' && t !== 'Tier 1'));
+  if (typeof PROGRAMS !== 'undefined' && !PROGRAMS[dinCurrentTier]) dinCurrentTier = ordered[0] || 'Bukan Tier 1';
+  tierSel.innerHTML = '';
+  ordered.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t;
+    o.textContent = t;
+    tierSel.appendChild(o);
+  });
+  tierSel.value = dinCurrentTier;
+}
+
+function populateDinProgramDropdown(preserveKey) {
+  const sel = document.getElementById('dinProgram');
+  if (!sel) return;
+  const prevKey = preserveKey !== undefined ? preserveKey : sel.value;
+  sel.innerHTML = '<option value="">Manual (custom)</option>';
+  const list = (typeof PROGRAMS !== 'undefined' && PROGRAMS[dinCurrentTier]) ? PROGRAMS[dinCurrentTier] : {};
+  Object.keys(list).forEach(k => {
+    const p = list[k];
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+  if (prevKey && list[prevKey]) {
+    sel.value = prevKey;
+  } else {
+    sel.value = '';
+  }
+  updateDinProgramHint();
+}
+
+function updateDinProgramHint() {
+  const sel = document.getElementById('dinProgram'), hint = document.getElementById('dinProgramHint');
+  if (!sel || !hint) return;
+  const key = sel.value;
+  if (!key) { hint.textContent = ''; return; }
+  const list = (typeof PROGRAMS !== 'undefined' && PROGRAMS[dinCurrentTier]) ? PROGRAMS[dinCurrentTier] : {};
+  const p = list[key];
+  if (!p) { hint.textContent = ''; return; }
+  const segText = p.segments.map(([m, r]) => `${m} bln (${r}%)`).join(' + ');
+  hint.textContent = `Skema: ${segText}`;
+}
+
+function populateDinProgram() {
+  populateDinTierDropdown();
+  populateDinProgramDropdown();
 }
 
 function toggleDinTier() {
@@ -331,7 +395,12 @@ function calcDinamis() {
   let cum = 0;
   steps.forEach((s, i) => { const el = document.getElementById('dinStepRange-' + i); const f = cum + 1; cum += s.months; if (el) el.textContent = `bln ${f}–${cum}`; });
   const tenor = cum;
-  document.getElementById('dinTenorInfo').innerHTML = `Total tenor <b class="num text-slate-700 dark:text-slate-200">${tenor} bln</b> (${monthsToText(tenor)})`;
+  const tEl = document.getElementById('dinTenor');
+  if (tEl) tEl.value = tenor;
+  const twEl = document.getElementById('dinTenorWords');
+  if (twEl) twEl.textContent = '≈ ' + monthsToText(tenor);
+  const tiEl = document.getElementById('dinTenorInfo');
+  if (tiEl) tiEl.innerHTML = `Total tenor <b class="num text-slate-700 dark:text-slate-200">${tenor} bln</b> (${monthsToText(tenor)})`;
 
   if (plafon <= 0) {
     document.getElementById('dinSummary').innerHTML = '<p class="sm:col-span-3 text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700">Isi plafon kredit untuk melihat simulasi.</p>';
@@ -374,31 +443,35 @@ function renderDinSummary(sim, base, plafon) {
   const baseFirst = base.rows[0] ? base.rows[0].payment : 0;
   const hemat = base.totalInterest - sim.totalInterest;
   const faster = base.paidOff - sim.paidOff;
-  const card = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
-  const third = din.method === 'tetap'
-    ? `<div class="${card}">
-        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Lunas di Bulan ke</p>
-        <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap ${faster > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${sim.paidOff}<span class="text-xs font-normal text-slate-400"> / ${sim.tenor} bln</span></h3>
-        <p class="text-[11px] text-slate-400 dark:text-slate-500">${faster > 0 ? `${monthsToText(faster)} lebih cepat dari tenor` : 'Sesuai tenor'}</p>
-      </div>`
-    : `<div class="${card}">
-        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
-        <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap text-slate-800 dark:text-slate-100">${fmtCompact(sim.totalPayment)}</h3>
-        <p class="text-[11px] text-slate-400 dark:text-slate-500">Pokok ${fmtCompact(plafon)} + Bunga ${fmtCompact(sim.totalInterest)}</p>
-      </div>`;
-  document.getElementById('dinSummary').innerHTML = `
+  const whiteCard = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
+
+  const card1 = `
     <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,#0072C6,#00529C)">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
-      <p class="text-blue-100 text-xs font-semibold mb-1">Angsuran Bulan ke-1</p>
-      <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
-      <p class="text-[11px] text-blue-200">${Math.round(baseFirst) !== Math.round(first) ? 'Tanpa dana pengurang ' + fmtMoney(Math.round(baseFirst)) : 'Bunga efektif ' + fmtPct(sim.rows[0] ? sim.rows[0].eff : 0)}</p>
-    </div>
-    <div class="${card}">
-      <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Hemat Bunga</p>
-      <h3 class="text-xl 2xl:text-2xl font-bold mb-1 num whitespace-nowrap ${hemat > 0.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-100'}">${fmtCompact(Math.max(0, hemat))}</h3>
-      <p class="text-[11px] text-slate-400 dark:text-slate-500">Bunga ${fmtCompact(base.totalInterest)} → ${fmtCompact(sim.totalInterest)}</p>
-    </div>
-    ${third}`;
+      <p class="text-blue-100 text-xs font-semibold mb-1">Angsuran KPR (Bulan ke-1)</p>
+      <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
+      <p class="text-[11px] text-blue-200">${Math.round(baseFirst) !== Math.round(first) ? 'Tanpa dana: ' + fmtMoney(Math.round(baseFirst)) + '/bln' : 'Bunga efektif ' + fmtPct(sim.rows[0] ? sim.rows[0].eff : 0)}</p>
+    </div>`;
+
+  const card2 = `
+    <div class="${whiteCard} flex flex-col justify-between">
+      <div>
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
+        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 num">${fmtCompact(sim.totalPayment)}</h3>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(plafon)}</span> + Bunga <span class="font-semibold text-bri dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
+    </div>`;
+
+  const card3 = `
+    <div class="${whiteCard} flex flex-col justify-between">
+      <div>
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Bunga</p>
+        <h3 class="text-2xl font-bold text-bri dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
+      </div>
+      <p class="text-[11px] text-slate-400 dark:text-slate-500">${hemat > 0.5 ? 'Hemat bunga ' + fmtCompact(Math.max(0, hemat)) + (faster > 0 ? ' · ' + monthsToText(faster) + ' lebih cepat' : '') : 'Akumulasi selama ' + sim.paidOff + ' bulan'}</p>
+    </div>`;
+
+  document.getElementById('dinSummary').innerHTML = `${card1}${card2}${card3}`;
 
   const banner = document.getElementById('dinBanner');
   if (hemat > 0.5) {
@@ -605,7 +678,8 @@ function parseTieringCsv(csvText) {
     const line = rawLine.trim();
     if (!line || line.startsWith('#')) continue;
     const sep = line.includes(';') ? ';' : (line.includes('\t') ? '\t' : ',');
-    const cols = line.split(sep).map(c => c.trim().replace(/^[\"\']|[\"\']$/g, ''));
+    const cleanCell = s => { let t = String(s || "").trim(); if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) t = t.slice(1, -1).trim(); return t; };
+    const cols = line.split(sep).map(cleanCell);
     if (cols.length < 5) continue;
     if (cols[0].toLowerCase().includes('batas') || cols[0].toLowerCase().includes('ratio') || isNaN(parseFloat(cols[0]))) continue;
     result.push([
@@ -622,6 +696,11 @@ function parseTieringCsv(csvText) {
 if (typeof window !== 'undefined') {
   window.setDinTiers = setDinTiers;
   window.parseTieringCsv = parseTieringCsv;
+  window.populateDinTierDropdown = populateDinTierDropdown;
+  window.populateDinProgramDropdown = populateDinProgramDropdown;
+  window.onDinTierChange = onDinTierChange;
+  window.onDinProgramChange = onDinProgramChange;
+  window.populateDinProgram = populateDinProgram;
   if (window._cachedApiTiering) {
     setDinTiers(window._cachedApiTiering);
   }
@@ -632,12 +711,19 @@ function dinInit() {
   dinRestore();
   if (typeof window !== "undefined" && window._cachedApiTiering) setDinTiers(window._cachedApiTiering);
   const p = document.getElementById('dinPlafon');
-  p.value = formatThousands(din.plafon);
-  document.getElementById('dinPlafonWords').textContent = '≈ ' + terbilang(din.plafon) + ' rupiah';
+  if (p) p.value = formatThousands(din.plafon);
+  const pw = document.getElementById('dinPlafonWords');
+  if (pw) pw.textContent = '≈ ' + terbilang(din.plafon) + ' rupiah';
+  const tenor = din.steps.reduce((a, s) => a + s.months, 0);
+  const tEl = document.getElementById('dinTenor');
+  if (tEl) tEl.value = tenor;
+  const twEl = document.getElementById('dinTenorWords');
+  if (twEl) twEl.textContent = '≈ ' + monthsToText(tenor);
   dinSyncMethodUI();
+  populateDinTierDropdown();
+  populateDinProgramDropdown();
   renderDinSteps();
   renderDinVars();
-  if (typeof PROGRAMS !== "undefined" && Object.keys(PROGRAMS).length) populateDinProgram();
 }
 
 // ekspor untuk pengujian di Node (diabaikan di browser)
