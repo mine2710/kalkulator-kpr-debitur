@@ -171,7 +171,7 @@
 
       <!-- Tab program di atas (tablet & laptop) -->
       <nav id="modeTabs" aria-label="Jenis simulasi"
-        class="hidden md:grid grid-cols-3 gap-1.5 bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+        class="hidden md:grid grid-cols-4 gap-1.5 bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
       </nav>
 
       <!-- Judul program aktif + tombol (i) di bagian atas (khusus HP) -->
@@ -185,7 +185,7 @@
         <div id="infoBody"></div>
       </dialog>
 
-      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div data-modes="kpr-baru to-float to-fix" class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
         <!-- ─── LEFT: INPUTS ─── -->
         <div class="xl:col-span-4 space-y-6">
@@ -575,7 +575,7 @@
       </div>
 
       <!-- ═══ RINGKASAN TAHAP ═══ -->
-      <div
+      <div data-modes="kpr-baru to-float to-fix"
         class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
           <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
@@ -588,7 +588,7 @@
       </div>
 
       <!-- ═══ JADWAL AMORTISASI (collapsible) ═══ -->
-      <div
+      <div data-modes="kpr-baru to-float to-fix"
         class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleAmort()"
           aria-controls="amortWrap">
@@ -607,6 +607,171 @@
           <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700" id="amortTable"></div>
         </div>
       </div>
+
+      <!-- ═══════════ KPR DINAMIS (dana pengurang bunga) ═══════════ -->
+      <div data-modes="kpr-dinamis" class="hidden grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- ─── LEFT: INPUTS ─── -->
+        <div class="xl:col-span-4 space-y-6">
+
+          <!-- Data kredit + metode -->
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 14V6l7-4 7 4v8" />
+                <path d="M7 16v-5h4v5" />
+              </svg>
+              Data Kredit
+            </h2>
+            <div class="space-y-4">
+              <div>
+                <label for="dinPlafon" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Plafon Kredit</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
+                  <input type="text" id="dinPlafon" value="1.000.000.000" inputmode="numeric"
+                    class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                    oninput="onDinPlafon(this)">
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinPlafonWords"></p>
+              </div>
+              <div>
+                <p class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Metode Angsuran</p>
+                <div class="flex rounded-lg border border-slate-200 dark:border-slate-600 p-0.5 bg-slate-100 dark:bg-slate-700/70 text-xs font-semibold" role="group" aria-label="Metode angsuran">
+                  <button type="button" id="dinMethod-adjust" onclick="setDinMethod('adjust')">Angsuran Menyesuaikan</button>
+                  <button type="button" id="dinMethod-tetap" onclick="setDinMethod('tetap')">Angsuran Tetap</button>
+                </div>
+                <p id="dinMethodHint" class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tahapan suku bunga dasar -->
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#F58220" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 14 L6 9 L10 11 L16 3" />
+                <path d="M12 3h4v4" />
+              </svg>
+              Tahapan Suku Bunga Dasar
+            </h2>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Bunga sebelum dikurangi dana nasabah. Total tenor = jumlah durasi semua tahap.</p>
+            <div class="mb-3">
+              <label for="dinProgram" class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Salin dari program KPR (opsional)</label>
+              <select id="dinProgram" onchange="onDinProgram()"
+                class="w-full px-3 py-2 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                <option value="">— Isi manual —</option>
+              </select>
+            </div>
+            <div id="dinSteps" class="space-y-2.5"></div>
+            <div class="flex items-center justify-between gap-3 mt-3">
+              <p id="dinTenorInfo" class="text-xs text-slate-500 dark:text-slate-400"></p>
+              <button type="button" id="dinAddStep" onclick="addDinStep()"
+                class="shrink-0 text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-bri hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg px-3 py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+ Tambah Tahap</button>
+            </div>
+          </div>
+
+          <!-- Dana pengurang (variasi) -->
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-emerald-800 border-l-4 border-l-emerald-600 transition-all duration-200 hover:shadow-md">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+              <svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="5" width="14" height="10" rx="2" />
+                <circle cx="9" cy="10" r="2" />
+              </svg>
+              Dana Pengurang Bunga
+            </h2>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Rasio = jumlah dana ÷ plafon. Pengurang diambil dari tabel tiering sesuai rasio &amp; jenis dana, berlaku selama durasi penempatan.</p>
+            <div id="dinVars" class="space-y-2.5"></div>
+            <button type="button" id="dinAddVar" onclick="addDinVar()"
+              class="w-full mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border border-slate-200 dark:border-slate-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-lg py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+ Tambah Variasi</button>
+            <div id="dinVarWarn" aria-live="polite" class="mt-3 text-[11px] leading-relaxed text-amber-700 dark:text-amber-300 empty:hidden rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-3 py-2"></div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <button type="button" onclick="toggleDinTier()" aria-controls="dinTierWrap"
+                class="w-full flex items-center justify-between text-xs font-semibold text-bri dark:text-blue-300">
+                <span>Tabel Tiering Pengurang (Usulan CSL Group 80% LS)</span>
+                <span id="dinTierArrow" class="text-slate-400 transition-transform" style="transform:rotate(-90deg)" aria-hidden="true">▼</span>
+              </button>
+              <div id="dinTierWrap" class="hidden mt-3">
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 mb-2">Pengurang dalam poin persen (% p.a.). Sel hijau = tier yang sedang dipakai.</p>
+                <div id="dinTierTable" class="max-h-72 overflow-auto rounded-lg border border-slate-100 dark:border-slate-700"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── RIGHT: OUTPUTS ─── -->
+        <div class="xl:col-span-8 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="dinSummary"></div>
+          <div id="dinBanner" aria-live="polite"></div>
+
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 3v14h14" />
+                <path d="M6 12l3-4 3 2 4-6" />
+              </svg>
+              Sisa Pokok &amp; Bunga Efektif
+            </h2>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-3">Garis hijau (sumbu kanan) menunjukkan bunga efektif setelah dikurangi dana nasabah.</p>
+            <div class="relative h-72 md:h-80"><canvas id="dinChart"
+                aria-label="Grafik sisa pokok dengan dan tanpa dana pengurang, serta bunga efektif per bulan" role="img"></canvas></div>
+          </div>
+
+          <div
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 4h14M3 9h14M3 14h9" />
+              </svg>
+              Ringkasan Simulasi KPR Dinamis
+            </h2>
+            <div class="space-y-5" id="dinMetrics"></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-modes="kpr-dinamis"
+        class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+        <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
+          <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 3h16v14H2zM2 8h16M7 8v9" />
+          </svg>
+          Periode Bunga Efektif
+        </h2>
+        <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-4">Bulan-bulan dengan tahap dan pengurang yang sama digabung menjadi satu periode.</p>
+        <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700" id="dinPeriodTable"></div>
+      </div>
+
+      <div data-modes="kpr-dinamis"
+        class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
+        <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleDinAmort()"
+          aria-controls="dinAmortWrap">
+          <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 2h9l3 3v13H4z" />
+              <path d="M8 8h6M8 12h6" />
+            </svg>
+            Jadwal Angsuran Bulanan
+          </span>
+          <span id="dinAmortArrow" class="text-slate-400 text-sm transition-transform" style="transform:rotate(-90deg)"
+            aria-hidden="true">▼</span>
+        </button>
+        <div id="dinAmortWrap" class="hidden mt-4">
+          <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-2">Baris kuning = bulan pertama dengan bunga efektif baru.</p>
+          <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700" id="dinAmortTable"></div>
+        </div>
+      </div>
     </section>
 
     <p class="text-center text-xs text-slate-400 dark:text-slate-500 pb-4">Simulasi ini bersifat estimasi untuk edukasi
@@ -618,11 +783,12 @@
   <!-- ═══ BOTTOM NAV (HP, gaya BRImo) ═══ -->
   <nav id="bottomNav" aria-label="Jenis simulasi"
     class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700 shadow-[0_-4px_20px_rgba(15,23,42,0.08)] bottom-nav-safe">
-    <div id="bottomNavItems" class="grid grid-cols-3 max-w-lg mx-auto px-1.5"></div>
+    <div id="bottomNavItems" class="grid grid-cols-4 max-w-lg mx-auto px-1.5"></div>
   </nav>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
+  <script src="dinamis.js"></script>
 </body>
 
 </html>

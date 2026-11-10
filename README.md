@@ -32,8 +32,10 @@ kalkulator-kpr-debitur/
 ├── index.html                   # Halaman UI kalkulator
 ├── config.js                    # Konfigurasi endpoint & token (obfuscated)
 ├── script.js                    # Logika perhitungan, grafik & data loader (POST + fallback CSV)
+├── dinamis.js                   # Tab "KPR Dinamis": dana pengurang bunga (tiering CSL) — dari file Excel di Tambahan/
 ├── style.css                    # Styling tambahan
 ├── programs.csv                 # Data cadangan lokal suku bunga KPR
+├── tiering.csv                  # Data cadangan lokal tabel tiering KPR Dinamis
 ├── obfuscate.py / obfuscate.js  # Tool bantu enkripsi URL Web App & Token
 ├── google-apps-script/
 │   └── Code.gs                  # Kode backend untuk Google Spreadsheet Apps Script

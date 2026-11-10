@@ -246,6 +246,7 @@ function parseProgramsJson(items) {
 async function loadPrograms() {
   const sel = document.getElementById('program'), hint = document.getElementById('programHint');
   let loadedFromApi = false;
+  let tieringLoadedFromApi = false;
 
   const urlParams = new URLSearchParams(window.location.search);
   const forceCsv = urlParams.get('source') === 'csv';
@@ -265,10 +266,20 @@ async function loadPrograms() {
         const data = await res.json();
         if (data.status === 'error' || data.error) {
           console.warn('Otorisasi POST API ditolak oleh Google Apps Script:', data.message);
-        } else if (data && Array.isArray(data.programs) && data.programs.length) {
-          PROGRAMS = parseProgramsJson(data.programs);
-          loadedFromApi = true;
-          console.log(`Database program KPR berhasil dimuat via POST dari Google Spreadsheet (${data.programs.length} program).`);
+        } else {
+          if (data && Array.isArray(data.programs) && data.programs.length) {
+            PROGRAMS = parseProgramsJson(data.programs);
+            loadedFromApi = true;
+            console.log(`Database program KPR berhasil dimuat via POST dari Google Spreadsheet (${data.programs.length} program).`);
+          }
+          if (data && Array.isArray(data.tiering) && data.tiering.length) {
+            if (typeof window !== 'undefined') window._cachedApiTiering = data.tiering;
+            if (typeof setDinTiers === 'function') {
+              setDinTiers(data.tiering);
+              tieringLoadedFromApi = true;
+              console.log(`Database tiering KPR Dinamis berhasil dimuat via POST (${data.tiering.length} tier).`);
+            }
+          }
         }
       }
     } catch (apiErr) {
@@ -276,7 +287,7 @@ async function loadPrograms() {
     }
   }
 
-  // 2. Fallback cadangan ke file programs.csv lokal
+  // 2. Fallback cadangan ke file programs.csv lokal jika belum dimuat dari API
   if (!loadedFromApi) {
     try {
       const r = await fetch('programs.csv', { cache: 'no-cache' });
@@ -290,8 +301,26 @@ async function loadPrograms() {
     }
   }
 
+  // 3. Fallback cadangan ke file tiering.csv lokal jika belum dimuat dari API
+  if (!tieringLoadedFromApi) {
+    try {
+      const rTier = await fetch('tiering.csv', { cache: 'no-cache' });
+      if (rTier.ok && typeof parseTieringCsv === 'function') {
+        const text = await rTier.text();
+        const parsedTiers = parseTieringCsv(text);
+        if (parsedTiers && parsedTiers.length && typeof setDinTiers === 'function') {
+          setDinTiers(parsedTiers);
+          console.log(`Database tiering KPR Dinamis dimuat dari cadangan lokal (tiering.csv, ${parsedTiers.length} tier).`);
+        }
+      }
+    } catch (eTier) {
+      console.warn('Gagal memuat tiering.csv lokal:', eTier);
+    }
+  }
+
   populateTierDropdown();
   populateProgramDropdown();
+  if (typeof populateDinProgram === 'function') populateDinProgram();
 }
 function populateTierDropdown() {
   const tierSel = document.getElementById('tierSelect');
@@ -441,7 +470,7 @@ function recalcAll() {
 
 // ─── Take Over controls ───
 // ─── Halaman & mode simulasi ───
-const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix'];
+const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'];
 const MODES = {
   'kpr-baru': {
     short: 'KPR Baru', icon: '🏠', mainTitle: 'Skema KPR Baru',
@@ -470,6 +499,15 @@ const MODES = {
     need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program yang diajukan ke BRI.'],
     ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
   },
+  'kpr-dinamis': {
+    short: 'KPR Dinamis', icon: '📉', mainTitle: 'KPR Dinamis',
+    title: 'KPR Dinamis (Dana Pengurang Bunga)',
+    tagline: 'Simulasi angsuran KPR ketika debitur menempatkan dana (Tabungan, Giro, atau Deposito) di BRI sehingga suku bunga kredit berkurang sesuai tabel tiering.',
+    who: ['Debitur yang memiliki atau berencana menempatkan dana di BRI selama masa kredit.', 'Ingin melihat seberapa besar bunga dan angsuran turun dari dana yang ditempatkan.'],
+    calc: ['<b>Bunga efektif</b> tiap bulan = bunga dasar tahap + pengurang dari dana yang aktif (minimal 0%).', 'Dua metode: <b>Angsuran Tetap</b> (lunas lebih cepat) atau <b>Angsuran Menyesuaikan</b> (angsuran turun tiap bulan).', 'Penghematan bunga dibanding tanpa dana pengurang, serta jadwal angsuran bulanan.'],
+    need: ['Plafon kredit dan tahapan suku bunga dasar.', 'Jumlah dana, jenis dana, bulan mulai, dan durasi penempatan tiap variasi.'],
+    ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
+  },
 };
 function infoList(title, items, dot) {
   return `<div><p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1.5">${title}</p>
@@ -483,6 +521,7 @@ const MODE_ICONS = {
   'kpr-baru': '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/>',
   'to-float': '<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>',
   'to-fix': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  'kpr-dinamis': '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
 };
 function modeIcon(k, cls) {
   return `<svg class="${cls || 'h-5 w-5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MODE_ICONS[k]}</svg>`;
@@ -500,7 +539,7 @@ function renderTabs() {
       ? 'text-white/80 hover:text-white hover:bg-white/15'
       : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
     return `<div class="relative">
-      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-2 rounded-xl px-8 py-3 text-sm font-semibold transition ${tabCls}">
+      <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition ${tabCls}">
         ${modeIcon(k)}<span class="text-center leading-tight">${m.short}</span>
       </a>
       <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.short}" title="Info program"
@@ -991,6 +1030,7 @@ function computeTakeover(principal, sim, prebuiltFx) {
 
 // ─── Main calculate (real-time) ───
 function calculate() {
+  if (state.mode === 'kpr-dinamis') { if (typeof calcDinamis === 'function') calcDinamis(); return; }
   const s = sym();
   document.getElementById('curr1').textContent = s;
   document.getElementById('curr2').textContent = s;
@@ -1468,6 +1508,7 @@ function applySavedProgram() {
 function resetSaved() {
   _stateReady = false;
   try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  if (typeof resetDinamis === 'function') resetDinamis();
   location.reload();
 }
 
