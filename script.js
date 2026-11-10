@@ -591,7 +591,7 @@ function renderTabs() {
 function openInfo(k) {
   const m = MODES[k];
   document.getElementById('infoBody').innerHTML = `
-    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,#00529C,#0072C6)">
+    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--bri)),rgb(var(--bri-2)))">
       <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${modeIcon(k)}</span>
       <div class="flex-1">
         <h3 id="infoTitle" class="text-base font-bold leading-tight">${m.title}</h3>
@@ -1084,7 +1084,7 @@ function renderSummaryCards(sim, to, principal) {
   const whiteCard = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
 
   let html = `
-    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,#0072C6,#00529C)">
+    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--bri-2)),rgb(var(--bri)))">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
       <p class="text-blue-100 text-xs font-semibold mb-1">${to ? 'Angsuran Take Over' : 'Angsuran KPR'} ${multi ? '(Tahap 1)' : ''}</p>
       <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(firstPmt)}<span class="text-xs font-normal"> /bln</span></h3>
@@ -1155,6 +1155,11 @@ function bigCell(label, value, o) {
     <p class="text-[10px] sm:text-[11px] font-bold uppercase mb-1.5 break-words ${lc}">${label}</p>
     <p class="fit-val font-bold num ${vc}" style="--len:${f.len};--max:1.125rem">${f.s}</p>
     ${o.sub ? `<p class="text-[11px] mt-1 break-words ${sc}">${o.sub}</p>` : ''}</div>`;
+}
+// warna palet BRI dari variabel CSS (ikut mode cerah/gelap)
+function briColor(name, alpha) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '8 87 195';
+  return alpha === undefined ? `rgb(${v})` : `rgb(${v} / ${alpha})`;
 }
 function metricSection(title, dot, cells, cols) {
   return `<div>
@@ -1270,14 +1275,14 @@ function renderCharts(sim, to) {
   const balBaru = [parseNum(document.getElementById('principal').value)];
   sim.rows.forEach(r => balBaru.push(Math.max(0, r.endBalance)));
 
-  const dsSaldo = [{ label: to ? 'Saldo Take Over' : 'Saldo Pokok', data: downsample(balBaru, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.08)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
+  const dsSaldo = [{ label: to ? 'Saldo Take Over' : 'Saldo Pokok', data: downsample(balBaru, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.16), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
   let dsKum = [];
   let annos = {};
 
   if (to) {
     dsSaldo.push({ label: 'Saldo Sebelumnya', data: downsample(to.oldSaldo, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 });
     dsKum = [
-      { label: 'Kumulatif Take Over', data: downsample(to.cumNew, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.06)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
+      { label: 'Kumulatif Take Over', data: downsample(to.cumNew, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.14), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
       { label: 'Kumulatif Sebelumnya', data: downsample(to.cumOld, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
     ];
     if (to.meets.length) {
@@ -1302,7 +1307,7 @@ function renderCharts(sim, to) {
     syncTogglePillStyle(2, showBunga);
 
     dsKum = [
-      { label: 'Total Pembayaran (Pokok + Bunga)', data: downsample(cumTotal, 220), borderColor: '#00529C', backgroundColor: 'rgba(0,82,156,0.06)', borderWidth: 2.5, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showTotal },
+      { label: 'Total Pembayaran (Pokok + Bunga)', data: downsample(cumTotal, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.14), borderWidth: 2.5, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showTotal },
       { label: 'Kumulatif Pokok', data: downsample(cumPokok, 220), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.05)', borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showPokok },
       { label: 'Kumulatif Bunga', data: downsample(cumBunga, 220), borderColor: '#F58220', backgroundColor: 'rgba(245,130,32,0.05)', borderWidth: 2, borderDash: [5, 4], fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showBunga },
     ];

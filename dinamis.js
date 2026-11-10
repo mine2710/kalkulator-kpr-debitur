@@ -446,7 +446,7 @@ function renderDinSummary(sim, base, plafon) {
   const whiteCard = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
 
   const card1 = `
-    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,#0072C6,#00529C)">
+    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--bri-2)),rgb(var(--bri)))">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
       <p class="text-blue-100 text-xs font-semibold mb-1">Angsuran KPR (Bulan ke-1)</p>
       <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
@@ -512,9 +512,9 @@ function renderDinChart(sim, base, plafon) {
 
   const dark = isDark();
   const tick = dark ? '#94a3b8' : '#64748b', grid = dark ? 'rgba(148,163,184,0.14)' : '#eef2f7', legend = dark ? '#cbd5e1' : '#475569';
-  const blue = dark ? '#4AA3E8' : '#00529C';
+  const blue = dark ? '#4AA3E8' : briColor('--bri');
   const ds = [
-    { label: 'Sisa pokok (dengan dana)', data: downsample(saldo, 240), borderColor: blue, backgroundColor: dark ? 'rgba(74,163,232,0.10)' : 'rgba(0,82,156,0.07)', borderWidth: 2.5, fill: true, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
+    { label: 'Sisa pokok (dengan dana)', data: downsample(saldo, 240), borderColor: blue, backgroundColor: dark ? 'rgba(74,163,232,0.10)' : briColor('--bri-sky', 0.16), borderWidth: 2.5, fill: true, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
     { label: 'Sisa pokok (tanpa dana)', data: downsample(saldoBase, 240), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
     { label: 'Bunga efektif (%)', data: eff, borderColor: '#059669', borderWidth: 2, stepped: true, fill: false, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y1' },
     { label: 'Bunga dasar (%)', data: baseRate, borderColor: dark ? '#64748b' : '#94a3b8', borderDash: [2, 3], borderWidth: 1.5, stepped: true, fill: false, pointRadius: 0, pointHoverRadius: 3, yAxisID: 'y1' },

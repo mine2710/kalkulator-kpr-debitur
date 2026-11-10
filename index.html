@@ -16,7 +16,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: { bri: '#00529C', 'bri-dark': '#003C73', 'bri-light': '#E4EFF9', briorange: '#F58220' },
+          colors: { bri: 'rgb(var(--bri) / <alpha-value>)', 'bri-dark': 'rgb(var(--bri-dark) / <alpha-value>)', 'bri-2': 'rgb(var(--bri-2) / <alpha-value>)', 'bri-sky': 'rgb(var(--bri-sky) / <alpha-value>)', 'bri-light': '#E4EFF9', briorange: '#F58220' },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
         }
       }
@@ -32,6 +32,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    /* Palet biru BRI. Mode cerah: #0857C3 (utama), #307FE2 (sekunder), #71C5E8 (aksen). Mode gelap: palet lama. */
+    :root { --bri: 8 87 195; --bri-2: 48 127 226; --bri-sky: 113 197 232; --bri-dark: 6 66 150; }
+    .dark { --bri: 0 82 156; --bri-2: 0 114 198; --bri-sky: 74 163 232; --bri-dark: 0 60 115; }
+  </style>
   <style>
     /* ───── Phone mode: smaller fonts ───── */
     @media (max-width: 640px) {
@@ -338,7 +343,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 14V6l7-4 7 4v8" />
                 <path d="M7 16v-5h4v5" />
@@ -427,7 +432,7 @@
             <!-- Biaya Take Over (di dalam kartu Skema Take Over paling bawah) -->
             <div data-modes="to-float to-fix" class="hidden mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#00529C" stroke-width="2"
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="9" cy="9" r="7" />
                   <path d="M9 5v8M6.5 7.5h4a1.5 1.5 0 0 1 0 3h-3" />
@@ -461,7 +466,7 @@
           <div data-modes="kpr-baru"
             class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 5h14v10H2zM2 9h14" />
                 <path d="M5 12h3" />
@@ -526,7 +531,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 3v14h14" />
                 <path d="M6 12l3-4 3 2 4-6" />
@@ -538,8 +543,8 @@
                 <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Kumulatif Pembayaran (Pokok + Bunga)</p>
                 <div id="chartToggles" data-modes="kpr-baru" class="hidden flex flex-wrap items-center gap-2 text-xs font-semibold">
                   <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-slate-600 bg-blue-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-bri transition">
-                    <input type="checkbox" id="toggleTotal" checked onchange="toggleChartDataset(0, this.checked)" class="rounded accent-[#00529C] h-3.5 w-3.5 cursor-pointer">
-                    <span class="inline-block w-2 h-2 rounded-full bg-[#00529C]"></span>
+                    <input type="checkbox" id="toggleTotal" checked onchange="toggleChartDataset(0, this.checked)" class="rounded accent-bri h-3.5 w-3.5 cursor-pointer">
+                    <span class="inline-block w-2 h-2 rounded-full bg-bri"></span>
                     <span>Total</span>
                   </label>
                   <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-slate-600 bg-emerald-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-emerald-500 transition">
@@ -563,7 +568,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 4h14M3 9h14M3 14h9" />
               </svg>
@@ -578,7 +583,7 @@
       <div data-modes="kpr-baru to-float to-fix"
         class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round" aria-hidden="true">
             <path d="M2 3h16v14H2zM2 8h16M7 8v9" />
           </svg>
@@ -593,7 +598,7 @@
         <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleAmort()"
           aria-controls="amortWrap">
           <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" aria-hidden="true">
               <path d="M4 2h9l3 3v13H4z" />
               <path d="M8 8h6M8 12h6" />
@@ -618,7 +623,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 14V6l7-4 7 4v8" />
                 <path d="M7 16v-5h4v5" />
@@ -743,7 +748,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 3v14h14" />
                 <path d="M6 12l3-4 3 2 4-6" />
@@ -762,7 +767,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 4h14M3 9h14M3 14h9" />
               </svg>
@@ -776,7 +781,7 @@
       <div data-modes="kpr-dinamis"
         class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
-          <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round" aria-hidden="true">
             <path d="M2 3h16v14H2zM2 8h16M7 8v9" />
           </svg>
@@ -791,7 +796,7 @@
         <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleDinAmort()"
           aria-controls="dinAmortWrap">
           <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <svg width="18" height="18" fill="none" stroke="#00529C" stroke-width="2" stroke-linecap="round"
+            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" aria-hidden="true">
               <path d="M4 2h9l3 3v13H4z" />
               <path d="M8 8h6M8 12h6" />
