@@ -5,7 +5,7 @@
  *   node obfuscate.js <URL_WEB_APP> <TOKEN>
  * 
  * Contoh:
- *   node obfuscate.js https://script.google.com/macros/s/AKfy.../exec BRI_KPR_SECURE_TOKEN_2026_xyz88
+ *   node obfuscate.js https://script.google.com/macros/s/AKfy.../exec TOKEN_ANDA
  */
 
 const KEY = 0x5a;
@@ -23,7 +23,7 @@ const token = process.argv[3];
 
 if (!url || !token) {
   console.log('Penggunaan: node obfuscate.js <URL_WEB_APP> <TOKEN>');
-  console.log('Contoh: node obfuscate.js https://script.google.com/macros/s/.../exec BRI_KPR_SECURE_TOKEN_2026_xyz88');
+  console.log('Contoh: node obfuscate.js https://script.google.com/macros/s/.../exec TOKEN_ANDA');
   process.exit(1);
 }
 

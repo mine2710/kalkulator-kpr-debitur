@@ -5,7 +5,7 @@ Penggunaan:
   python obfuscate.py <URL_WEB_APP> <TOKEN>
 
 Contoh:
-  python obfuscate.py https://script.google.com/macros/s/.../exec BRI_KPR_SECURE_TOKEN_2026_xyz88
+  python obfuscate.py https://script.google.com/macros/s/.../exec TOKEN_ANDA
 """
 
 import sys
@@ -19,7 +19,7 @@ def encrypt(s: str, k: int = KEY) -> str:
 
 if len(sys.argv) < 3:
     print("Penggunaan: python obfuscate.py <URL_WEB_APP> <TOKEN>")
-    print("Contoh: python obfuscate.py https://script.google.com/macros/s/.../exec BRI_KPR_SECURE_TOKEN_2026_xyz88")
+    print("Contoh: python obfuscate.py https://script.google.com/macros/s/.../exec TOKEN_ANDA")
     sys.exit(1)
 
 url = sys.argv[1]

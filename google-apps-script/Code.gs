@@ -11,18 +11,17 @@
  *    - Untuk KKB : { "token": "...", "type": "kkb" }  --> Mengambil sheet KKB (vehicles, rates, dll)
  *    - Jika tanpa "type" (KKB versi lama) --> Otomatis tetap melayani KKB.
  * 
- * Token yang diterima:
- * - KKB Token: BRI_KKB_SECURE_TOKEN_2026_xyz99
- * - KPR Token: BRI_KPR_SECURE_TOKEN_2026_xyz88
+ * Token TIDAK ditulis di kode. Atur di Project Settings > Script Properties:
+ * - KPR_TOKEN, KKB_TOKEN (dan/atau AUTH_TOKEN)
  * (Bisa juga memakai satu token yang sama untuk kedua aplikasi)
  * ============================================================================
  */
 
 // Token Otorisasi yang diizinkan
-var VALID_TOKENS = [
-  'BRI_KKB_SECURE_TOKEN_2026_xyz99',
-  'BRI_KPR_SECURE_TOKEN_2026_xyz88'
-];
+var _PROPS = PropertiesService.getScriptProperties();
+var KPR_TOKEN = _PROPS.getProperty('KPR_TOKEN');
+var KKB_TOKEN = _PROPS.getProperty('KKB_TOKEN');
+var VALID_TOKENS = [KPR_TOKEN, KKB_TOKEN].filter(function (t) { return !!t; });
 
 /**
  * Tolak akses HTTP GET langsung di browser (Keamanan)
@@ -91,7 +90,7 @@ function doPost(e) {
     // ========================================================================
     // 1. JIKA REQUEST DARI KALKULATOR KPR (type: 'kpr' / 'tiering' atau token KPR)
     // ========================================================================
-    if (reqType === 'kpr' || reqType === 'tiering' || clientToken === 'BRI_KPR_SECURE_TOKEN_2026_xyz88') {
+    if (reqType === 'kpr' || reqType === 'tiering' || (KPR_TOKEN && clientToken === KPR_TOKEN)) {
       var programs = [];
       var tiering = [];
 
