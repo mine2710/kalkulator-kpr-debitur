@@ -1,2 +1,10 @@
 Untitled spreadsheet*.xlsx
 ~$*
+
+# clasp (Apps Script CLI) - berisi ID proyek, jangan dipush
+.clasp.json
+.clasprc.json
+
+# token Apps Script (hanya untuk clasp push, jangan dipush ke GitHub)
+Secrets.gs
+Secrets.js

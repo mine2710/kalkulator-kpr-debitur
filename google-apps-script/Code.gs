@@ -17,11 +17,20 @@
  * ============================================================================
  */
 
-// Token Otorisasi yang diizinkan
-var _PROPS = PropertiesService.getScriptProperties();
-var KPR_TOKEN = _PROPS.getProperty('KPR_TOKEN');
-var KKB_TOKEN = _PROPS.getProperty('KKB_TOKEN');
-var VALID_TOKENS = [KPR_TOKEN, KKB_TOKEN].filter(function (t) { return !!t; });
+/**
+ * Token Otorisasi yang diizinkan — TIDAK ditulis di file ini (repo GitHub bersifat publik).
+ * Sumber token (dibaca saat ada permintaan):
+ *  1. Script Properties: KPR_TOKEN, KKB_TOKEN, AUTH_TOKEN
+ *  2. File Secrets.gs di proyek Apps Script (hanya ada di Google, tidak ikut ke GitHub):
+ *       var SECRET_KPR_TOKEN = '...';  var SECRET_KKB_TOKEN = '...';
+ */
+function getTokens_() {
+  var props = PropertiesService.getScriptProperties();
+  var kpr = props.getProperty('KPR_TOKEN') || (typeof SECRET_KPR_TOKEN !== 'undefined' ? SECRET_KPR_TOKEN : null);
+  var kkb = props.getProperty('KKB_TOKEN') || (typeof SECRET_KKB_TOKEN !== 'undefined' ? SECRET_KKB_TOKEN : null);
+  var auth = props.getProperty('AUTH_TOKEN');
+  return { kpr: kpr, kkb: kkb, valid: [kpr, kkb, auth].filter(function (t) { return !!t; }) };
+}
 
 /**
  * Tolak akses HTTP GET langsung di browser (Keamanan)
@@ -57,15 +66,10 @@ function doPost(e) {
 
     var clientToken = payload.token || (e && e.parameter && e.parameter.token);
 
-    // Cek token ke Script Properties atau VALID_TOKENS array
-    var customPropToken = PropertiesService.getScriptProperties().getProperty('AUTH_TOKEN');
-    var isTokenValid = false;
-
-    if (customPropToken && clientToken === customPropToken) {
-      isTokenValid = true;
-    } else if (VALID_TOKENS.indexOf(clientToken) !== -1) {
-      isTokenValid = true;
-    }
+    // Cek token ke Script Properties / Secrets.gs
+    var TOKENS = getTokens_();
+    var KPR_TOKEN = TOKENS.kpr;
+    var isTokenValid = !!clientToken && TOKENS.valid.indexOf(clientToken) !== -1;
 
     if (!isTokenValid) {
       return createJsonResponse({
