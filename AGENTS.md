@@ -40,7 +40,8 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 
 ## Keputusan yang sudah disepakati (jangan diubah tanpa tanya pengguna)
 
-- **KPR Dinamis — tabel tiering** bersumber dari sheet `tiering` di Google Spreadsheet **"API Kalkulator"** (kolom: label, `Tiering` = batas bawah rasio, `CASA` = Tabungan & Giro, `Deposito`). `DIN_TIERS` di `dinamis.js` sengaja kosong dan diisi dari API; jangan tulis angkanya ke repo.
+- **KPR Dinamis — tabel tiering** bersumber dari sheet `tiering` di Google Spreadsheet **"API Kalkulator"** (kolom: label, `Tiering` = batas bawah rasio, `CASA`, `Deposito`). `DIN_TIERS` di `dinamis.js` sengaja kosong dan diisi dari API; jangan tulis angkanya ke repo.
+- **Jenis dana hanya DUA: `CASA` dan `Deposito`** — mengikuti kolom sheet. Jangan memecah CASA menjadi Tabungan/Giro di UI, kode, maupun API (API mengirim `casa` dan `deposito`).
 - **Metode "Angsuran Menyesuaikan"** (dari Excel Simulasi): angsuran dihitung ulang tiap bulan dengan bunga efektif.
   **Metode "Angsuran Tetap"** (dari Excel V2): angsuran dari bunga dasar, dihitung ulang hanya saat ganti tahap → lunas lebih cepat.
 - Deposito **tetap dapat pengurang** sesuai kolom `Deposito` di sheet (di Excel Simulasi selalu 0 karena bug rumus `INDEX`).
@@ -59,3 +60,4 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 - 2026-11-11 — Claude Code — `AGENTS.md` (konteks bersama) dibuat; token & path lokal dihapus dari `handoff.md`.
 - 2026-11-11 — Claude Code — Data (CSV program/tiering, Excel `Tambahan/`) dikeluarkan dari GitHub; `Code.gs` baca token dari Script Properties/`Secrets.gs`. Tabel `DIN_TIERS` di `dinamis.js` menyusul setelah API menyajikan tiering.
 - 2026-11-11 — Claude Code — Apps Script di-deploy versi 8 lewat `clasp` (link API tetap): API mengirim `programs` + `tiering` dari spreadsheet; parser tiering mengenali kolom `CASA`. Tabel `DIN_TIERS` dihapus dari `dinamis.js`. Perubahan Apps Script/spreadsheet berdampak ke aplikasi KKB juga: selalu tes KPR + KKB setelah deploy.
+- 2026-11-11 — Claude Code — Jenis dana KPR Dinamis dijadikan 2 (CASA, Deposito) di UI, `dinamis.js`, dan API; perbaikan bug pengurang 0,25% yang terbaca 25%.

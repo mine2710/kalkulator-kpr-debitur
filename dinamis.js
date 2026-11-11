@@ -6,10 +6,13 @@
 //  Butuh helper dari script.js (fmtMoney, parseNum, standardPayment, dll).
 // ═══════════════════════════════════════════
 
-const DIN_JENIS = ['Tabungan', 'Giro', 'Deposito'];
+// Jenis dana mengikuti kolom sheet "tiering": CASA (tabungan/giro) dan Deposito.
+const DIN_JENIS = ['CASA', 'Deposito'];
+// data lama (tersimpan di perangkat) masih memakai Tabungan/Giro → dianggap CASA
+function dinJenis(j) { return j === 'Tabungan' || j === 'Giro' ? 'CASA' : j; }
 
 // Tabel tiering pengurang suku bunga (poin persen).
-// Baris: [batas bawah rasio dana/plafon, label, Tabungan, Giro, Deposito]
+// Baris: [batas bawah rasio dana/plafon, label, CASA, Deposito]
 // SENGAJA KOSONG: datanya TIDAK disimpan di repo. Diisi lewat setDinTiers() dari
 // sheet "tiering" di Google Spreadsheet (API Apps Script) saat halaman dimuat.
 let DIN_TIERS = [];
@@ -34,10 +37,10 @@ const din = {
   plafon: 1000000000,
   steps: [{ months: 36, rate: 7 }, { months: 84, rate: 10.5 }],
   vars: [
-    { amount: 800000000, jenis: 'Tabungan', start: 1, months: 24 },
-    { amount: 600000000, jenis: 'Tabungan', start: 25, months: 24 },
-    { amount: 400000000, jenis: 'Tabungan', start: 49, months: 36 },
-    { amount: 200000000, jenis: 'Tabungan', start: 85, months: 36 },
+    { amount: 800000000, jenis: 'CASA', start: 1, months: 24 },
+    { amount: 600000000, jenis: 'CASA', start: 25, months: 24 },
+    { amount: 400000000, jenis: 'CASA', start: 49, months: 36 },
+    { amount: 200000000, jenis: 'CASA', start: 85, months: 36 },
   ],
   tierOpen: false,
   amortAll: false,
@@ -160,7 +163,7 @@ function removeDinStep(i) {
 function updateDinVar(i, key, val) {
   const v = din.vars[i]; if (!v) return;
   if (key === 'amount') v.amount = parseNum(val);
-  else if (key === 'jenis') v.jenis = DIN_JENIS.includes(val) ? val : 'Tabungan';
+  else if (key === 'jenis') v.jenis = DIN_JENIS.includes(val) ? val : 'CASA';
   else if (key === 'start') v.start = dinNum(val, 1, 1);
   else if (key === 'months') v.months = dinNum(val, 1, 1);
   dinRefreshVarInfo(); dinSchedule();
@@ -170,7 +173,7 @@ function addDinVar() {
   const last = din.vars[din.vars.length - 1];
   // seperti di Excel Simulasi: variasi berikutnya mulai setelah variasi sebelumnya berakhir
   const start = last ? last.start + last.months : 1;
-  din.vars.push({ amount: last ? last.amount : Math.round(din.plafon * 0.5), jenis: last ? last.jenis : 'Tabungan', start, months: 12 });
+  din.vars.push({ amount: last ? last.amount : Math.round(din.plafon * 0.5), jenis: last ? last.jenis : 'CASA', start, months: 12 });
   renderDinVars(); dinSchedule();
 }
 function removeDinVar(i) {
@@ -354,7 +357,7 @@ function renderDinTierTable() {
       <thead class="bg-slate-50 dark:bg-slate-700/50 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
         <tr><th class="px-2.5 py-2">Rasio dana</th>${DIN_JENIS.map(j => `<th class="px-2.5 py-2 text-right">${j}</th>`).join('')}</tr>
       </thead>
-      <tbody>${DIN_TIERS.map((t, r) => `<tr><td class="${td}">${t[1]}</td>${cell(t[2], r, 0)}${cell(t[3], r, 1)}${cell(t[4], r, 2)}</tr>`).join('')}</tbody>
+      <tbody>${DIN_TIERS.map((t, r) => `<tr><td class="${td}">${t[1]}</td>${cell(t[2], r, 0)}${cell(t[3], r, 1)}</tr>`).join('')}</tbody>
     </table>`;
 }
 
@@ -596,9 +599,9 @@ function dinRestore() {
   if (Array.isArray(s.steps) && s.steps.length >= 1 && s.steps.length <= DIN_MAX_STEPS && s.steps.every(okStep)) {
     din.steps = s.steps.map(x => ({ months: Math.round(+x.months), rate: +x.rate }));
   }
-  const okVar = x => x && Number(x.amount) >= 0 && Number(x.start) >= 1 && Number(x.months) >= 1 && DIN_JENIS.includes(x.jenis);
+  const okVar = x => x && Number(x.amount) >= 0 && Number(x.start) >= 1 && Number(x.months) >= 1 && DIN_JENIS.includes(dinJenis(x.jenis));
   if (Array.isArray(s.vars) && s.vars.length <= DIN_MAX_VARS && s.vars.every(okVar)) {
-    din.vars = s.vars.map(x => ({ amount: Math.round(+x.amount), jenis: x.jenis, start: Math.round(+x.start), months: Math.round(+x.months) }));
+    din.vars = s.vars.map(x => ({ amount: Math.round(+x.amount), jenis: dinJenis(x.jenis), start: Math.round(+x.start), months: Math.round(+x.months) }));
   }
 }
 function resetDinamis() {
@@ -611,35 +614,33 @@ function setDinTiers(tiers) {
   const parsed = [];
   for (const item of tiers) {
     if (!item) continue;
-    let ratio, label, tab, gir, dep;
+    let ratio, label, casa, dep;
     if (Array.isArray(item)) {
+      // [rasio, label, CASA, Deposito] — atau format lama [rasio, label, Tabungan, Giro, Deposito]
       ratio = Number(item[0]);
       label = String(item[1] || '');
-      tab = Number(item[2]);
-      gir = Number(item[3]);
-      dep = Number(item[4]);
+      casa = Number(item[2]);
+      dep = Number(item.length >= 5 ? item[4] : item[3]);
     } else if (typeof item === 'object') {
       ratio = Number(item.min_ratio !== undefined ? item.min_ratio : item.ratio);
       label = String(item.label || item.tiering || item.rentang || '');
-      tab = Number(item.tabungan !== undefined ? item.tabungan : item.tab);
-      gir = Number(item.giro !== undefined ? item.giro : item.gir);
+      casa = Number(item.casa !== undefined ? item.casa : (item.tabungan !== undefined ? item.tabungan : item.giro));
       dep = Number(item.deposito !== undefined ? item.deposito : item.dep);
     } else {
       continue;
     }
     if (isNaN(ratio) || ratio < 0) continue;
     if (ratio >= 5) ratio = ratio / 100;
+    // Nilai sudah dalam poin persen (0.25 = 0,25%); pengurang selalu negatif.
     const fixVal = v => {
       let n = Number(v) || 0;
-      if (Math.abs(n) > 0 && Math.abs(n) <= 0.25) n = n * 100;
       if (n > 0) n = -n;
       return +n.toFixed(4);
     };
-    tab = fixVal(tab);
-    gir = fixVal(gir);
+    casa = fixVal(casa);
     dep = fixVal(dep);
     if (!label) label = `${Math.round(ratio * 100)}%`;
-    parsed.push([+ratio.toFixed(4), label, tab, gir, dep]);
+    parsed.push([+ratio.toFixed(4), label, casa, dep]);
   }
   if (!parsed.length) return false;
   parsed.sort((a, b) => a[0] - b[0]);
@@ -661,15 +662,9 @@ function parseTieringCsv(csvText) {
     const sep = line.includes(';') ? ';' : (line.includes('\t') ? '\t' : ',');
     const cleanCell = s => { let t = String(s || "").trim(); if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) t = t.slice(1, -1).trim(); return t; };
     const cols = line.split(sep).map(cleanCell);
-    if (cols.length < 5) continue;
+    if (cols.length < 4) continue;
     if (cols[0].toLowerCase().includes('batas') || cols[0].toLowerCase().includes('ratio') || isNaN(parseFloat(cols[0]))) continue;
-    result.push([
-      parseFloat(cols[0]),
-      cols[1],
-      parseFloat(cols[2]),
-      parseFloat(cols[3]),
-      parseFloat(cols[4])
-    ]);
+    result.push(cols.slice(0, 5).map((c, k) => (k === 1 ? c : parseFloat(c))));
   }
   return result;
 }

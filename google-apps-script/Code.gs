@@ -240,28 +240,25 @@ function readTieringSheet(sh) {
   if (!data || data.length < 2) return [];
 
   // 1. Cari baris header: baris pertama yang memuat kolom pengurang
-  //    (Tabungan / Giro / CASA / Deposito). "CASA" = Tabungan & Giro sekaligus.
-  var headerRowIdx = -1, tabCol = -1, girCol = -1, depCol = -1;
+  //    (CASA / Deposito). Hanya ada DUA jenis dana: CASA dan Deposito.
+  //    Judul lama "Tabungan" atau "Giro" tetap dikenali sebagai kolom CASA.
+  var headerRowIdx = -1, casaCol = -1, depCol = -1;
   for (var r = 0; r < Math.min(15, data.length) && headerRowIdx === -1; r++) {
     var row = data[r] || [];
-    var t = -1, g = -1, d = -1;
+    var t = -1, d = -1;
     for (var c = 0; c < row.length; c++) {
       var cell = String(row[c] === null || row[c] === undefined ? '' : row[c]).trim().toLowerCase();
       if (!cell) continue;
-      if (cell.indexOf('casa') !== -1) { if (t === -1) t = c; if (g === -1) g = c; }
-      else if (cell.indexOf('tabungan') !== -1 || cell.indexOf('saving') !== -1) { if (t === -1) t = c; }
-      else if (cell.indexOf('giro') !== -1) { if (g === -1) g = c; }
+      if (cell.indexOf('casa') !== -1 || cell.indexOf('tabungan') !== -1 || cell.indexOf('saving') !== -1 || cell.indexOf('giro') !== -1) { if (t === -1) t = c; }
       else if (cell.indexOf('deposit') !== -1) { if (d === -1) d = c; }
     }
-    if (t !== -1 || g !== -1 || d !== -1) { headerRowIdx = r; tabCol = t; girCol = g; depCol = d; }
+    if (t !== -1 || d !== -1) { headerRowIdx = r; casaCol = t; depCol = d; }
   }
   if (headerRowIdx === -1) return [];
-  if (tabCol === -1) tabCol = girCol;   // hanya ada Giro  -> Tabungan ikut Giro
-  if (girCol === -1) girCol = tabCol;   // hanya ada Tabungan/CASA -> Giro ikut Tabungan
 
   // 2. Kolom rasio & label ditentukan dari ISI baris data pertama (bukan dari judul kolom):
   //    kolom angka = batas bawah rasio, kolom teks = label rentang.
-  var valueCols = [tabCol, girCol, depCol];
+  var valueCols = [casaCol, depCol];
   var firstRow = data[headerRowIdx + 1] || [];
   var ratioCol = -1, labelCol = -1;
   for (var k = 0; k < firstRow.length; k++) {
@@ -313,8 +310,7 @@ function readTieringSheet(sh) {
     tiers.push({
       min_ratio: rVal,
       label: lbl,
-      tabungan: tabCol !== -1 ? parseRedVal(dRow[tabCol]) : 0,
-      giro: girCol !== -1 ? parseRedVal(dRow[girCol]) : 0,
+      casa: casaCol !== -1 ? parseRedVal(dRow[casaCol]) : 0,
       deposito: depCol !== -1 ? parseRedVal(dRow[depCol]) : 0
     });
   }

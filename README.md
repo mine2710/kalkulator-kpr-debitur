@@ -11,7 +11,7 @@ Kalkulator KPR (Kredit Pemilikan Rumah) berbasis web untuk membantu **debitur/na
 
 - **KPR Baru** — simulasi angsuran berjenjang (fix → floating) sesuai program suku bunga.
 - **Take Over Float / Fix** — bandingkan angsuran saat ini dengan program baru, lengkap dengan titik impas (BEP).
-- **KPR Dinamis** — simulasi penurunan bunga berdasarkan dana yang ditempatkan (Tabungan/Giro/Deposito).
+- **KPR Dinamis** — simulasi penurunan bunga berdasarkan dana yang ditempatkan (CASA/Deposito).
 - Grafik sisa pokok & kumulatif, tabel amortisasi, mode gelap, dan tampilan ramah ponsel.
 
 ## 📁 Struktur File

@@ -502,7 +502,7 @@ const MODES = {
   'kpr-dinamis': {
     short: 'KPR Dinamis', icon: '📉', mainTitle: 'KPR Dinamis',
     title: 'KPR Dinamis (Dana Pengurang Bunga)',
-    tagline: 'Simulasi angsuran KPR ketika debitur menempatkan dana (Tabungan, Giro, atau Deposito) di BRI sehingga suku bunga kredit berkurang sesuai tabel tiering.',
+    tagline: 'Simulasi angsuran KPR ketika debitur menempatkan dana (CASA atau Deposito) di BRI sehingga suku bunga kredit berkurang sesuai tabel tiering.',
     who: ['Debitur yang memiliki atau berencana menempatkan dana di BRI selama masa kredit.', 'Ingin melihat seberapa besar bunga dan angsuran turun dari dana yang ditempatkan.'],
     calc: ['<b>Bunga efektif</b> tiap bulan = bunga dasar tahap + pengurang dari dana yang aktif (minimal 0%).', 'Dua metode: <b>Angsuran Tetap</b> (lunas lebih cepat) atau <b>Angsuran Menyesuaikan</b> (angsuran turun tiap bulan).', 'Penghematan bunga dibanding tanpa dana pengurang, serta jadwal angsuran bulanan.'],
     need: ['Plafon kredit dan tahapan suku bunga dasar.', 'Jumlah dana, jenis dana, bulan mulai, dan durasi penempatan tiap variasi.'],

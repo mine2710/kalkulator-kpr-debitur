@@ -104,9 +104,8 @@ Dalam 1 kali request HTTP POST, endpoint Apps Script langsung mengembalikan data
     {
       "min_ratio": 0.1,
       "label": "10 - <20%",
-      "tabungan": -0.4,
-      "giro": -0.4,
-      "deposito": -0.35
+      "casa": -0.25,
+      "deposito": -0.25
     }
   ]
 }
@@ -166,7 +165,7 @@ Data mentah dari API atau CSV dipetakan ke dalam struktur dictionary hierarkis b
 ### 3.2 Struktur Data Tabel Tiering (`DIN_TIERS`)
 Menyimpan matriks pengurang suku bunga Usulan CSL Group 80% LS:
 ```javascript
-// [Batas Bawah Rasio, Label Rentang, Tabungan (% p.a.), Giro (% p.a.), Deposito (% p.a.)]
+// [Batas Bawah Rasio, Label Rentang, CASA (% p.a.), Deposito (% p.a.)]
 let DIN_TIERS = [ /* diisi dari sheet "tiering" di Google Spreadsheet saat halaman dimuat */ ];
 ```
 
@@ -269,7 +268,7 @@ sequenceDiagram
 ---
 
 ### 4.4 Modul KPR Dinamis (`#kpr-dinamis`)
-Mengakomodasi produk khusus BRI di mana debitur yang menempatkan dana (Tabungan, Giro, Deposito) berhak mendapatkan **pengurang suku bunga pinjaman (tiering CSL Usulan Group 80% LS)**.
+Mengakomodasi produk khusus BRI di mana debitur yang menempatkan dana (CASA atau Deposito) berhak mendapatkan **pengurang suku bunga pinjaman (tiering CSL Usulan Group 80% LS)**.
 
 #### A. Mekanisme Tiering & Pengurang Bunga
 Untuk setiap variasi penempatan dana:
@@ -278,7 +277,7 @@ $$\text{Rasio Dana} = \frac{\text{Jumlah Dana yang Ditempatkan}}{\text{Plafon Pi
 Sistem mencari tier pada tabel `DIN_TIERS`:
 * Jika rasio $< 10\%$: Tidak ada pengurang ($0\%$).
 * Jika rasio $\ge 190\%$: Mendapat tier tertinggi (tier 20).
-* Pengurang suku bunga ($\Delta r$) diambil sesuai kolom instrumen dana (Tabungan, Giro, atau Deposito).
+* Pengurang suku bunga ($\Delta r$) diambil sesuai kolom jenis dana (CASA atau Deposito).
 
 Bunga efektif pada bulan ke-$m$:
 $$r_{\text{eff}}(m) = \max\left(0,\, r_{\text{dasar}}(m) + \sum \Delta r_v(m)\right)$$
@@ -386,7 +385,7 @@ Apakah URL Endpoint & Token Valid?
 
 ### 7.2 Cara Mengubah Tabel Tiering KPR Dinamis di Google Spreadsheet
 1. Masuk ke sheet **`Tiering`**.
-2. Pastikan kolom memuat: `Batas Bawah` | `Tiering` | `Tabungan` | `Giro` | `Deposito`.
+2. Pastikan kolom memuat: label rentang | `Tiering` (batas bawah rasio) | `CASA` | `Deposito`.
 3. Masukkan batas bawah rasio (misal `0.10` untuk 10%) dan nilai pengurang suku bunga (misal `-0.40%` atau `-0.004`).
 4. Web app otomatis membaca perubahan tersebut dan menyesuaikan kalkulasi pengurang suku bunga.
 
