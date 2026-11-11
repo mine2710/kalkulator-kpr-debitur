@@ -36,8 +36,8 @@ flowchart TD
         Core["Core Engine (script.js)"]
         Din["Dinamis Engine (dinamis.js)"]
         Conf["Security & Config (config.js)"]
-        CSV1["programs.csv (Local Fallback)"]
-        CSV2["tiering.csv (Local Fallback)"]
+        CSV1["programs.csv (cadangan lokal, tidak ada di GitHub)"]
+        CSV2["tiering.csv (cadangan lokal, tidak ada di GitHub)"]
     end
 
     subgraph GoogleCloud ["Google Cloud Environment"]
@@ -167,28 +167,7 @@ Data mentah dari API atau CSV dipetakan ke dalam struktur dictionary hierarkis b
 Menyimpan matriks pengurang suku bunga Usulan CSL Group 80% LS:
 ```javascript
 // [Batas Bawah Rasio, Label Rentang, Tabungan (% p.a.), Giro (% p.a.), Deposito (% p.a.)]
-let DIN_TIERS = [
-  [0.10, "10 - <20%",  -0.40, -0.40, -0.35],
-  [0.20, "20 - <30%",  -0.80, -0.85, -0.70],
-  [0.30, "30 - <40%",  -1.00, -1.30, -1.00],
-  [0.40, "40 - <50%",  -1.50, -1.70, -1.30],
-  [0.50, "50 - <60%",  -2.00, -2.15, -1.70],
-  [0.60, "60 - <70%",  -2.30, -2.60, -2.00],
-  [0.70, "70 - <80%",  -2.75, -3.00, -2.40],
-  [0.80, "80 - <90%",  -3.25, -3.40, -2.75],
-  [0.90, "90 - <100%", -3.50, -3.90, -3.00],
-  [1.00, "100 - <110%",-4.00, -4.30, -3.50],
-  [1.10, "110 - <120%",-4.50, -4.80, -3.75],
-  [1.20, "120 - <130%",-4.75, -5.20, -4.00],
-  [1.30, "130 - <135%",-5.25, -5.60, -4.50],
-  [1.35, "135 - <140%",-5.50, -5.90, -4.70],
-  [1.40, "140 - <150%",-5.75, -6.10, -5.00],
-  [1.50, "150 - <160%",-6.00, -6.50, -5.20],
-  [1.60, "160 - <170%",-6.50, -7.00, -5.50],
-  [1.70, "170 - <180%",-7.00, -7.40, -6.00],
-  [1.80, "180 - <190%",-7.25, -7.85, -6.25],
-  [1.90, "≥ 190%",      -7.50, -8.00, -6.50]
-];
+let DIN_TIERS = [ /* diisi dari sheet "tiering" di Google Spreadsheet saat halaman dimuat */ ];
 ```
 
 ### 3.3 State Management & Sinkronisasi
@@ -429,6 +408,6 @@ Jika file [`google-apps-script/Code.gs`](google-apps-script/Code.gs) mengalami p
 * [`dinamis.js`](dinamis.js) — Mesin simulasi khusus KPR Dinamis (metode anuitas menyesuaikan, amortisasi dipercepat tetap, pemetaan tiering CSL).
 * [`google-apps-script/Code.gs`](google-apps-script/Code.gs) — Backend API serverless Google Apps Script penyedia data `programs` dan `tiering`.
 * [`config.js`](config.js) — Konfigurasi kredensial dan URL API terenkripsi.
-* [`programs.csv`](programs.csv) — Cadangan database program suku bunga lokal offline.
-* [`tiering.csv`](tiering.csv) — Cadangan database tabel tiering CSL pengurang bunga lokal offline.
-* [`Tambahan/`](Tambahan/) — Berkas Excel acuan resmi perhitungan formula KPR Dinamis (`Simulasi_Angsuran_KPR DInamis.xlsx` dan `Kalkulator_Angsuran_Dinamis V2.xlsx`).
+* `programs.csv` — Cadangan lokal program suku bunga. **Tidak disimpan di GitHub** (lihat `.gitignore`).
+* `tiering.csv` — Cadangan lokal tabel tiering. **Tidak disimpan di GitHub**.
+* `Tambahan/` — Berkas Excel acuan perhitungan KPR Dinamis. **Hanya ada di laptop, tidak disimpan di GitHub**.

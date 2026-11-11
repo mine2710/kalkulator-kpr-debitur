@@ -8,3 +8,9 @@ Untitled spreadsheet*.xlsx
 # token Apps Script (hanya untuk clasp push, jangan dipush ke GitHub)
 Secrets.gs
 Secrets.js
+
+# Data (program suku bunga, tiering, Excel acuan) - sumbernya Google Spreadsheet, jangan dipush
+programs.csv
+tiering.csv
+Tambahan/
+*.xlsx

@@ -18,7 +18,7 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 | `index.html` | Semua tampilan, 4 tab. Elemen per tab ditandai `data-modes="kpr-baru to-float to-fix kpr-dinamis"` |
 | `script.js` | KPR Baru, Take Over Float/Fix, pemuat data (API → fallback CSV), helper format & grafik |
 | `dinamis.js` | Tab KPR Dinamis (tiering dana pengurang bunga). Bergantung pada helper global dari `script.js` |
-| `programs.csv` / `tiering.csv` | Data cadangan bila API Apps Script gagal. `segments` = `durasi:bunga` dipisah `|` |
+| `programs.csv` / `tiering.csv` | Cadangan lokal saja, **tidak ada di GitHub** (di-`.gitignore`). Sumber data = Google Spreadsheet (sheet `Programs`, `tiering`). `segments` = `durasi:bunga` dipisah `|` |
 | `google-apps-script/Code.gs` | Backend; token dibaca dari Script Properties |
 
 ## Aturan wajib
@@ -27,7 +27,8 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 2. **Rahasia:** JANGAN pernah menulis token, URL Apps Script asli, atau path lokal (`file:///d:/...`)
    ke file apa pun di repo — repo ini **PUBLIC**. Token hanya di Script Properties (`KPR_TOKEN`, `KKB_TOKEN`)
    dan versi tersandi di `config.js`. Di dokumentasi tulis `<TOKEN>` saja.
-3. **Folder `Tambahan/`** berisi Excel internal BRI — jangan dikutip isinya ke README/dokumen publik.
+3. **Data jangan masuk GitHub:** `programs.csv`, `tiering.csv`, `Tambahan/`, dan semua `.xlsx` di-`.gitignore`.
+   Jangan salin isi tabel suku bunga/tiering ke kode atau dokumen. Sumber data hanya Google Spreadsheet.
 4. **Warna:** pakai kelas Tailwind `bri`, `bri-2`, `bri-sky`, `bri-dark` (variabel CSS `--bri` dst. di `index.html`).
    Mode cerah: #0857C3 / #307FE2 / #71C5E8. Mode gelap memakai palet lama. Jangan tulis hex biru langsung;
    di JS grafik pakai `briColor('--bri', alpha)`.
@@ -56,3 +57,4 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 - 2026-11-10 — Claude Code — Palet biru mode cerah (#0857C3, #307FE2, #71C5E8) via variabel CSS.
 - 2026-11-11 — Antigravity — `handoff.md` dibuat (dokumentasi lengkap sistem).
 - 2026-11-11 — Claude Code — `AGENTS.md` (konteks bersama) dibuat; token & path lokal dihapus dari `handoff.md`.
+- 2026-11-11 — Claude Code — Data (CSV program/tiering, Excel `Tambahan/`) dikeluarkan dari GitHub; `Code.gs` baca token dari Script Properties/`Secrets.gs`. Tabel `DIN_TIERS` di `dinamis.js` menyusul setelah API menyajikan tiering.

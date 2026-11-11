@@ -21,8 +21,6 @@ Kalkulator KPR (Kredit Pemilikan Rumah) berbasis web untuk membantu **debitur/na
 ├── script.js           # Logika perhitungan, grafik & pemuat data
 ├── dinamis.js          # Tab KPR Dinamis
 ├── config.js           # Konfigurasi sumber data
-├── programs.csv        # Data cadangan program suku bunga
-├── tiering.csv         # Data cadangan tiering KPR Dinamis
 └── google-apps-script/ # Backend opsional (Google Apps Script)
 ```
 
@@ -36,7 +34,7 @@ python -m http.server 8080
 
 Lalu buka `http://localhost:8080`. Bisa juga memakai ekstensi **Live Server** di VS Code.
 
-Jika sumber data online tidak tersedia, aplikasi otomatis memakai data cadangan dari `programs.csv` dan `tiering.csv`.
+Data program suku bunga dan tiering diambil dari Google Spreadsheet saat halaman dimuat; datanya tidak disimpan di repositori ini.
 
 ## ⚙️ Backend (Opsional)
 

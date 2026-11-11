@@ -296,7 +296,7 @@ async function loadPrograms() {
       console.log('Database program KPR dimuat dari cadangan lokal (programs.csv).');
     } catch (e) {
       console.error(e);
-      hint.textContent = 'Data program KPR gagal dimuat — buka lewat web server (mis. Live Server atau python -m http.server), bukan klik dua kali.';
+      hint.textContent = 'Data program KPR belum bisa dimuat. Periksa koneksi internet lalu muat ulang halaman, atau isi tahapan bunga secara manual.';
       return;
     }
   }
