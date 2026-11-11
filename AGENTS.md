@@ -40,7 +40,7 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 
 ## Keputusan yang sudah disepakati (jangan diubah tanpa tanya pengguna)
 
-- **KPR Dinamis — tabel tiering** bersumber dari sheet `tiering` di Google Spreadsheet (kolom: label, `Tiering` = batas bawah rasio, `CASA` = Tabungan & Giro, `Deposito`). `DIN_TIERS` di `dinamis.js` sengaja kosong dan diisi dari API; jangan tulis angkanya ke repo.
+- **KPR Dinamis — tabel tiering** bersumber dari sheet `tiering` di Google Spreadsheet **"API Kalkulator"** (kolom: label, `Tiering` = batas bawah rasio, `CASA` = Tabungan & Giro, `Deposito`). `DIN_TIERS` di `dinamis.js` sengaja kosong dan diisi dari API; jangan tulis angkanya ke repo.
 - **Metode "Angsuran Menyesuaikan"** (dari Excel Simulasi): angsuran dihitung ulang tiap bulan dengan bunga efektif.
   **Metode "Angsuran Tetap"** (dari Excel V2): angsuran dari bunga dasar, dihitung ulang hanya saat ganti tahap → lunas lebih cepat.
 - Deposito **tetap dapat pengurang** sesuai kolom `Deposito` di sheet (di Excel Simulasi selalu 0 karena bug rumus `INDEX`).
