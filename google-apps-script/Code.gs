@@ -239,71 +239,63 @@ function readTieringSheet(sh) {
   var data = sh.getDataRange().getValues();
   if (!data || data.length < 2) return [];
 
-  var headerRowIdx = -1;
-  var ratioCol = -1, labelCol = -1, tabCol = -1, girCol = -1, depCol = -1;
-
-  for (var r = 0; r < Math.min(15, data.length); r++) {
-    var row = data[r];
-    if (!row || !row.length) continue;
+  // 1. Cari baris header: baris pertama yang memuat kolom pengurang
+  //    (Tabungan / Giro / CASA / Deposito). "CASA" = Tabungan & Giro sekaligus.
+  var headerRowIdx = -1, tabCol = -1, girCol = -1, depCol = -1;
+  for (var r = 0; r < Math.min(15, data.length) && headerRowIdx === -1; r++) {
+    var row = data[r] || [];
+    var t = -1, g = -1, d = -1;
     for (var c = 0; c < row.length; c++) {
-      var cell = String(row[c] || '').trim().toLowerCase();
-      if (ratioCol === -1 && (cell.indexOf('batas') !== -1 || cell.indexOf('ratio') !== -1 || cell.indexOf('rasio') !== -1)) {
-        ratioCol = c;
-      }
-      if (labelCol === -1 && (cell.indexOf('label') !== -1 || cell.indexOf('tiering') !== -1 || cell.indexOf('rentang') !== -1)) {
-        labelCol = c;
-      }
-      if (tabCol === -1 && (cell.indexOf('tabungan') !== -1 || cell.indexOf('saving') !== -1)) {
-        tabCol = c;
-      }
-      if (girCol === -1 && cell.indexOf('giro') !== -1) {
-        girCol = c;
-      }
-      if (depCol === -1 && (cell.indexOf('deposito') !== -1 || cell.indexOf('deposit') !== -1)) {
-        depCol = c;
-      }
+      var cell = String(row[c] === null || row[c] === undefined ? '' : row[c]).trim().toLowerCase();
+      if (!cell) continue;
+      if (cell.indexOf('casa') !== -1) { if (t === -1) t = c; if (g === -1) g = c; }
+      else if (cell.indexOf('tabungan') !== -1 || cell.indexOf('saving') !== -1) { if (t === -1) t = c; }
+      else if (cell.indexOf('giro') !== -1) { if (g === -1) g = c; }
+      else if (cell.indexOf('deposit') !== -1) { if (d === -1) d = c; }
     }
-    if (tabCol !== -1 && (ratioCol !== -1 || labelCol !== -1)) {
-      headerRowIdx = r;
-      break;
-    }
+    if (t !== -1 || g !== -1 || d !== -1) { headerRowIdx = r; tabCol = t; girCol = g; depCol = d; }
+  }
+  if (headerRowIdx === -1) return [];
+  if (tabCol === -1) tabCol = girCol;   // hanya ada Giro  -> Tabungan ikut Giro
+  if (girCol === -1) girCol = tabCol;   // hanya ada Tabungan/CASA -> Giro ikut Tabungan
+
+  // 2. Kolom rasio & label ditentukan dari ISI baris data pertama (bukan dari judul kolom):
+  //    kolom angka = batas bawah rasio, kolom teks = label rentang.
+  var valueCols = [tabCol, girCol, depCol];
+  var firstRow = data[headerRowIdx + 1] || [];
+  var ratioCol = -1, labelCol = -1;
+  for (var k = 0; k < firstRow.length; k++) {
+    if (valueCols.indexOf(k) !== -1) continue;
+    var v0 = firstRow[k];
+    if (typeof v0 === 'number' && ratioCol === -1) ratioCol = k;
+    else if (typeof v0 === 'string' && v0.trim() && labelCol === -1) labelCol = k;
   }
 
-  // Jika tidak ditemukan header spesifik, gunakan kolom 0 s/d 4
-  if (headerRowIdx === -1) {
-    headerRowIdx = 0;
-    ratioCol = 0;
-    labelCol = 1;
-    tabCol = 2;
-    girCol = 3;
-    depCol = 4;
-  } else {
-    if (ratioCol === -1) ratioCol = 0;
-    if (labelCol === -1) labelCol = 1;
-    if (girCol === -1) girCol = tabCol + 1;
-    if (depCol === -1) depCol = tabCol + 2;
+  // Angka pertama di dalam teks/angka. "10 - <20%" -> 10, "≥ 220%" -> 220, 0.1 -> 0.1
+  function firstNumber(v) {
+    if (typeof v === 'number') return v;
+    var m = String(v === null || v === undefined ? '' : v).replace(',', '.').match(/\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
   }
-
   function parseRatioVal(v) {
     if (v === null || v === undefined || v === '') return null;
-    var s = String(v).replace('%', '').replace(',', '.').trim();
-    var num = parseFloat(s);
+    var num = firstNumber(v);
     if (isNaN(num)) return null;
-    if (num >= 5) num = num / 100; // Contoh: jika ditulis 10 atau 20 (bukan 0.1 / 0.2)
+    if (typeof v === 'string' || num >= 5) num = num / 100; // teks "10%" / angka 10 -> 0.10
     return Math.round(num * 10000) / 10000;
   }
-
   function parseRedVal(v) {
     if (v === null || v === undefined || v === '') return 0;
-    var s = String(v).replace('%', '').replace(',', '.').trim();
-    var num = parseFloat(s);
-    if (isNaN(num)) return 0;
-    // Jika tersimpan sebagai desimal pecahan (misal -0.004 -> -0.40%)
-    if (Math.abs(num) > 0 && Math.abs(num) <= 0.25) {
-      num = num * 100;
+    var num;
+    if (typeof v === 'number') {
+      num = v;
+      // Sel berformat persen tersimpan sebagai pecahan (0.0025 = 0,25%)
+      if (Math.abs(num) > 0 && Math.abs(num) <= 0.25) num = num * 100;
+    } else {
+      num = parseFloat(String(v).replace('%', '').replace(',', '.').trim());
+      if (isNaN(num)) return 0;
     }
-    // Pengurang suku bunga bernilai negatif
-    if (num > 0) num = -num;
+    if (num > 0) num = -num; // pengurang suku bunga selalu negatif
     return Math.round(num * 10000) / 10000;
   }
 
@@ -311,20 +303,19 @@ function readTieringSheet(sh) {
   for (var i = headerRowIdx + 1; i < data.length; i++) {
     var dRow = data[i];
     if (!dRow || !dRow.length) continue;
-    var rVal = parseRatioVal(dRow[ratioCol]);
+    var rVal = ratioCol !== -1 ? parseRatioVal(dRow[ratioCol]) : null;
+    if (rVal === null && labelCol !== -1) rVal = parseRatioVal(String(dRow[labelCol] || ''));
     if (rVal === null || rVal < 0) continue;
 
-    var lbl = labelCol !== -1 && dRow[labelCol] ? String(dRow[labelCol]).trim() : (Math.round(rVal * 100) + '%');
-    var tabVal = tabCol !== -1 ? parseRedVal(dRow[tabCol]) : 0;
-    var girVal = girCol !== -1 ? parseRedVal(dRow[girCol]) : tabVal;
-    var depVal = depCol !== -1 ? parseRedVal(dRow[depCol]) : tabVal;
+    var lbl = labelCol !== -1 && dRow[labelCol] !== '' && dRow[labelCol] !== null && dRow[labelCol] !== undefined
+      ? String(dRow[labelCol]).trim() : (Math.round(rVal * 100) + '%');
 
     tiers.push({
       min_ratio: rVal,
       label: lbl,
-      tabungan: tabVal,
-      giro: girVal,
-      deposito: depVal
+      tabungan: tabCol !== -1 ? parseRedVal(dRow[tabCol]) : 0,
+      giro: girCol !== -1 ? parseRedVal(dRow[girCol]) : 0,
+      deposito: depCol !== -1 ? parseRedVal(dRow[depCol]) : 0
     });
   }
 

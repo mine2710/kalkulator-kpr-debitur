@@ -8,31 +8,11 @@
 
 const DIN_JENIS = ['Tabungan', 'Giro', 'Deposito'];
 
-// Tabel tiering "Usulan CSL Group 80% LS" — pengurang suku bunga (poin persen)
-// [batas bawah rasio dana/plafon, label, Tabungan, Giro, Deposito]
-// Nilai mengikuti file Simulasi_Angsuran_KPR DInamis.xlsx (versi terbaru).
-let DIN_TIERS = [
-  [0.10, '10 - <20%', -0.40, -0.40, -0.35],
-  [0.20, '20 - <30%', -0.80, -0.85, -0.70],
-  [0.30, '30 - <40%', -1.00, -1.30, -1.00],
-  [0.40, '40 - <50%', -1.50, -1.70, -1.30],
-  [0.50, '50 - <60%', -2.00, -2.15, -1.70],
-  [0.60, '60 - <70%', -2.30, -2.60, -2.00],
-  [0.70, '70 - <80%', -2.75, -3.00, -2.40],
-  [0.80, '80 - <90%', -3.25, -3.40, -2.75],
-  [0.90, '90 - <100%', -3.50, -3.90, -3.00],
-  [1.00, '100 - <110%', -4.00, -4.30, -3.50],
-  [1.10, '110 - <120%', -4.50, -4.80, -3.75],
-  [1.20, '120 - <130%', -4.75, -5.20, -4.00],
-  [1.30, '130 - <135%', -5.25, -5.60, -4.50],
-  [1.35, '135 - <140%', -5.50, -5.90, -4.70],
-  [1.40, '140 - <150%', -5.75, -6.10, -5.00],
-  [1.50, '150 - <160%', -6.00, -6.50, -5.20],
-  [1.60, '160 - <170%', -6.50, -7.00, -5.50],
-  [1.70, '170 - <180%', -7.00, -7.40, -6.00],
-  [1.80, '180 - <190%', -7.25, -7.85, -6.25],
-  [1.90, '≥ 190%', -7.50, -8.00, -6.50],
-];
+// Tabel tiering pengurang suku bunga (poin persen).
+// Baris: [batas bawah rasio dana/plafon, label, Tabungan, Giro, Deposito]
+// SENGAJA KOSONG: datanya TIDAK disimpan di repo. Diisi lewat setDinTiers() dari
+// sheet "tiering" di Google Spreadsheet (API Apps Script) saat halaman dimuat.
+let DIN_TIERS = [];
 const DIN_MAX_STEPS = 10;
 const DIN_MAX_VARS = 7;
 
@@ -67,7 +47,7 @@ let _dinLast = null;
 const DIN_STORE_KEY = 'kpr-dinamis-v1';
 
 // ─── Perhitungan ───
-// Pengurang dari tabel tiering. Rasio < 10% → tanpa pengurang; ≥ 190% → tier terakhir.
+// Pengurang dari tabel tiering. Rasio di bawah tier pertama → tanpa pengurang; di atas tier terakhir → tier terakhir.
 function dinTier(ratio, jenis) {
   const col = DIN_JENIS.indexOf(jenis);
   let idx = -1;
@@ -422,11 +402,12 @@ function calcDinamis() {
 
 function renderDinWarnings(vars, tenor, sim) {
   const w = [];
+  if (!DIN_TIERS.length) w.push('Tabel tiering belum bisa dimuat dari server, jadi pengurang bunga belum dihitung. Periksa koneksi internet lalu muat ulang halaman.');
   vars.forEach((v, i) => {
     const inf = dinVarInfo(v, din.plafon);
     if (v.start > tenor) w.push(`Variasi ${i + 1} dimulai setelah tenor berakhir (bulan ke-${tenor}), tidak berpengaruh.`);
     else if (inf.end > tenor) w.push(`Variasi ${i + 1} berakhir di bulan ke-${inf.end}, melewati tenor ${tenor} bln.`);
-    if (inf.tier.idx < 0) w.push(`Variasi ${i + 1}: rasio dana ${fmtPct(inf.ratio * 100, 1)} di bawah 10%, tidak mendapat pengurang.`);
+    if (inf.tier.idx < 0 && DIN_TIERS.length) w.push(`Variasi ${i + 1}: rasio dana ${fmtPct(inf.ratio * 100, 1)} di bawah ${Math.round(DIN_TIERS[0][0] * 100)}%, tidak mendapat pengurang.`);
   });
   for (let a = 0; a < vars.length; a++) for (let b = a + 1; b < vars.length; b++) {
     const A = vars[a], B = vars[b];

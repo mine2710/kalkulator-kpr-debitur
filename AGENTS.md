@@ -40,12 +40,12 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 
 ## Keputusan yang sudah disepakati (jangan diubah tanpa tanya pengguna)
 
-- **KPR Dinamis — tabel tiering** memakai versi file *Simulasi_Angsuran_KPR DInamis.xlsx* (lebih baru dari V2).
+- **KPR Dinamis — tabel tiering** bersumber dari sheet `tiering` di Google Spreadsheet (kolom: label, `Tiering` = batas bawah rasio, `CASA` = Tabungan & Giro, `Deposito`). `DIN_TIERS` di `dinamis.js` sengaja kosong dan diisi dari API; jangan tulis angkanya ke repo.
 - **Metode "Angsuran Menyesuaikan"** (dari Excel Simulasi): angsuran dihitung ulang tiap bulan dengan bunga efektif.
   **Metode "Angsuran Tetap"** (dari Excel V2): angsuran dari bunga dasar, dihitung ulang hanya saat ganti tahap → lunas lebih cepat.
-- Deposito **tetap dapat pengurang** (di Excel Simulasi selalu 0 karena bug rumus `INDEX`).
+- Deposito **tetap dapat pengurang** sesuai kolom `Deposito` di sheet (di Excel Simulasi selalu 0 karena bug rumus `INDEX`).
 - Bulan pelunasan hanya menagih sisa pokok + bunga (Excel V2 menagih angsuran penuh — bug).
-- Bunga efektif = `max(0, bunga dasar + jumlah pengurang)`. Rasio < 10% → tanpa pengurang; ≥ 190% → tier terakhir.
+- Bunga efektif = `max(0, bunga dasar + jumlah pengurang)`. Rasio di bawah tier pertama → tanpa pengurang; di atas tier terakhir → tier terakhir.
 - Dropdown program 2 tingkat (Tier → Program) di KPR Baru dan KPR Dinamis.
 
 ## Log Keputusan (tambahkan di paling bawah, format: tanggal — agent — ringkasan)
@@ -58,3 +58,4 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 - 2026-11-11 — Antigravity — `handoff.md` dibuat (dokumentasi lengkap sistem).
 - 2026-11-11 — Claude Code — `AGENTS.md` (konteks bersama) dibuat; token & path lokal dihapus dari `handoff.md`.
 - 2026-11-11 — Claude Code — Data (CSV program/tiering, Excel `Tambahan/`) dikeluarkan dari GitHub; `Code.gs` baca token dari Script Properties/`Secrets.gs`. Tabel `DIN_TIERS` di `dinamis.js` menyusul setelah API menyajikan tiering.
+- 2026-11-11 — Claude Code — Apps Script di-deploy versi 8 lewat `clasp` (link API tetap): API mengirim `programs` + `tiering` dari spreadsheet; parser tiering mengenali kolom `CASA`. Tabel `DIN_TIERS` dihapus dari `dinamis.js`. Perubahan Apps Script/spreadsheet berdampak ke aplikasi KKB juga: selalu tes KPR + KKB setelah deploy.
