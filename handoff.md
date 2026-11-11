@@ -77,7 +77,7 @@ Sebelumnya, endpoint API hanya melayani kalkulator KKB atau membaca sheet tungga
 * **HTTP POST:** Menerima body payload berformat JSON dengan format otorisasi:
   ```json
   {
-    "token": "BRI_KPR_SECURE_TOKEN_2026_xyz88",
+    "token": "<TOKEN — disimpan di Script Properties, jangan ditulis di repo>",
     "type": "kpr"
   }
   ```
@@ -97,7 +97,7 @@ Dalam 1 kali request HTTP POST, endpoint Apps Script langsung mengembalikan data
       "key": "fixed_3_7_10",
       "name": "Fixed 3 Th 7% Tenor 10 Th",
       "min_months": 120,
-      "segments": "36:7.00,84:10.50"
+      "segments": "36:7.00|84:10.50"
     }
   ],
   "tiering": [
@@ -402,7 +402,7 @@ Apakah URL Endpoint & Token Valid?
    * **`key`**: Identifier unik huruf kecil tanpa spasi (misal: `fixed_1_35_10`).
    * **`name`**: Nama program yang tampil di dropdown (misal: `Fixed 1 Th 3.5% Tenor 10 Th`).
    * **`min_months`**: Minimal total tenor dalam bulan (misal: `120`).
-   * **`segments`**: Rangkaian durasi dan bunga dipisahkan koma (misal: `12:3.50,108:11.00`).
+   * **`segments`**: Rangkaian `durasi:bunga` dipisahkan tanda `|` (misal: `12:3.50|108:11.00`).
 4. Data akan langsung ter-update di web aplikasi saat halaman di-refresh.
 
 ### 7.2 Cara Mengubah Tabel Tiering KPR Dinamis di Google Spreadsheet
@@ -412,7 +412,7 @@ Apakah URL Endpoint & Token Valid?
 4. Web app otomatis membaca perubahan tersebut dan menyesuaikan kalkulasi pengurang suku bunga.
 
 ### 7.3 Cara Memperbarui Kode Backend Google Apps Script
-Jika file [`google-apps-script/Code.gs`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/google-apps-script/Code.gs) mengalami perubahan logika:
+Jika file [`google-apps-script/Code.gs`](google-apps-script/Code.gs) mengalami perubahan logika:
 1. Buka spreadsheet Google > Menu **Extensions** (Ekstensi) > **Apps Script**.
 2. Salin seluruh kode terbaru dari `Code.gs` lokal dan gantikan isi di editor Apps Script.
 3. Klik tombol **Save** (💾).
@@ -424,11 +424,11 @@ Jika file [`google-apps-script/Code.gs`](file:///d:/Kerja/Magang Hub BRI/kalkula
 ---
 
 ### 8. Referensi File Penting dalam Repositori
-* [`index.html`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/index.html) — Antarmuka pengguna (UI), modal dialog info, struktur 4 tab simulasi KPR.
-* [`script.js`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/script.js) — Logika utama kalkulator (KPR Baru, Take Over Float, Take Over Fix, data loader, validasi RPC, Chart.js render).
-* [`dinamis.js`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/dinamis.js) — Mesin simulasi khusus KPR Dinamis (metode anuitas menyesuaikan, amortisasi dipercepat tetap, pemetaan tiering CSL).
-* [`google-apps-script/Code.gs`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/google-apps-script/Code.gs) — Backend API serverless Google Apps Script penyedia data `programs` dan `tiering`.
-* [`config.js`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/config.js) — Konfigurasi kredensial dan URL API terenkripsi.
-* [`programs.csv`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/programs.csv) — Cadangan database program suku bunga lokal offline.
-* [`tiering.csv`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/tiering.csv) — Cadangan database tabel tiering CSL pengurang bunga lokal offline.
-* [`Tambahan/`](file:///d:/Kerja/Magang Hub BRI/kalkulator-kpr-debitur/kalkulator-kpr-debitur/Tambahan/) — Berkas Excel acuan resmi perhitungan formula KPR Dinamis (`Simulasi_Angsuran_KPR DInamis.xlsx` dan `Kalkulator_Angsuran_Dinamis V2.xlsx`).
+* [`index.html`](index.html) — Antarmuka pengguna (UI), modal dialog info, struktur 4 tab simulasi KPR.
+* [`script.js`](script.js) — Logika utama kalkulator (KPR Baru, Take Over Float, Take Over Fix, data loader, validasi RPC, Chart.js render).
+* [`dinamis.js`](dinamis.js) — Mesin simulasi khusus KPR Dinamis (metode anuitas menyesuaikan, amortisasi dipercepat tetap, pemetaan tiering CSL).
+* [`google-apps-script/Code.gs`](google-apps-script/Code.gs) — Backend API serverless Google Apps Script penyedia data `programs` dan `tiering`.
+* [`config.js`](config.js) — Konfigurasi kredensial dan URL API terenkripsi.
+* [`programs.csv`](programs.csv) — Cadangan database program suku bunga lokal offline.
+* [`tiering.csv`](tiering.csv) — Cadangan database tabel tiering CSL pengurang bunga lokal offline.
+* [`Tambahan/`](Tambahan/) — Berkas Excel acuan resmi perhitungan formula KPR Dinamis (`Simulasi_Angsuran_KPR DInamis.xlsx` dan `Kalkulator_Angsuran_Dinamis V2.xlsx`).
