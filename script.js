@@ -646,51 +646,90 @@ function route(fromHashChange) {
 
 // ─── RPC: cek kemampuan bayar (KPR Baru) ───
 // rasio maksimal angsuran terhadap pendapatan: <15jt 50%, 15–25jt 55%, >25jt 60%
-let _rpcCustomEdited = false;
+// Sakelar "Atur Rasio Manual": mati → rasio mengikuti ketentuan di atas;
+// nyala → debitur mengisi rasio sendiri (persen). Kolom kosong / tidak valid → tetap rasio standar.
+let _rpcRatioManual = false;
 
 function rpcRatio(income) { return income < 15e6 ? 0.50 : income <= 25e6 ? 0.55 : 0.60; }
 
-function onRpcInputChange() {
-  _rpcCustomEdited = false;
-  syncRpcMaxField();
+// baca persen dari teks ("52,5" atau "52.5"); 0 bila kosong / tidak valid, maksimal 100
+function parseRatioPct(str) {
+  const n = parseFloat(String(str).replace(',', '.'));
+  return isFinite(n) && n > 0 ? Math.min(n, 100) : 0;
 }
+function fmtRatioPct(p) { return String(Math.round(p * 100) / 100).replace('.', ','); }
 
-function onRpcMaxCustomInput() {
-  _rpcCustomEdited = true;
-}
-
-function syncRpcMaxField() {
-  const maxEl = document.getElementById('rpcMaxInstallment');
-  if (!maxEl) return;
-  if (_rpcCustomEdited && parseNum(maxEl.value) > 0) return;
-  const income = parseNum(document.getElementById('rpcIncome').value);
-  const debt = parseNum(document.getElementById('rpcDebt').value);
-  if (income > 0) {
-    const ratio = rpcRatio(income);
-    const maxAng = income * ratio;
-    const sisaBank = Math.max(0, Math.round(maxAng - debt));
-    maxEl.value = formatThousands(sisaBank);
+function onRpcRatioToggle() {
+  const cb = document.getElementById('rpcRatioManual');
+  _rpcRatioManual = !!(cb && cb.checked);
+  const el = document.getElementById('rpcRatio');
+  if (_rpcRatioManual && el) {
+    // kolom masih kosong → mulai dari rasio standar supaya tinggal diubah
+    if (parseRatioPct(el.value) <= 0) {
+      const income = parseNum(document.getElementById('rpcIncome').value);
+      el.value = String(Math.round(rpcRatio(income) * 100));
+    }
+    syncRpcRatioField();
+    el.focus();
+    el.select();
   }
+  scheduleCalc();
+}
+
+function onRpcRatioInput(el) {
+  const clean = el.value.replace(/[^0-9.,]/g, '');
+  if (clean !== el.value) el.value = clean;
+}
+
+// rapikan isi kolom saat ditinggalkan (mis. 250 → 100)
+function onRpcRatioBlur() {
+  const el = document.getElementById('rpcRatio');
+  const pct = el ? parseRatioPct(el.value) : 0;
+  if (el) el.value = pct > 0 ? fmtRatioPct(pct) : '';
+  syncRpcRatioField();
+}
+
+// Selaraskan sakelar, kolom rasio, dan keterangan; kembalikan rasio yang dipakai (desimal).
+function syncRpcRatioField() {
+  const income = parseNum(document.getElementById('rpcIncome').value);
+  const stdPct = Math.round(rpcRatio(income) * 100);
+  const band = income < 15e6 ? 'di bawah Rp 15 juta' : income <= 25e6 ? 'Rp 15–25 juta' : 'di atas Rp 25 juta';
+
+  const cb = document.getElementById('rpcRatioManual');
+  if (cb) cb.checked = _rpcRatioManual;
+  const std = document.getElementById('rpcRatioStd');
+  if (std) std.textContent = `Standar untuk pendapatan ${band}: ${stdPct}%`;
+  const field = document.getElementById('rpcRatioField');
+  if (field) field.classList.toggle('hidden', !_rpcRatioManual);
+
+  const el = document.getElementById('rpcRatio');
+  const manualPct = _rpcRatioManual && el ? parseRatioPct(el.value) : 0;
+  if (el) el.placeholder = String(stdPct);
+  const hint = document.getElementById('rpcRatioHint');
+  if (hint) {
+    hint.textContent = manualPct > 0
+      ? 'Rasio ini dipakai menggantikan rasio standar.'
+      : `Kolom kosong — memakai rasio standar ${stdPct}%.`;
+  }
+
+  return (manualPct > 0 ? manualPct : stdPct) / 100;
 }
 
 function renderRpc(sim) {
   const el = document.getElementById('rpcResult');
-  syncRpcMaxField();
+  const ratio = syncRpcRatioField();
 
   const income = parseNum(document.getElementById('rpcIncome').value);
   const debt = parseNum(document.getElementById('rpcDebt').value);
-  const maxCustomEl = document.getElementById('rpcMaxInstallment');
-  const customVal = maxCustomEl ? parseNum(maxCustomEl.value) : 0;
 
-  const ratio = rpcRatio(income);
-  const maxAng = income * ratio;
-  const sisaBank = Math.max(0, maxAng - debt);
-  const limitToUse = customVal > 0 ? customVal : sisaBank;
-
-  if (limitToUse <= 0 && income <= 0) {
-    el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan atau maksimal angsuran untuk melihat kemampuan bayar.</p>';
+  if (income <= 0) {
+    el.innerHTML = '<p class="text-xs text-slate-400 dark:text-slate-500">Isi pendapatan per bulan untuk melihat kemampuan bayar.</p>';
     return;
   }
+
+  const maxAng = income * ratio;
+  const limitToUse = Math.max(0, maxAng - debt);
+  const basis = `${fmtRatioPct(ratio * 100)}% × pendapatan${debt > 0 ? ' − angsuran berjalan' : ''}`;
 
   const multi = sim.stepSummaries.length > 1;
   const pmt = sim.stepSummaries[0] ? sim.stepSummaries[0].payment : 0;
@@ -707,9 +746,10 @@ function renderRpc(sim) {
     ? `<p class="mt-1.5 text-[11px] opacity-90">Catatan: angsuran tahap berikutnya naik hingga <b>${fmtMoney(Math.round(peak))}/bln</b>, melebihi batas maksimal angsuran.</p>` : '';
 
   el.innerHTML = `
-    <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between">
-      <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran</span>
-      <span class="num text-sm font-bold text-bri dark:text-blue-300">${fmtMoney(Math.round(limitToUse))} /bln</span>
+    <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between gap-3">
+      <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran
+        <span class="block text-[10px] font-normal text-slate-400 dark:text-slate-500">${basis}</span></span>
+      <span class="num text-sm font-bold text-bri dark:text-blue-300 whitespace-nowrap">${fmtMoney(Math.round(limitToUse))} /bln</span>
     </div>
     <div role="status" class="mt-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
 }
@@ -1435,7 +1475,7 @@ function saveState() {
       steps: state.steps,
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
                   oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
-                  rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'), rpcMaxInstallment: v('rpcMaxInstallment'),
+                  rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'), rpcRatio: v('rpcRatio'), rpcRatioCustom: _rpcRatioManual,
                   fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
 
       feeMode: state.feeMode, feeVal: v('feeVal'),
@@ -1476,10 +1516,8 @@ function restoreState() {
     if (s.tier) currentTier = s.tier;
     if (parseNum(s.rpcIncome) > 0) set('rpcIncome', formatThousands(parseNum(s.rpcIncome)));
       if (s.rpcDebt != null && s.rpcDebt !== '') set('rpcDebt', formatThousands(parseNum(s.rpcDebt)));
-      if (parseNum(s.rpcMaxInstallment) > 0) {
-        set('rpcMaxInstallment', formatThousands(parseNum(s.rpcMaxInstallment)));
-        _rpcCustomEdited = true;
-      }
+      if (parseRatioPct(s.rpcRatio) > 0) set('rpcRatio', fmtRatioPct(parseRatioPct(s.rpcRatio)));
+      _rpcRatioManual = !!s.rpcRatioCustom;
       if (parseNum(s.fixOS) > 0) set('fixOS', formatThousands(parseNum(s.fixOS)));
       set('fixTotal', s.fixTotal); set('fixLeft', s.fixLeft); set('fixRate', s.fixRate); set('floatRate', s.floatRate);
       set('fixTakeoverMonth', s.fixTakeoverMonth);

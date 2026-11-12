@@ -205,7 +205,7 @@ Mengukur kelayakan finansial debitur:
    * Pendapatan $> \text{Rp } 25 \text{ Juta} \rightarrow 60\%$
 2. **Kapasitas Angsuran Tersedia:**
    $$\text{Maksimal Angsuran} = (\text{Pendapatan} \times \text{Rasio}) - \text{Angsuran Berjalan Lain}$$
-3. **Fitur Input Kustom:** Debitur dapat langsung mengisi angka maksimal angsuran yang dikehendaki secara manual.
+3. **Sakelar "Atur Rasio Manual":** Bawaan **mati** → rasio mengikuti ketentuan di poin 1 (rasio standar ditampilkan di bawah judul sakelar). Bila **dinyalakan**, muncul kolom "Rasio Maksimal Angsuran" (persen, 0–100, boleh desimal) yang menggantikan rasio standar di rumus poin 2. Kolom kosong/tidak valid → tetap rasio standar. Rasio manual bertahan walau pendapatan diubah; mematikan sakelar mengembalikan ke rasio standar.
 4. **Validasi:** Sistem membandingkan angsuran KPR tahap pertama dan puncak angsuran dengan batas maksimal angsuran debitur, menampilkan status kelayakan hijau (Mampu Bayar) atau kuning (Belum Mampu Bayar).
 
 #### C. Visualisasi Data Kumulatif
