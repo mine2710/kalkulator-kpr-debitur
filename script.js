@@ -731,19 +731,20 @@ function renderRpc(sim) {
   const limitToUse = Math.max(0, maxAng - debt);
   const basis = `${fmtRatioPct(ratio * 100)}% × pendapatan${debt > 0 ? ' − angsuran berjalan' : ''}`;
 
+  // Yang diuji = angsuran TERBESAR di seluruh tahap (biasanya tahap floating),
+  // bukan angsuran tahap pertama — supaya debitur tetap mampu saat bunga naik.
   const multi = sim.stepSummaries.length > 1;
-  const pmt = sim.stepSummaries[0] ? sim.stepSummaries[0].payment : 0;
   const peak = Math.max(0, ...sim.stepSummaries.map(s => s.payment));
-  const ok = limitToUse >= pmt;
+  const label = multi ? 'Angsuran KPR tertinggi' : 'Angsuran KPR';
+  const ok = limitToUse >= peak;
 
   const cls = ok
     ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40'
     : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40';
   const msg = ok
-    ? `✅ <b>Mampu bayar</b> — Angsuran KPR (${fmtMoney(Math.round(pmt))}/bln) masih di bawah batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln).`
-    : `⚠️ <b>Belum mampu bayar</b> — Angsuran KPR (${fmtMoney(Math.round(pmt))}/bln) melebihi batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln). Coba perpanjang tenor atau kurangi plafon.`;
-  const note = ok && peak > limitToUse
-    ? `<p class="mt-1.5 text-[11px] opacity-90">Catatan: angsuran tahap berikutnya naik hingga <b>${fmtMoney(Math.round(peak))}/bln</b>, melebihi batas maksimal angsuran.</p>` : '';
+    ? `✅ <b>Mampu bayar</b> — ${label} (${fmtMoney(Math.round(peak))}/bln) masih di bawah batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln).`
+    : `⚠️ <b>Belum mampu bayar</b> — ${label} (${fmtMoney(Math.round(peak))}/bln) melebihi batas maksimal angsuran (${fmtMoney(Math.round(limitToUse))}/bln). Coba perpanjang tenor atau kurangi plafon.`;
+  const note = '';
 
   el.innerHTML = `
     <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between gap-3">
