@@ -470,7 +470,9 @@ function recalcAll() {
 
 // ─── Take Over controls ───
 // ─── Halaman & mode simulasi ───
-const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'];
+// Tab yang disembunyikan sementara (kode tetap ada). Hapus dari daftar ini untuk menampilkan lagi.
+const HIDDEN_MODES = ['kpr-dinamis'];
+const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'].filter(k => !HIDDEN_MODES.includes(k));
 const MODES = {
   'kpr-baru': {
     short: 'KPR Baru', icon: '🏠', mainTitle: 'Skema KPR Baru',
@@ -624,7 +626,7 @@ function syncPrincipalInputState() {
 function route(fromHashChange) {
   const prevMode = state.mode;
   const h = location.hash.replace('#', '');
-  state.mode = MODES[h] ? h : 'kpr-baru';
+  state.mode = MODES[h] && !HIDDEN_MODES.includes(h) ? h : 'kpr-baru';
   renderTabs();
   document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
   document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
