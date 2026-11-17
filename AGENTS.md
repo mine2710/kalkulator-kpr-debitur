@@ -24,7 +24,7 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 ## Dua deploy (main & beta)
 
 - **`main`** = versi utama, tayang di GitHub Pages. Folder lokal: `kalkulator-kpr-debitur/kalkulator-kpr-debitur`.
-- **`beta`** = salinan untuk Cloudflare Pages (folder lokal: `kalkulator-kpr-debitur(folder ke-2)`). Berisi fitur yang belum masuk utama: tab KPR Dinamis ditampilkan, Take Over Fix bunga berjenjang.
+- **`beta`** = salinan, tayang di Cloudflare Pages: https://revisimasreyhan.pages.dev/ (deploy otomatis dari branch `beta`; folder lokal: `kalkulator-kpr-debitur(folder ke-2)`). Berisi fitur yang belum masuk utama: tab KPR Dinamis ditampilkan, Take Over Fix bunga berjenjang.
 - Jangan merge `beta` ke `main` tanpa persetujuan pengguna. Perbaikan untuk versi utama dikerjakan di `main`.
 
 ## Aturan wajib
