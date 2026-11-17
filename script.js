@@ -18,6 +18,7 @@ let state = {
   feeMode: 'persen',
   oldPmtCustom: false,
   fixSyncPlafon: true,
+  fixExtra: [], // Take Over Fix berjenjang: tahap fix ke-2 dst. [{ months, rate }]
   fixAmortOpen: false,
   fixAmortAll: false,
   userPrincipal: 1000000000,
@@ -471,7 +472,7 @@ function recalcAll() {
 // ─── Take Over controls ───
 // ─── Halaman & mode simulasi ───
 // Tab yang disembunyikan sementara (kode tetap ada). Hapus dari daftar ini untuk menampilkan lagi.
-const HIDDEN_MODES = ['kpr-dinamis'];
+const HIDDEN_MODES = [];
 const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'].filter(k => !HIDDEN_MODES.includes(k));
 const MODES = {
   'kpr-baru': {
@@ -758,8 +759,19 @@ let _lastFixFx = null;
 function readFixInputs() {
   const plafonAwal = parseNum(document.getElementById('fixOS').value);
   const total = Math.max(2, Math.round(Number(document.getElementById('fixTotal').value) || 240));
-  const fixRaw = Math.max(0, Math.round(Number(document.getElementById('fixLeft').value) || 0));
-  const fixMonths = Math.min(total, fixRaw);
+  // tahapan fix berjenjang: Fix 1 (kolom tetap) + tahap tambahan; dipotong bila melebihi tenor
+  const rawStages = [{
+    months: Math.max(0, Math.round(Number(document.getElementById('fixLeft').value) || 0)),
+    rate: Number(document.getElementById('fixRate').value) || 0,
+  }].concat(state.fixExtra.map(x => ({ months: Math.max(0, Math.round(Number(x.months) || 0)), rate: Number(x.rate) || 0 })));
+  const fixRaw = rawStages.reduce((a, x) => a + x.months, 0);
+  const fixStages = [];
+  let used = 0;
+  rawStages.forEach((x, i) => {
+    const m = Math.min(x.months, total - used);
+    if (m > 0) { fixStages.push({ no: i + 1, months: m, rate: x.rate, start: used + 1, end: used + m }); used += m; }
+  });
+  const fixMonths = used;
   const toRawEl = document.getElementById('fixTakeoverMonth');
   const toRaw = toRawEl ? Math.max(1, Math.round(Number(toRawEl.value) || 1)) : 1;
   const toMonth = Math.min(Math.max(1, toRaw), total - 1);
@@ -768,9 +780,10 @@ function readFixInputs() {
     total,
     fixRaw,
     fixMonths,
+    fixStages,
     toRaw,
     toMonth,
-    rFix: Number(document.getElementById('fixRate').value) || 0,
+    rFix: fixStages.length ? fixStages[0].rate : 0,
     rFloat: Number(document.getElementById('floatRate').value) || 0,
   };
 }
@@ -779,19 +792,21 @@ function buildFixSchedule() {
   const f = readFixInputs();
   const floatAwalMonths = f.total - f.fixMonths;
   const fullSteps = [];
-  let fixPmt = 0, floatPmt = 0, bal = f.plafonAwal;
+  let floatPmt = 0, bal = f.plafonAwal, done = 0;
 
-  if (f.fixMonths > 0) {
-    fixPmt = Math.round(standardPayment(f.plafonAwal, f.rFix / 1200, f.total));
-    fullSteps.push({ months: f.fixMonths, rate: f.rFix, payment: fixPmt });
-    for (let m = 0; m < f.fixMonths; m++) {
-      bal -= fixPmt - bal * (f.rFix / 1200);
-    }
-  }
+  // tiap ganti tahap, angsuran dihitung ulang dari sisa pokok & sisa tenor
+  f.fixStages.forEach(st => {
+    const r = st.rate / 1200;
+    st.payment = Math.round(standardPayment(Math.max(0, bal), r, f.total - done));
+    fullSteps.push({ months: st.months, rate: st.rate, payment: st.payment });
+    for (let m = 0; m < st.months; m++) bal -= st.payment - bal * r;
+    done += st.months;
+  });
   if (floatAwalMonths > 0) {
     floatPmt = Math.round(standardPayment(Math.max(0, bal), f.rFloat / 1200, floatAwalMonths));
     fullSteps.push({ months: floatAwalMonths, rate: f.rFloat, payment: floatPmt });
   }
+  const fixPmt = f.fixStages.length ? f.fixStages[0].payment : 0;
 
   const fullSim = simulateFull(f.plafonAwal, fullSteps);
   const toRow = fullSim.rows[f.toMonth - 1];
@@ -800,7 +815,7 @@ function buildFixSchedule() {
   const sisaTenor = remRows.length;
   const sisaFix = Math.max(0, f.fixMonths - f.toMonth);
   const sisaFloat = Math.max(0, sisaTenor - sisaFix);
-  const curPmt = sisaFix > 0 ? fixPmt : floatPmt;
+  const curPmt = remRows.length ? remRows[0].payment : floatPmt;
   const remTotalBunga = remRows.reduce((acc, r) => acc + r.interest, 0);
 
   return {
@@ -816,6 +831,35 @@ function buildFixSchedule() {
     remRows,
     remTotalBunga,
   };
+}
+
+// ─── Tahap fix tambahan (Fix 2, Fix 3, …) ───
+function renderFixStages() {
+  const wrap = document.getElementById('fixExtraStages');
+  if (!wrap) return;
+  const inp = 'num w-full px-3 py-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition';
+  wrap.innerHTML = state.fixExtra.map((x, i) => `
+    <div class="grid grid-cols-[3.25rem_1fr_1fr_2rem] gap-2 items-center">
+      <span class="text-xs font-bold text-amber-700 dark:text-amber-300">Fix ${i + 2}</span>
+      <input type="number" min="0" step="1" value="${x.months}" aria-label="Masa Fix ${i + 2} (bln)" class="${inp}" oninput="updateFixStage(${i}, 'months', this.value)">
+      <input type="number" min="0" step="0.01" value="${x.rate}" aria-label="Bunga Fix ${i + 2} (%)" class="${inp}" oninput="updateFixStage(${i}, 'rate', this.value)">
+      <button type="button" onclick="removeFixStage(${i})" aria-label="Hapus tahap Fix ${i + 2}" title="Hapus tahap"
+        class="h-8 w-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition">✕</button>
+    </div>`).join('');
+}
+function addFixStage() {
+  const last = state.fixExtra.length ? state.fixExtra[state.fixExtra.length - 1] : { rate: Number(document.getElementById('fixRate').value) || 0 };
+  state.fixExtra.push({ months: 12, rate: +(Number(last.rate) + 1).toFixed(2) });
+  renderFixStages(); state.fixAmortAll = false; scheduleCalc();
+}
+function removeFixStage(i) {
+  state.fixExtra.splice(i, 1);
+  renderFixStages(); state.fixAmortAll = false; scheduleCalc();
+}
+function updateFixStage(i, key, val) {
+  if (!state.fixExtra[i]) return;
+  state.fixExtra[i][key] = Number(val) || 0;
+  state.fixAmortAll = false; scheduleCalc();
 }
 
 function toggleFixAmort() {
@@ -842,7 +886,7 @@ function renderFixOutputs(fx) {
   _lastFixFx = fx;
   const f = fx.f;
   const hints = [];
-  if (f.fixRaw > f.total) hints.push('Masa fix awal melebihi tenor awal, disesuaikan menjadi ' + f.total + ' bln.');
+  if (f.fixRaw > f.total) hints.push('Total masa fix melebihi tenor awal, disesuaikan menjadi ' + f.total + ' bln.');
   if (f.toRaw >= f.total) hints.push('Bulan take over dibatasi maksimal bulan ke-' + (f.total - 1) + '.');
   document.getElementById('fixHint').textContent = hints.join(' ');
 
@@ -903,7 +947,9 @@ function renderFixOutputs(fx) {
       <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sisa masa fix: <b>${fx.sisaFix} bln</b> · Masa float: <b>${fx.sisaFloat} bln</b></p>
     </div>
     <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-1">
-      ${row('Angsuran masa fix', fx.fixPmt > 0 ? fmtMoney(fx.fixPmt) + ' /bln' : '—', f.fixMonths > 0 ? 'Bunga ' + fmtPct(f.rFix) + ' (bln 1–' + f.fixMonths + ')' : 'Tanpa masa fix')}
+      ${f.fixStages.length
+        ? f.fixStages.map(st => row(f.fixStages.length > 1 ? 'Angsuran Fix ' + st.no : 'Angsuran masa fix', fmtMoney(st.payment) + ' /bln', 'Bunga ' + fmtPct(st.rate) + ' (bln ' + st.start + '–' + st.end + ')')).join('')
+        : row('Angsuran masa fix', '—', 'Tanpa masa fix')}
       ${row('Angsuran masa float', fx.sisaFloat > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.sisaFloat > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ' (mulai bln ke-' + (f.fixMonths + 1) + ')' : '')}
     </div>
     <button type="button" onclick="toggleFixAmort()"
@@ -1275,7 +1321,7 @@ function renderMetrics(sim, to, principal) {
 }
 
 // ─── Take Over Fix: tahapan perubahan angsuran (skema sebelumnya vs take over) ───
-// Tahap mengikuti KPR sebelumnya saja: (1) sisa masa fix, (2) masa float. Angsuran take over
+// Tahap mengikuti KPR sebelumnya saja: tiap tahap fix yang masih tersisa (berjenjang), lalu masa float. Angsuran take over
 // dibandingkan pada bulan pertama tiap tahap; bila berubah di tengah tahap, dicatat sebagai keterangan.
 function buildPmtPhases(sim, to) {
   const fx = to.fx;
@@ -1283,8 +1329,12 @@ function buildPmtPhases(sim, to) {
   const oldPays = to.oldPayments || [];
   const oldN = to.oldMonths, newN = sim.totalMonths;
   const ranges = [];
-  if (fx.sisaFix > 0) ranges.push({ from: 1, to: Math.min(fx.sisaFix, oldN), oldLabel: 'Fix ' + fmtPct(fx.f.rFix) });
-  if (fx.sisaFloat > 0) ranges.push({ from: fx.sisaFix + 1, to: oldN, oldLabel: 'Float ' + fmtPct(fx.f.rFloat) });
+  const multiFix = fx.f.fixStages.length > 1;
+  fx.f.fixStages.forEach(st => {
+    const from = Math.max(1, st.start - fx.f.toMonth), to = Math.min(oldN, st.end - fx.f.toMonth);
+    if (to >= from) ranges.push({ from, to, name: multiFix ? 'Masa Fix ' + st.no : 'Masa Fix', oldLabel: 'Fix ' + fmtPct(st.rate) });
+  });
+  if (fx.sisaFloat > 0) ranges.push({ from: fx.sisaFix + 1, to: oldN, name: 'Masa Float', oldLabel: 'Float ' + fmtPct(fx.f.rFloat) });
   return ranges.filter(r => r.to >= r.from).map(r => {
     const a = r.from - 1;
     const newRow = a < newN ? sim.rows[a] : null;
@@ -1299,7 +1349,7 @@ function buildPmtPhases(sim, to) {
       if (!note && newN < r.to) note = 'Lunas di bln ke-' + newN;
     }
     return {
-      from: r.from, to: r.to, oldLabel: r.oldLabel,
+      from: r.from, to: r.to, name: r.name, oldLabel: r.oldLabel,
       oldP: Math.round(oldPays[a] || 0),
       newP: newRow ? Math.round(newRow.payment) : null,
       newLabel: newRow ? 'Bunga ' + fmtPct(sim.stepSummaries[newRow.step - 1].rate) : 'Lunas',
@@ -1326,7 +1376,7 @@ function openPmtInfo() {
   const rows = d.phases.map((p, i) => {
     const s = phaseSelisih(p);
     return `<tr class="border-t border-slate-100 dark:border-slate-700">
-      <td class="px-2 py-2 whitespace-nowrap"><b>${p.oldLabel.startsWith('Fix') ? 'Masa Fix' : 'Masa Float'}</b><span class="block text-[10px] text-slate-400">Bln ${p.from}${p.to > p.from ? '–' + p.to : ''}</span></td>
+      <td class="px-2 py-2 whitespace-nowrap"><b>${p.name}</b><span class="block text-[10px] text-slate-400">Bln ${p.from}${p.to > p.from ? '–' + p.to : ''}</span></td>
       <td class="px-2 py-2 whitespace-nowrap">${p.oldP == null ? '—' : fmtMoney(p.oldP)}<span class="block text-[10px] text-slate-400">${p.oldLabel}</span></td>
       <td class="px-2 py-2 whitespace-nowrap">${p.newP == null ? '—' : fmtMoney(p.newP)}<span class="block text-[10px] text-slate-400">${p.newLabel}</span>${p.note ? `<span class="block text-[10px] text-amber-600 dark:text-amber-400">${p.note}</span>` : ''}</td>
       <td class="px-2 py-2 whitespace-nowrap text-right font-bold ${s.cls}">${s.txt}</td></tr>`;
@@ -1336,7 +1386,7 @@ function openPmtInfo() {
       <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${infoIcon('h-5 w-5')}</span>
       <div class="flex-1">
         <h3 id="infoTitle" class="text-base font-bold leading-tight">Tahapan Perubahan Angsuran</h3>
-        <p class="mt-1 text-xs text-blue-100">Perbandingan angsuran skema sebelumnya dan take over pada masa fix dan masa float, dihitung sejak bulan take over.</p>
+        <p class="mt-1 text-xs text-blue-100">Perbandingan angsuran skema sebelumnya dan take over pada tiap tahap fix dan masa float, dihitung sejak bulan take over.</p>
       </div>
       <button type="button" onclick="closeInfo()" aria-label="Tutup" class="h-8 w-8 shrink-0 rounded-lg hover:bg-white/15 transition">✕</button>
     </div>
@@ -1568,7 +1618,7 @@ function saveState() {
             oldRate: v('oldRate'), oldTerm: v('oldTerm'),
                   oldPlafon: v('oldPlafon'), oldPmtCustom: !!state.oldPmtCustom, oldCustomPmt: v('oldCustomPmt'),
                   rpcIncome: v('rpcIncome'), rpcDebt: v('rpcDebt'), rpcRatio: v('rpcRatio'), rpcRatioCustom: _rpcRatioManual,
-                  fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
+                  fixOS: v('fixOS'), fixTotal: v('fixTotal'), fixLeft: v('fixLeft'), fixRate: v('fixRate'), fixExtra: state.fixExtra, floatRate: v('floatRate'), fixTakeoverMonth: v('fixTakeoverMonth'), fixSyncPlafon: !!state.fixSyncPlafon, userPrincipal: state.userPrincipal,
 
       feeMode: state.feeMode, feeVal: v('feeVal'),
     }));
@@ -1613,6 +1663,7 @@ function restoreState() {
       if (parseNum(s.fixOS) > 0) set('fixOS', formatThousands(parseNum(s.fixOS)));
       set('fixTotal', s.fixTotal); set('fixLeft', s.fixLeft); set('fixRate', s.fixRate); set('floatRate', s.floatRate);
       set('fixTakeoverMonth', s.fixTakeoverMonth);
+      if (Array.isArray(s.fixExtra)) state.fixExtra = s.fixExtra.filter(x => x && isFinite(+x.months) && isFinite(+x.rate)).map(x => ({ months: Math.round(+x.months), rate: +x.rate }));
       if (typeof s.fixSyncPlafon === 'boolean') {
         state.fixSyncPlafon = s.fixSyncPlafon;
         const syncEl = document.getElementById('fixSyncPlafon');
@@ -1652,6 +1703,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateThemeIcon();
   const restored = restoreState();
   renderSteps();
+  renderFixStages();
   if (!restored) recalcAll();
     updatePrincipalWords();
   updateFeeHint();

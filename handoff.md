@@ -253,6 +253,7 @@ sequenceDiagram
 ```
 
 1. **Simulasi Amortisasi Bank Sebelumnya:**
+   * *(Branch `beta`)* Bunga fix bisa **berjenjang**: Fix 1 (`fixLeft`/`fixRate`) + tahap tambahan di `state.fixExtra` (tombol "+ Tambah Tahap Fix"). Setiap ganti tahap, angsuran dihitung ulang dari sisa pokok & sisa tenor; sesudah tahap fix terakhir memakai Bunga Float.
    * Menghitung angsuran masa bunga fix dari plafon awal dan tenor total awal.
    * Melakukan amortisasi dari bulan ke-1 sampai ke bulan take over yang diinputkan debitur.
    * Saldo akhir pada bulan tersebut secara otomatis menjadi **Sisa OS Take Over**.

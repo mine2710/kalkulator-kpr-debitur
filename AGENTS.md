@@ -21,6 +21,12 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 | `programs.csv` / `tiering.csv` | Cadangan lokal saja, **tidak ada di GitHub** (di-`.gitignore`). Sumber data = Google Spreadsheet (sheet `Programs`, `tiering`). `segments` = `durasi:bunga` dipisah `|` |
 | `google-apps-script/Code.gs` | Backend; token dibaca dari Script Properties |
 
+## Dua deploy (main & beta)
+
+- **`main`** = versi utama, tayang di GitHub Pages. Folder lokal: `kalkulator-kpr-debitur/kalkulator-kpr-debitur`.
+- **`beta`** = salinan untuk Cloudflare Pages (folder lokal: `kalkulator-kpr-debitur(folder ke-2)`). Berisi fitur yang belum masuk utama: tab KPR Dinamis ditampilkan, Take Over Fix bunga berjenjang.
+- Jangan merge `beta` ke `main` tanpa persetujuan pengguna. Perbaikan untuk versi utama dikerjakan di `main`.
+
 ## Aturan wajib
 
 1. **Bahasa:** UI, pesan commit, dan penjelasan ke pengguna dalam **Bahasa Indonesia**.
@@ -67,3 +73,4 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 - 2026-11-16 — Claude Code — Tab KPR Dinamis disembunyikan sementara atas permintaan pengguna lewat `HIDDEN_MODES` di `script.js` (kode & HTML tetap ada; `#kpr-dinamis` dialihkan ke KPR Baru; navigasi jadi 3 kolom). Untuk menampilkan lagi: kosongkan `HIDDEN_MODES` dan kembalikan `grid-cols-4` di `index.html`.
 - 2026-11-17 — Claude Code — RPC (KPR Baru): sakelar "Atur Rasio Manual" diganti nama "Atur RPC"; keterangan "Standar untuk pendapatan …" dan keterangan rumus di bawah "Maksimal Angsuran" dihapus. Kata "BRI" dihapus dari semua teks yang tampil di aplikasi (judul tab, deskripsi mode, banner KPR Dinamis); nama kelas warna `bri` & komentar kode tetap.
 - 2026-11-17 — Claude Code — Take Over Fix: kartu ringkasan "Perubahan Angsuran" tetap menampilkan selisih bulan pertama seperti semula, ditambah tombol "Lihat Tabel Tahapan Angsuran" (gaya sama dengan "Lihat Tabel Amortisasi"; muncul bila angsuran berubah per tahap, mis. bank lama turun saat masuk masa float) yang membuka dialog berisi tabel 2 tahap saja (Masa Fix & Masa Float KPR sebelumnya; perubahan angsuran take over di tengah tahap ditulis sebagai catatan) (keterangan "Kenapa dibuat per tahap" dihapus atas permintaan pengguna). Tab lain tidak diubah.
+- 2026-11-17 — Claude Code — Branch `beta` (deploy Cloudflare Pages) dibuat dari `main`: tab KPR Dinamis ditampilkan lagi (`HIDDEN_MODES = []`, navigasi 4 kolom); Take Over Fix bunga KPR sebelumnya bisa berjenjang (Fix 1 + tombol "+ Tambah Tahap Fix" → Float), angsuran dihitung ulang tiap ganti tahap; tabel tahapan angsuran mengikuti tiap tahap fix + float.
