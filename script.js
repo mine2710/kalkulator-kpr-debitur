@@ -1061,6 +1061,7 @@ function computeTakeover(principal, sim, prebuiltFx) {
   return {
     oldPrincipal, oldMonths, oldPmt, fee, horizon, cumOld, cumNew,
     fx: old.fx || null,
+    oldPayments: old.payments,
     oldSaldo: old.saldo, oldTotalBunga: old.totalBunga,
     meets, oldTotal, newTotal, efisiensi: oldTotal - newTotal,
   };
@@ -1136,11 +1137,21 @@ function renderSummaryCards(sim, to, principal) {
             : `<span class="text-amber-600 dark:text-amber-400">▲ ${fmtMoney(Math.abs(selPmt))}</span>`;
     const hemat = to.efisiensi >= 0;
     const effColor = hemat ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+    // Take Over Fix: angsuran sebelumnya bisa turun saat masuk masa float → tampilkan per tahap + tombol (i)
+    const phases = state.mode === 'to-fix' ? buildPmtPhases(sim, to) : [];
+    _lastPmtPhases = phases.length > 1 ? { phases, fx: to.fx } : null;
+    const pmtBody = `<h3 class="text-xl font-bold mb-1 num">${pmtHtml}</h3>
+        <p class="text-[11px] text-slate-400 dark:text-slate-500">Angsuran sebelum: ${fmtMoney(Math.round(to.oldPmt))}/bln</p>`;
+    const pmtInfoBtn = _lastPmtPhases
+      ? `<button type="button" onclick="openPmtInfo()"
+          class="mt-2 w-full flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold text-bri dark:text-blue-300 transition">
+          <span>Lihat Tabel Tahapan Angsuran</span><span>▼</span></button>`
+      : '';
     html += `
       <div class="${whiteCard}">
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Perubahan Angsuran</p>
-        <h3 class="text-xl font-bold mb-1 num">${pmtHtml}</h3>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500">Angsuran sebelum: ${fmtMoney(Math.round(to.oldPmt))}/bln</p>
+        ${pmtBody}
+        ${pmtInfoBtn}
       </div>
       <div class="${whiteCard}">
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Selisih Total Dibayar</p>
@@ -1261,6 +1272,89 @@ function renderMetrics(sim, to, principal) {
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">${more}</div></div>`;
 
   document.getElementById('metricsGrid').innerHTML = html;
+}
+
+// ─── Take Over Fix: tahapan perubahan angsuran (skema sebelumnya vs take over) ───
+// Tahap mengikuti KPR sebelumnya saja: (1) sisa masa fix, (2) masa float. Angsuran take over
+// dibandingkan pada bulan pertama tiap tahap; bila berubah di tengah tahap, dicatat sebagai keterangan.
+function buildPmtPhases(sim, to) {
+  const fx = to.fx;
+  if (!fx) return [];
+  const oldPays = to.oldPayments || [];
+  const oldN = to.oldMonths, newN = sim.totalMonths;
+  const ranges = [];
+  if (fx.sisaFix > 0) ranges.push({ from: 1, to: Math.min(fx.sisaFix, oldN), oldLabel: 'Fix ' + fmtPct(fx.f.rFix) });
+  if (fx.sisaFloat > 0) ranges.push({ from: fx.sisaFix + 1, to: oldN, oldLabel: 'Float ' + fmtPct(fx.f.rFloat) });
+  return ranges.filter(r => r.to >= r.from).map(r => {
+    const a = r.from - 1;
+    const newRow = a < newN ? sim.rows[a] : null;
+    let note = '';
+    if (newRow) {
+      for (let t = a + 1; t < Math.min(r.to, newN); t++) {
+        if (Math.abs(sim.rows[t].payment - newRow.payment) > 1) {
+          note = 'Mulai bln ke-' + (t + 1) + ' jadi ' + fmtMoney(Math.round(sim.rows[t].payment));
+          break;
+        }
+      }
+      if (!note && newN < r.to) note = 'Lunas di bln ke-' + newN;
+    }
+    return {
+      from: r.from, to: r.to, oldLabel: r.oldLabel,
+      oldP: Math.round(oldPays[a] || 0),
+      newP: newRow ? Math.round(newRow.payment) : null,
+      newLabel: newRow ? 'Bunga ' + fmtPct(sim.stepSummaries[newRow.step - 1].rate) : 'Lunas',
+      note,
+    };
+  });
+}
+
+let _lastPmtPhases = null;
+function phaseSelisih(p) {
+  if (p.oldP == null) return { txt: 'Skema sebelumnya lunas', cls: 'text-slate-500 dark:text-slate-400' };
+  if (p.newP == null) return { txt: 'Take over lunas', cls: 'text-emerald-600 dark:text-emerald-400' };
+  const sel = p.oldP - p.newP;
+  if (Math.abs(sel) < 1) return { txt: 'Sama', cls: 'text-slate-500 dark:text-slate-400' };
+  return sel > 0
+    ? { txt: '▼ ' + fmtMoney(sel), cls: 'text-emerald-600 dark:text-emerald-400' }
+    : { txt: '▲ ' + fmtMoney(-sel), cls: 'text-amber-600 dark:text-amber-400' };
+}
+// dialog (tombol i) di kartu Perubahan Angsuran — gaya sama dengan dialog info program
+function openPmtInfo() {
+  const d = _lastPmtPhases;
+  if (!d) return;
+  const fx = d.fx;
+  const rows = d.phases.map((p, i) => {
+    const s = phaseSelisih(p);
+    return `<tr class="border-t border-slate-100 dark:border-slate-700">
+      <td class="px-2 py-2 whitespace-nowrap"><b>${p.oldLabel.startsWith('Fix') ? 'Masa Fix' : 'Masa Float'}</b><span class="block text-[10px] text-slate-400">Bln ${p.from}${p.to > p.from ? '–' + p.to : ''}</span></td>
+      <td class="px-2 py-2 whitespace-nowrap">${p.oldP == null ? '—' : fmtMoney(p.oldP)}<span class="block text-[10px] text-slate-400">${p.oldLabel}</span></td>
+      <td class="px-2 py-2 whitespace-nowrap">${p.newP == null ? '—' : fmtMoney(p.newP)}<span class="block text-[10px] text-slate-400">${p.newLabel}</span>${p.note ? `<span class="block text-[10px] text-amber-600 dark:text-amber-400">${p.note}</span>` : ''}</td>
+      <td class="px-2 py-2 whitespace-nowrap text-right font-bold ${s.cls}">${s.txt}</td></tr>`;
+  }).join('');
+  document.getElementById('infoBody').innerHTML = `
+    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--bri)),rgb(var(--bri-2)))">
+      <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${infoIcon('h-5 w-5')}</span>
+      <div class="flex-1">
+        <h3 id="infoTitle" class="text-base font-bold leading-tight">Tahapan Perubahan Angsuran</h3>
+        <p class="mt-1 text-xs text-blue-100">Perbandingan angsuran skema sebelumnya dan take over pada masa fix dan masa float, dihitung sejak bulan take over.</p>
+      </div>
+      <button type="button" onclick="closeInfo()" aria-label="Tutup" class="h-8 w-8 shrink-0 rounded-lg hover:bg-white/15 transition">✕</button>
+    </div>
+    <div class="space-y-4 px-5 py-5">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+        <table class="num w-full text-left text-xs text-slate-700 dark:text-slate-200">
+          <thead class="bg-slate-50 dark:bg-slate-700/60 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-300">
+            <tr><th class="px-2 py-2">Periode</th><th class="px-2 py-2">Sebelumnya</th><th class="px-2 py-2">Take Over</th><th class="px-2 py-2 text-right">Selisih /bln</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="flex gap-2 px-5 pb-5">
+      <button type="button" onclick="closeInfo()" class="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Tutup</button>
+    </div>`;
+  const dlg = document.getElementById('infoDialog');
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
 }
 
 // ─── Render: TO banner ───

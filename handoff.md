@@ -264,6 +264,10 @@ sequenceDiagram
    * Mengakumulasikan biaya total yang dibayarkan di bank lama (bulan take over $\times$ angsuran lama) ditambah biaya take over.
    * Memetakan garis kumulatif KPR lama vs KPR BRI pada bulan berjalan yang sama.
    * Menghitung secara eksak di bulan ke berapa biaya take over tertutupi oleh selisih penghematan bunga BRI (Titik Impas / BEP).
+4. **Tahapan Perubahan Angsuran** (`buildPmtPhases` / `openPmtInfo` di `script.js`, lewat tombol "Lihat Tabel Tahapan Angsuran" di kartu ringkasan "Perubahan Angsuran"; isi kartu tetap selisih bulan pertama):
+   * Hanya 2 tahap, mengikuti KPR sebelumnya: **Masa Fix** (sisa masa fix) dan **Masa Float** (sampai KPR lama lunas). Angsuran take over diambil pada bulan pertama tiap tahap; bila berubah di tengah tahap (ganti tahap bunga program), ditulis sebagai catatan "Mulai bln ke-… jadi Rp…".
+   * Tiap tahap menampilkan angsuran sebelumnya vs take over beserta selisih /bln (▼ hemat / ▲ lebih).
+   * Alasan: angsuran masa float dihitung ulang dari sisa pokok & sisa tenor dengan bunga float; bila bunga float < bunga fix, angsuran lama **turun**, sehingga selisih bulan pertama saja bisa menyesatkan. Tabel tahapan tampil di dialog `#infoDialog` (tanpa teks penjelasan).
 
 ---
 
