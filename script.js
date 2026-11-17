@@ -484,8 +484,8 @@ const MODES = {
     ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-bri-light text-bri dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-blue-800', tab: 'bg-bri text-white' },
   },
   'to-float': {
-    short: 'Take Over Float', icon: '🔄', mainTitle: 'Skema Take Over',
-    title: 'Take Over Float',
+    short: 'Pengajuan Takeover KPR', sub: 'Nasabah Sudah Floating Rate', icon: '🔄', mainTitle: 'Skema Take Over',
+    title: 'Pengajuan Takeover KPR (Nasabah Sudah Floating Rate)',
     tagline: 'Simulasi pemindahan KPR dari bank lain ketika bunga di bank sebelumnya sudah memasuki masa floating.',
     who: ['Debitur KPR di bank lain yang masa bunga fix-nya sudah berakhir.', 'Bunga yang dibayar saat ini sudah <b>floating</b> (mengikuti suku bunga pasar).'],
     calc: ['Perbandingan angsuran skema sebelumnya vs skema take over.', 'Selisih total pembayaran, sudah termasuk biaya take over.', '<b>Titik impas (BEP)</b>: bulan ke berapa take over mulai lebih ringan.'],
@@ -493,8 +493,8 @@ const MODES = {
     ui: { border: 'border-t-briorange', borderL: 'border-l-briorange', badge: 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300', dot: 'bg-briorange', btn: 'bg-orange-600 hover:bg-orange-700', tab: 'bg-orange-600 text-white' },
   },
   'to-fix': {
-    short: 'Take Over Fix', icon: '📌', mainTitle: '② KPR Simulasi Take Over',
-    title: 'Take Over Fix',
+    short: 'Pengajuan Takeover KPR', sub: 'Nasabah Masih Fixed Rate', icon: '📌', mainTitle: '② KPR Simulasi Take Over',
+    title: 'Pengajuan Takeover KPR (Nasabah Masih Fixed Rate)',
     tagline: 'Simulasi pemindahan KPR dari bank lain dengan menghitung amortisasi lengkap dari plafon awal hingga bulan take over untuk memperoleh Sisa OS otomatis.',
     who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: memindahkan KPR pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
     calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR baru dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
@@ -542,9 +542,9 @@ function renderTabs() {
       : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
     return `<div class="relative">
       <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-1.5 md:gap-2 rounded-xl px-3 sm:px-4 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-semibold transition ${tabCls}">
-        ${modeIcon(k)}<span class="text-center leading-tight">${m.short}</span>
+        ${modeIcon(k)}<span class="text-center leading-tight">${m.short}${m.sub ? `<span class="block text-[10px] md:text-[11px] font-medium ${on ? 'text-white/80' : 'text-slate-400 dark:text-slate-400'}">${m.sub}</span>` : ''}</span>
       </a>
-      <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.short}" title="Info program"
+      <button type="button" onclick="openInfo('${k}')" aria-label="Info program ${m.title}" title="Info program"
         class="absolute top-1.5 right-1.5 inline-flex h-6 w-6 items-center justify-center rounded-full transition ${infoCls}">${infoIcon()}</button>
     </div>`;
   }).join('');
@@ -562,7 +562,7 @@ function renderTabs() {
           <h2 class="text-sm font-bold text-slate-800 dark:text-white leading-snug">${cur.title}</h2>
         </div>
       </div>
-      <button type="button" onclick="openInfo('${state.mode}')" aria-label="Info program ${cur.short}" title="Info program"
+      <button type="button" onclick="openInfo('${state.mode}')" aria-label="Info program ${cur.title}" title="Info program"
         class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 dark:border-slate-600 bg-bri-light/70 dark:bg-slate-700 text-bri dark:text-blue-300 hover:bg-bri hover:text-white active:scale-95 transition">
         ${infoIcon('h-5 w-5')}
       </button>`;
@@ -584,7 +584,7 @@ function renderTabs() {
         <span class="inline-flex items-center justify-center rounded-xl px-3.5 py-1 transition ${pillCls}">
           ${modeIcon(k, 'h-5 w-5')}
         </span>
-        <span class="text-center leading-tight">${m.short}</span>
+        <span class="text-center leading-tight">${m.short}${m.sub ? `<span class="block text-[9px] font-medium opacity-80">${m.sub}</span>` : ''}</span>
       </a>`;
     }).join('');
   }
