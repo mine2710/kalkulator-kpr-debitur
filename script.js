@@ -475,8 +475,8 @@ const HIDDEN_MODES = ['kpr-dinamis'];
 const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'].filter(k => !HIDDEN_MODES.includes(k));
 const MODES = {
   'kpr-baru': {
-    short: 'KPR Baru', icon: '🏠', mainTitle: 'Skema KPR Baru',
-    title: 'KPR Baru (KPR New &amp; Secondary)',
+    short: 'Pengajuan KPR Baru', sub: 'Properti Primary / Secondary', icon: '🏠', mainTitle: 'Skema KPR Baru',
+    title: 'Pengajuan KPR Baru (Properti Primary / Secondary)',
     tagline: 'Simulasi angsuran untuk pengajuan KPR baru, baik rumah baru dari developer (primary) maupun rumah bekas (secondary).',
     who: ['Calon debitur yang akan membeli rumah dengan KPR.', 'Pembelian rumah baru dari developer (<b>KPR New</b>) atau rumah bekas/second dari perorangan (<b>Secondary</b>).'],
     calc: ['Angsuran per bulan di setiap tahap suku bunga.', 'Total bunga, total pembayaran, dan jadwal amortisasi.', '<b>Cek Kemampuan Bayar (RPC)</b>: apakah angsuran masih sesuai pendapatan.'],
