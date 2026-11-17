@@ -460,7 +460,7 @@ function renderDinSummary(sim, base, plafon) {
   const banner = document.getElementById('dinBanner');
   if (hemat > 0.5) {
     const extra = din.method === 'tetap' && faster > 0 ? ` dan kredit lunas <b>${monthsToText(faster)}</b> lebih cepat` : '';
-    banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40">✅ Dengan menempatkan dana di BRI, total bunga turun <b>${fmtMoney(Math.round(hemat))}</b>${extra} dibanding tanpa dana pengurang.</div>`;
+    banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40">✅ Dengan menempatkan dana, total bunga turun <b>${fmtMoney(Math.round(hemat))}</b>${extra} dibanding tanpa dana pengurang.</div>`;
   } else {
     banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-bri-light dark:bg-blue-900/20 text-bri dark:text-blue-300 border-blue-100 dark:border-blue-900/40">ℹ️ Belum ada dana pengurang yang aktif. Tambahkan variasi dengan rasio dana minimal 10% dari plafon.</div>`;
   }

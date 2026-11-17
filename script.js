@@ -477,35 +477,35 @@ const MODES = {
   'kpr-baru': {
     short: 'KPR Baru', icon: '🏠', mainTitle: 'Skema KPR Baru',
     title: 'KPR Baru (KPR New &amp; Secondary)',
-    tagline: 'Simulasi angsuran untuk pengajuan KPR baru di BRI, baik rumah baru dari developer (primary) maupun rumah bekas (secondary).',
+    tagline: 'Simulasi angsuran untuk pengajuan KPR baru, baik rumah baru dari developer (primary) maupun rumah bekas (secondary).',
     who: ['Calon debitur yang akan membeli rumah dengan KPR.', 'Pembelian rumah baru dari developer (<b>KPR New</b>) atau rumah bekas/second dari perorangan (<b>Secondary</b>).'],
     calc: ['Angsuran per bulan di setiap tahap suku bunga.', 'Total bunga, total pembayaran, dan jadwal amortisasi.', '<b>Cek Kemampuan Bayar (RPC)</b>: apakah angsuran masih sesuai pendapatan.'],
     need: ['Jumlah pinjaman (plafon) dan tenor.', 'Program suku bunga yang dipilih.', 'Pendapatan per bulan &amp; angsuran lain yang sedang berjalan.'],
     ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-bri-light text-bri dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-blue-800', tab: 'bg-bri text-white' },
   },
   'to-float': {
-    short: 'Take Over Float', icon: '🔄', mainTitle: 'Skema Take Over (BRI)',
+    short: 'Take Over Float', icon: '🔄', mainTitle: 'Skema Take Over',
     title: 'Take Over Float',
-    tagline: 'Simulasi pindah KPR dari bank lain ke BRI ketika bunga di bank sebelumnya sudah memasuki masa floating.',
+    tagline: 'Simulasi pemindahan KPR dari bank lain ketika bunga di bank sebelumnya sudah memasuki masa floating.',
     who: ['Debitur KPR di bank lain yang masa bunga fix-nya sudah berakhir.', 'Bunga yang dibayar saat ini sudah <b>floating</b> (mengikuti suku bunga pasar).'],
-    calc: ['Perbandingan angsuran skema sebelumnya vs skema take over BRI.', 'Selisih total pembayaran, sudah termasuk biaya take over.', '<b>Titik impas (BEP)</b>: bulan ke berapa take over mulai lebih ringan.'],
+    calc: ['Perbandingan angsuran skema sebelumnya vs skema take over.', 'Selisih total pembayaran, sudah termasuk biaya take over.', '<b>Titik impas (BEP)</b>: bulan ke berapa take over mulai lebih ringan.'],
     need: ['Bunga floating saat ini &amp; sisa tenor di bank sebelumnya.', 'Sisa pokok (outstanding) pinjaman.', 'Biaya take over (persen atau nominal).'],
     ui: { border: 'border-t-briorange', borderL: 'border-l-briorange', badge: 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300', dot: 'bg-briorange', btn: 'bg-orange-600 hover:bg-orange-700', tab: 'bg-orange-600 text-white' },
   },
   'to-fix': {
     short: 'Take Over Fix', icon: '📌', mainTitle: '② KPR Simulasi Take Over',
     title: 'Take Over Fix',
-    tagline: 'Simulasi pindah KPR dari bank lain ke BRI dengan menghitung amortisasi lengkap dari plafon awal hingga bulan take over untuk memperoleh Sisa OS otomatis.',
-    who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: pindah ke BRI pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
-    calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR BRI dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
-    need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program yang diajukan ke BRI.'],
+    tagline: 'Simulasi pemindahan KPR dari bank lain dengan menghitung amortisasi lengkap dari plafon awal hingga bulan take over untuk memperoleh Sisa OS otomatis.',
+    who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: memindahkan KPR pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
+    calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR baru dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
+    need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program KPR yang diajukan.'],
     ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-blue-50 text-bri dark:bg-slate-700 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-bri-dark', tab: 'bg-bri text-white' },
   },
   'kpr-dinamis': {
     short: 'KPR Dinamis', icon: '📉', mainTitle: 'KPR Dinamis',
     title: 'KPR Dinamis (Dana Pengurang Bunga)',
-    tagline: 'Simulasi angsuran KPR ketika debitur menempatkan dana (CASA atau Deposito) di BRI sehingga suku bunga kredit berkurang sesuai tabel tiering.',
-    who: ['Debitur yang memiliki atau berencana menempatkan dana di BRI selama masa kredit.', 'Ingin melihat seberapa besar bunga dan angsuran turun dari dana yang ditempatkan.'],
+    tagline: 'Simulasi angsuran KPR ketika debitur menempatkan dana (CASA atau Deposito) sehingga suku bunga kredit berkurang sesuai tabel tiering.',
+    who: ['Debitur yang memiliki atau berencana menempatkan dana selama masa kredit.', 'Ingin melihat seberapa besar bunga dan angsuran turun dari dana yang ditempatkan.'],
     calc: ['<b>Bunga efektif</b> tiap bulan = bunga dasar tahap + pengurang dari dana yang aktif (minimal 0%).', 'Dua metode: <b>Angsuran Tetap</b> (lunas lebih cepat) atau <b>Angsuran Menyesuaikan</b> (angsuran turun tiap bulan).', 'Penghematan bunga dibanding tanpa dana pengurang, serta jadwal angsuran bulanan.'],
     need: ['Plafon kredit dan tahapan suku bunga dasar.', 'Jumlah dana, jenis dana, bulan mulai, dan durasi penempatan tiap variasi.'],
     ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
@@ -648,7 +648,7 @@ function route(fromHashChange) {
 
 // ─── RPC: cek kemampuan bayar (KPR Baru) ───
 // rasio maksimal angsuran terhadap pendapatan: <15jt 50%, 15–25jt 55%, >25jt 60%
-// Sakelar "Atur Rasio Manual": mati → rasio mengikuti ketentuan di atas;
+// Sakelar "Atur RPC": mati → rasio mengikuti ketentuan di atas;
 // nyala → debitur mengisi rasio sendiri (persen). Kolom kosong / tidak valid → tetap rasio standar.
 let _rpcRatioManual = false;
 
@@ -695,12 +695,9 @@ function onRpcRatioBlur() {
 function syncRpcRatioField() {
   const income = parseNum(document.getElementById('rpcIncome').value);
   const stdPct = Math.round(rpcRatio(income) * 100);
-  const band = income < 15e6 ? 'di bawah Rp 15 juta' : income <= 25e6 ? 'Rp 15–25 juta' : 'di atas Rp 25 juta';
 
   const cb = document.getElementById('rpcRatioManual');
   if (cb) cb.checked = _rpcRatioManual;
-  const std = document.getElementById('rpcRatioStd');
-  if (std) std.textContent = `Standar untuk pendapatan ${band}: ${stdPct}%`;
   const field = document.getElementById('rpcRatioField');
   if (field) field.classList.toggle('hidden', !_rpcRatioManual);
 
@@ -731,7 +728,6 @@ function renderRpc(sim) {
 
   const maxAng = income * ratio;
   const limitToUse = Math.max(0, maxAng - debt);
-  const basis = `${fmtRatioPct(ratio * 100)}% × pendapatan${debt > 0 ? ' − angsuran berjalan' : ''}`;
 
   // Yang diuji = angsuran TERBESAR di seluruh tahap (biasanya tahap floating),
   // bukan angsuran tahap pertama — supaya debitur tetap mampu saat bunga naik.
@@ -750,8 +746,7 @@ function renderRpc(sim) {
 
   el.innerHTML = `
     <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between gap-3">
-      <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran
-        <span class="block text-[10px] font-normal text-slate-400 dark:text-slate-500">${basis}</span></span>
+      <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran</span>
       <span class="num text-sm font-bold text-bri dark:text-blue-300 whitespace-nowrap">${fmtMoney(Math.round(limitToUse))} /bln</span>
     </div>
     <div role="status" class="mt-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
