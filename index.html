@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Kalkulator KPR</title>
+  <title>Kalkulator Kredit — KPR &amp; KKB</title>
   <meta name="description"
-    content="Kalkulator KPR untuk debitur — simulasi angsuran bertahap, take over, grafik & jadwal amortisasi.">
+    content="Kalkulator kredit untuk debitur — simulasi KPR (angsuran bertahap, take over) dan KKB (DP, asuransi, biaya kredit) lengkap dengan jadwal angsuran.">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
@@ -16,7 +16,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: { bri: 'rgb(var(--bri) / <alpha-value>)', 'bri-dark': 'rgb(var(--bri-dark) / <alpha-value>)', 'bri-2': 'rgb(var(--bri-2) / <alpha-value>)', 'bri-sky': 'rgb(var(--bri-sky) / <alpha-value>)', 'bri-light': '#E4EFF9', briorange: '#F58220' },
+          colors: { brand: { DEFAULT: 'rgb(var(--brand) / <alpha-value>)', dark: 'rgb(var(--brand-dark) / <alpha-value>)', 2: 'rgb(var(--brand-2) / <alpha-value>)', sky: 'rgb(var(--brand-sky) / <alpha-value>)', light: '#E4EFF9', orange: '#F58220' } },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
         }
       }
@@ -32,10 +32,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+  <link rel="stylesheet" href="kkb/kkb.css?v=1">
   <style>
-    /* Palet biru BRI. Mode cerah: #0857C3 (utama), #307FE2 (sekunder), #71C5E8 (aksen). Mode gelap: palet lama. */
-    :root { --bri: 8 87 195; --bri-2: 48 127 226; --bri-sky: 113 197 232; --bri-dark: 6 66 150; }
-    .dark { --bri: 0 82 156; --bri-2: 0 114 198; --bri-sky: 74 163 232; --bri-dark: 0 60 115; }
+    /* Palet biru utama aplikasi. Mode cerah: #0857C3 (utama), #307FE2 (sekunder), #71C5E8 (aksen). Mode gelap: palet lama. */
+    :root { --brand: 8 87 195; --brand-2: 48 127 226; --brand-sky: 113 197 232; --brand-dark: 6 66 150; }
+    .dark { --brand: 0 82 156; --brand-2: 0 114 198; --brand-sky: 74 163 232; --brand-dark: 0 60 115; }
   </style>
   <style>
     /* ───── Phone mode: smaller fonts ───── */
@@ -113,7 +114,7 @@
       -moz-appearance: textfield;
     }
 
-    /* ───── Bottom nav (HP, gaya BRImo) & safe-area iPhone ───── */
+    /* ───── Bottom nav (HP) & safe-area iPhone ───── */
     .bottom-nav-safe {
       padding-bottom: env(safe-area-inset-bottom, 0px);
       padding-left: env(safe-area-inset-left, 0px);
@@ -143,15 +144,18 @@
 
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- ═══ HEADER ═══ -->
-    <div
-      class="flex items-center justify-between gap-4 bg-white dark:bg-slate-800 px-5 py-4 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
-      <div class="min-w-0">
-        <h1 class="text-lg md:text-2xl font-bold text-slate-800 dark:text-white leading-tight">Kalkulator KPR</h1>
-        <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Simulasi Pinjaman &amp; Analisis Take Over</p>
+    <!-- ═══ HEADER: judul + pilihan produk (KPR / KKB) + tema ═══ -->
+    <header
+      class="grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-4 gap-y-3.5 bg-white dark:bg-slate-800 px-5 py-4 md:px-6 md:py-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all">
+      <div class="min-w-0 order-1">
+        <h1 class="text-lg md:text-2xl font-bold text-slate-800 dark:text-white leading-tight">Kalkulator Kredit</h1>
+        <p id="appSubtitle" class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Simulasi Pinjaman &amp; Analisis Take Over</p>
       </div>
+      <nav id="productTabs" aria-label="Pilih produk kredit"
+        class="order-3 md:order-2 col-span-2 md:col-span-1 grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-700 md:w-[27rem]">
+      </nav>
       <button onclick="toggleTheme()" aria-label="Ganti tema"
-        class="h-10 w-10 shrink-0 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-bri-light dark:hover:bg-slate-600 transition-all">
+        class="order-2 md:order-3 h-10 w-10 shrink-0 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-brand-light dark:hover:bg-slate-600 transition-all">
         <svg id="iconSun" class="hidden" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round">
           <circle cx="9" cy="9" r="4" />
@@ -162,7 +166,7 @@
           <path d="M15 10.5A6.5 6.5 0 1 1 7.5 3a5 5 0 0 0 7.5 7.5z" />
         </svg>
       </button>
-    </div>
+    </header>
 
 
     <!-- ═══ HALAMAN SIMULASI ═══ -->
@@ -272,13 +276,13 @@
                 <label for="oldRate" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Bunga
                   Float Saat Ini (%)</label>
                 <input type="number" id="oldRate" value="11.5" step="0.01" min="0"
-                  class="num w-full px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-briorange/20 transition">
+                  class="num w-full px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 transition">
               </div>
               <div>
                 <label for="oldTerm" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Sisa
                   Tenor (bln)</label>
                 <input type="number" id="oldTerm" value="100" step="1" min="1"
-                  class="num w-full px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-briorange/20 transition">
+                  class="num w-full px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 transition">
               </div>
             </div>
             <div data-modes="to-float" class="hidden space-y-4">
@@ -290,7 +294,7 @@
                     class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 font-medium text-sm"
                     id="curr2">Rp</span>
                   <input type="text" id="oldPlafon" value="800.000.000" inputmode="numeric"
-                    class="num w-full pl-10 pr-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition"
+                    class="num w-full pl-10 pr-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand transition"
                     oninput="formatField(this); scheduleCalc()">
                 </div>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Sisa pokok KPR di bank sebelumnya yang akan di-take over.</p>
@@ -310,7 +314,7 @@
                   <span class="text-xs font-medium text-slate-600 dark:text-slate-300">Apakah angsuran sudah sesuai?</span>
                   <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-600 p-0.5 bg-slate-100 dark:bg-slate-700/70 text-[11px] font-semibold shrink-0">
                     <button type="button" id="btnOldPmtMatch" onclick="setOldPmtCustom(false)"
-                      class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-bri dark:text-blue-300 shadow-sm transition">Sesuai</button>
+                      class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-brand dark:text-blue-300 shadow-sm transition">Sesuai</button>
                     <button type="button" id="btnOldPmtCustom" onclick="setOldPmtCustom(true)"
                       class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">Tidak Sesuai</button>
                   </div>
@@ -321,7 +325,7 @@
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-orange-600 dark:text-orange-300 font-bold text-xs">Rp</span>
                     <input type="text" id="oldCustomPmt" value="" placeholder="Masukkan angsuran eksisting Anda" inputmode="numeric"
-                      class="num w-full pl-9 pr-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-xs placeholder:text-slate-400 focus:outline-none focus:border-briorange focus:ring-2 focus:ring-briorange/20 transition"
+                      class="num w-full pl-9 pr-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-900/40 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-xs placeholder:text-slate-400 focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition"
                       oninput="formatField(this); scheduleCalc()">
                   </div>
                 </div>
@@ -337,7 +341,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 14V6l7-4 7 4v8" />
                 <path d="M7 16v-5h4v5" />
@@ -355,7 +359,7 @@
                   <input type="checkbox" id="fixSyncPlafon" class="sr-only peer" checked onchange="onFixSyncPlafonChange()"
                     aria-label="Samakan plafon take over dengan Sisa OS">
                   <div
-                    class="w-9 h-5 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-checked:bg-bri after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
+                    class="w-9 h-5 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-checked:bg-brand after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
                   </div>
                 </label>
               </div>
@@ -365,10 +369,10 @@
                     class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Jumlah
                     Pinjaman (Plafon)</label>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm"
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand dark:text-blue-300 font-bold text-sm"
                       id="curr1">Rp</span>
                     <input type="text" id="principal" value="1.000.000.000" inputmode="numeric"
-                      class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                       oninput="formatPrincipal(this)">
                   </div>
                   <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="principalWords"></p>
@@ -377,14 +381,14 @@
                   <label for="tenor" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Tenor
                     (bulan)</label>
                   <input type="number" id="tenor" step="1" disabled onchange="onTenorChange()"
-                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
               </div>
               <div data-modes="kpr-baru" class="hidden">
                 <label for="tierSelect"
                   class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kategori Program (Tier)</label>
                 <select id="tierSelect" onchange="onTierChange()"
-                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
                   <option value="Bukan Tier 1">Bukan Tier 1</option>
                   <option value="Tier 1">Tier 1</option>
                 </select>
@@ -393,7 +397,7 @@
                 <label for="program"
                   class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Program Suku Bunga</label>
                 <select id="program" onchange="onProgramChange()"
-                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
                   <option value="">Manual (custom)</option>
                 </select>
               </div>
@@ -415,7 +419,7 @@
               <div id="stepsContainer" class="space-y-2.5"></div>
               <div class="flex gap-2 mt-3">
                 <button onclick="addStep()"
-                  class="flex-1 text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-bri hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg py-2 transition-all">+
+                  class="flex-1 text-xs font-semibold text-brand dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-brand hover:bg-brand-light dark:hover:bg-slate-700 rounded-lg py-2 transition-all">+
                   Tambah Tahap</button>
                 <button onclick="recalcAll(); scheduleCalc()"
                   class="flex-1 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg py-2 transition-all">⟲
@@ -426,7 +430,7 @@
             <!-- Biaya Take Over (di dalam kartu Skema Take Over paling bawah) -->
             <div data-modes="to-float to-fix" class="hidden mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
               <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2"
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="9" cy="9" r="7" />
                   <path d="M9 5v8M6.5 7.5h4a1.5 1.5 0 0 1 0 3h-3" />
@@ -438,13 +442,13 @@
                   Tambahan Take Over (bulan ke-0)</label>
                 <div class="flex gap-2">
                   <select id="feeMode" onchange="onFeeModeChange()" aria-label="Jenis biaya take over"
-                    class="w-1/3 px-2 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition">
+                    class="w-1/3 px-2 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand transition">
                     <option value="persen">Persen</option>
                     <option value="nominal">Nominal</option>
                   </select>
                   <div class="relative w-2/3">
                     <input type="text" id="feeVal" value="5"
-                      class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition"
+                      class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand transition"
                       oninput="onFeeInput(this)">
                     <span
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium"
@@ -460,7 +464,7 @@
           <div data-modes="kpr-baru"
             class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 5h14v10H2zM2 9h14" />
                 <path d="M5 12h3" />
@@ -475,9 +479,9 @@
                     class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Pendapatan / Bulan</label>
                   <div class="relative">
                     <span
-                      class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-xs">Rp</span>
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-brand dark:text-blue-300 font-bold text-xs">Rp</span>
                     <input type="text" id="rpcIncome" value="10.000.000" inputmode="numeric"
-                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                       oninput="formatField(this); scheduleCalc()">
                   </div>
                 </div>
@@ -486,9 +490,9 @@
                     class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Angsuran Berjalan</label>
                   <div class="relative">
                     <span
-                      class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-xs">Rp</span>
+                      class="absolute left-3 top-1/2 -translate-y-1/2 text-brand dark:text-blue-300 font-bold text-xs">Rp</span>
                     <input type="text" id="rpcDebt" value="2.000.000" inputmode="numeric"
-                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      class="num w-full pl-9 pr-2.5 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                       oninput="formatField(this); scheduleCalc()">
                   </div>
                 </div>
@@ -502,7 +506,7 @@
                     <input type="checkbox" id="rpcRatioManual" class="sr-only peer" onchange="onRpcRatioToggle()"
                       aria-label="Atur RPC secara manual">
                     <div
-                      class="w-9 h-5 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-checked:bg-bri after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
+                      class="w-9 h-5 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-checked:bg-brand after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
                     </div>
                   </label>
                 </div>
@@ -512,7 +516,7 @@
                   <div class="relative">
                     <input type="text" id="rpcRatio" value="" placeholder="50" inputmode="decimal" autocomplete="off"
                       aria-describedby="rpcRatioHint"
-                      class="num w-full pl-3 pr-9 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      class="num w-full pl-3 pr-9 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:font-normal placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                       oninput="onRpcRatioInput(this); scheduleCalc()" onblur="onRpcRatioBlur()">
                     <span
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium">%</span>
@@ -538,7 +542,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 3v14h14" />
                 <path d="M6 12l3-4 3 2 4-6" />
@@ -549,9 +553,9 @@
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-3">
                 <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Kumulatif Pembayaran (Pokok + Bunga)</p>
                 <div id="chartToggles" data-modes="kpr-baru" class="hidden flex flex-wrap items-center gap-2 text-xs font-semibold">
-                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-slate-600 bg-blue-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-bri transition">
-                    <input type="checkbox" id="toggleTotal" checked onchange="toggleChartDataset(0, this.checked)" class="rounded accent-bri h-3.5 w-3.5 cursor-pointer">
-                    <span class="inline-block w-2 h-2 rounded-full bg-bri"></span>
+                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-slate-600 bg-blue-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-brand transition">
+                    <input type="checkbox" id="toggleTotal" checked onchange="toggleChartDataset(0, this.checked)" class="rounded accent-brand h-3.5 w-3.5 cursor-pointer">
+                    <span class="inline-block w-2 h-2 rounded-full bg-brand"></span>
                     <span>Total</span>
                   </label>
                   <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-slate-600 bg-emerald-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-emerald-500 transition">
@@ -559,7 +563,7 @@
                     <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
                     <span>Pokok</span>
                   </label>
-                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-200 dark:border-slate-600 bg-orange-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-briorange transition">
+                  <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-200 dark:border-slate-600 bg-orange-50/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 cursor-pointer select-none hover:border-brand-orange transition">
                     <input type="checkbox" id="toggleBunga" checked onchange="toggleChartDataset(2, this.checked)" class="rounded accent-[#F58220] h-3.5 w-3.5 cursor-pointer">
                     <span class="inline-block w-2 h-2 rounded-full bg-[#F58220]"></span>
                     <span>Bunga</span>
@@ -575,7 +579,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 4h14M3 9h14M3 14h9" />
               </svg>
@@ -590,7 +594,7 @@
       <div data-modes="kpr-baru to-float to-fix"
         class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round" aria-hidden="true">
             <path d="M2 3h16v14H2zM2 8h16M7 8v9" />
           </svg>
@@ -605,7 +609,7 @@
         <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleAmort()"
           aria-controls="amortWrap">
           <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" aria-hidden="true">
               <path d="M4 2h9l3 3v13H4z" />
               <path d="M8 8h6M8 12h6" />
@@ -630,7 +634,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-sky-700 border-l-4 border-l-sky-600 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 14V6l7-4 7 4v8" />
                 <path d="M7 16v-5h4v5" />
@@ -646,9 +650,9 @@
                     class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Jumlah
                     Pinjaman (Plafon)</label>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-bri dark:text-blue-300 font-bold text-sm">Rp</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-brand dark:text-blue-300 font-bold text-sm">Rp</span>
                     <input type="text" id="dinPlafon" value="1.000.000.000" inputmode="numeric"
-                      class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition"
+                      class="num w-full pl-10 pr-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition"
                       oninput="onDinPlafon(this)">
                   </div>
                   <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinPlafonWords"></p>
@@ -657,7 +661,7 @@
                   <label for="dinTenor" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Tenor
                     (bulan)</label>
                   <input type="number" id="dinTenor" step="1" disabled
-                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition disabled:opacity-75 disabled:cursor-not-allowed">
+                    class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition disabled:opacity-75 disabled:cursor-not-allowed">
                   <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="dinTenorWords"></p>
                 </div>
               </div>
@@ -677,7 +681,7 @@
                 <label for="dinTierSelect"
                   class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kategori Program (Tier)</label>
                 <select id="dinTierSelect" onchange="onDinTierChange()"
-                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
                   <option value="Bukan Tier 1">Bukan Tier 1</option>
                   <option value="Tier 1">Tier 1</option>
                 </select>
@@ -688,7 +692,7 @@
                 <label for="dinProgram"
                   class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Program Suku Bunga</label>
                 <select id="dinProgram" onchange="onDinProgramChange()"
-                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:ring-2 focus:ring-bri/20 transition">
+                  class="w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition">
                   <option value="">Manual (custom)</option>
                 </select>
               </div>
@@ -709,7 +713,7 @@
               <div id="dinSteps" class="space-y-2.5"></div>
               <div class="flex gap-2 mt-3">
                 <button type="button" id="dinAddStep" onclick="addDinStep()"
-                  class="flex-1 text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-bri hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+
+                  class="flex-1 text-xs font-semibold text-brand dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:border-brand hover:bg-brand-light dark:hover:bg-slate-700 rounded-lg py-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed">+
                   Tambah Tahap</button>
               </div>
             </div>
@@ -734,7 +738,7 @@
 
             <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
               <button type="button" onclick="toggleDinTier()" aria-controls="dinTierWrap"
-                class="w-full flex items-center justify-between text-xs font-semibold text-bri dark:text-blue-300">
+                class="w-full flex items-center justify-between text-xs font-semibold text-brand dark:text-blue-300">
                 <span>Tabel Tiering Pengurang Suku Bunga</span>
                 <span id="dinTierArrow" class="text-slate-400 transition-transform" style="transform:rotate(-90deg)" aria-hidden="true">▼</span>
               </button>
@@ -755,7 +759,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 3v14h14" />
                 <path d="M6 12l3-4 3 2 4-6" />
@@ -774,7 +778,7 @@
           <div
             class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 4h14M3 9h14M3 14h9" />
               </svg>
@@ -788,7 +792,7 @@
       <div data-modes="kpr-dinamis"
         class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2">
-          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+          <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round" aria-hidden="true">
             <path d="M2 3h16v14H2zM2 8h16M7 8v9" />
           </svg>
@@ -803,7 +807,7 @@
         <button type="button" class="w-full flex items-center justify-between select-none" onclick="toggleDinAmort()"
           aria-controls="dinAmortWrap">
           <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-bri shrink-0" stroke-width="2" stroke-linecap="round"
+            <svg width="18" height="18" fill="none" stroke="currentColor" class="text-brand shrink-0" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" aria-hidden="true">
               <path d="M4 2h9l3 3v13H4z" />
               <path d="M8 8h6M8 12h6" />
@@ -818,15 +822,339 @@
           <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700" id="dinAmortTable"></div>
         </div>
       </div>
+
+      <!-- ═══════════ KKB (Kredit Kendaraan Bermotor) ═══════════
+           Logika di kkb/js/app.js (dipanggil lewat id elemen), gaya komponen di kkb/kkb.css -->
+      <div id="kkbApp" data-modes="kkb-regular kkb-lnp kkb-karyawan" class="hidden space-y-6">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+          <!-- ─── LEFT: INPUTS ─── -->
+          <div class="xl:col-span-4 space-y-6">
+
+            <!-- ① Kendaraan & DP -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md dark:border-sky-700 border-l-4 border-l-sky-600">
+              <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="min-w-0">
+                  <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="text-brand shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5v4h-2"/><path d="M5 17H3v-4h18"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5"/></svg>
+                    <span id="sectionFinancingTitle">Pembiayaan &amp; Down Payment</span>
+                  </h2>
+                  <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="activeSchemeSubtitle">KKB Regular • New Car</p>
+                </div>
+                <button type="button" id="btnResetForm"
+                  class="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 hover:border-brand hover:text-brand dark:hover:text-blue-300 rounded-lg px-2.5 py-1.5 transition">↺ Reset</button>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputFinancingType">Jenis Pembiayaan</label>
+                  <select id="inputFinancingType" class="control">
+                    <option value="New Car" selected>New Car (Mobil Baru)</option>
+                    <option value="Used Car">Used Car (Mobil Bekas)</option>
+                    <option value="Refinancing">Refinancing</option>
+                    <option value="Mobil Niaga">Mobil Niaga</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputBrand">Merk Kendaraan</label>
+                    <select id="inputBrand" class="control"></select>
+                  </div>
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputModel">Tipe / Model</label>
+                    <select id="inputModel" class="control"></select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputVehiclePrice" id="labelVehiclePrice">Harga Kendaraan (OTR)</label>
+                  <div class="input-group has-left">
+                    <span class="addon addon-left">Rp</span>
+                    <input type="text" id="inputVehiclePrice" class="control num" inputmode="numeric" value="350.000.000" autocomplete="off">
+                  </div>
+                  <div class="chips">
+                    <button type="button" class="chip" data-price="150000000">150 Jt</button>
+                    <button type="button" class="chip" data-price="250000000">250 Jt</button>
+                    <button type="button" class="chip" data-price="350000000">350 Jt</button>
+                    <button type="button" class="chip" data-price="500000000">500 Jt</button>
+                    <button type="button" class="chip" data-price="850000000">850 Jt</button>
+                  </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <label class="text-xs font-semibold text-slate-600 dark:text-slate-300" for="inputDpValue" id="labelDpValue">Down Payment (DP Murni)</label>
+                    <div class="segmented" role="group" id="dpModeGroup" aria-label="Mode Input DP">
+                      <button type="button" class="active" id="btnDpModePct">Persen (%)</button>
+                      <button type="button" id="btnDpModeRp">Rupiah (Rp)</button>
+                    </div>
+                  </div>
+                  <div class="input-group has-right" id="dpInputWrap">
+                    <span class="addon addon-left" id="dpAddonLeft" hidden>Rp</span>
+                    <input type="text" id="inputDpValue" class="control num" inputmode="decimal" value="20" autocomplete="off">
+                    <span class="addon addon-right" id="dpAddonRight">%</span>
+                  </div>
+                  <p class="hint" id="dpConvertedCaption"></p>
+
+                  <div class="dp-status" id="dpMinBox" aria-live="polite">
+                    <div class="min-w-0">
+                      <div id="dpMinText"></div>
+                      <div class="dp-status-detail" id="dpFactorsList"></div>
+                    </div>
+                    <button type="button" id="btnApplyMinDp"
+                      class="shrink-0 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-2.5 py-1 text-[11px] font-semibold hover:opacity-80 transition">Pakai Min</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ② Asuransi Kendaraan -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md dark:border-emerald-800 border-l-4 border-l-emerald-600">
+              <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+                <svg class="text-emerald-600 dark:text-emerald-400 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                Asuransi Kendaraan
+              </h2>
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4">
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputWilayah">Wilayah Asuransi</label>
+                    <select id="inputWilayah" class="control">
+                      <option value="1">1 - Pulau Sumatera</option>
+                      <option value="2" selected>2 - DKI Jakarta &amp; Banten</option>
+                      <option value="3">3 - Selain Wilayah 1 &amp; 2</option>
+                    </select>
+                  </div>
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputCoverage">Coverage Asuransi</label>
+                    <select id="inputCoverage" class="control"></select>
+                  </div>
+                </div>
+                <div class="info-box -mt-2" id="coverageCriteriaText"></div>
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Syarat Klaim / Perluasan</span>
+                    <button type="button" id="btnSelectAllPerils"
+                      class="text-[11px] font-semibold text-brand dark:text-blue-300 hover:underline">Pilih Semua</button>
+                  </div>
+                  <div class="peril-list" id="perilCheckboxesContainer"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ③ Biaya Kredit -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md dark:border-amber-700 border-l-4 border-l-amber-600">
+              <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+                <svg class="text-amber-600 dark:text-amber-400 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+                Biaya Kredit
+              </h2>
+              <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputAdminFee">Biaya Admin</label>
+                    <div class="input-group has-left">
+                      <span class="addon addon-left">Rp</span>
+                      <input type="text" id="inputAdminFee" class="control num" inputmode="numeric" value="2.000.000" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputProvisiPct">Biaya Provisi</label>
+                    <div class="input-group has-right">
+                      <input type="text" id="inputProvisiPct" class="control num" inputmode="decimal" value="1,00" autocomplete="off">
+                      <span class="addon addon-right">%</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="hint -mt-2" id="provisiRpCaption"></p>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputPolisFee">Biaya Polis</label>
+                    <div class="input-group has-left">
+                      <span class="addon addon-left">Rp</span>
+                      <input type="text" id="inputPolisFee" class="control num" inputmode="numeric" value="60.000" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="min-w-0">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputBlokirFee">Blokir BPKB</label>
+                    <div class="input-group has-left">
+                      <span class="addon addon-left">Rp</span>
+                      <input type="text" id="inputBlokirFee" class="control num" inputmode="numeric" value="500.000" autocomplete="off">
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5" for="inputInstallmentType">Skema Angsuran</label>
+                  <select id="inputInstallmentType" class="control">
+                    <option value="ADDB" selected>ADDB — Bayar di Belakang (1 Bln Pasca Akad)</option>
+                    <option value="ADDM">ADDM — Angsuran ke-1 Masuk TDP</option>
+                  </select>
+                  <p class="hint" id="installmentTypeCaption">Angsuran ke-1 dibayar bulan depan (sudah termasuk bunga).</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 rounded-xl bg-amber-50/70 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-900/40 px-3.5 py-2.5">
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Biaya Fidusia (otomatis)</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500" id="fidusiaBracketInfo"></p>
+                  </div>
+                  <p id="fidusiaFeeDisplay" class="num text-sm font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap">Rp 0</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ─── RIGHT: OUTPUTS ─── -->
+          <div class="results xl:col-span-8 space-y-6">
+            <p id="simulationNotice" role="status" hidden
+              class="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-700 dark:text-red-300"></p>
+
+            <!-- Ringkasan angka utama -->
+            <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Ringkasan hasil">
+              <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--brand-2)),rgb(var(--brand)))">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full" aria-hidden="true"></div>
+                <p class="relative text-blue-100 text-xs font-semibold mb-1" id="kpiTenorLabel">Angsuran / Bulan</p>
+                <h3 class="relative text-2xl font-bold mb-1 num" id="kpiMonthlyInstallment">Rp 0</h3>
+                <p class="relative text-[11px] text-blue-200" id="kpiRateInfo"></p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between">
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1" id="kpiUpfrontLabel">Total Down Payment (TDP)</p>
+                  <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 num" id="kpiTotalDp">Rp 0</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500" id="kpiTdpSub">DP + Asuransi + Biaya Kredit</p>
+              </div>
+              <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between">
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1" id="kpiPrincipalLabel">Pokok Hutang</p>
+                  <h3 class="text-2xl font-bold text-brand dark:text-blue-300 mb-1 num" id="kpiPrincipalLoan">Rp 0</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500" id="kpiTotalInterestSub"></p>
+              </div>
+            </section>
+
+            <!-- Pilihan tenor -->
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md" aria-label="Pilihan tenor">
+              <div class="flex flex-wrap items-start justify-between gap-2 mb-4">
+                <div>
+                  <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="text-brand shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+                    Pilihan Tenor
+                  </h2>
+                  <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Klik baris untuk memilih tenor; seluruh rincian ikut berubah.</p>
+                </div>
+                <span id="tableSchemeBadge" class="inline-flex items-center rounded-full bg-brand-light dark:bg-blue-900/30 text-brand dark:text-blue-300 px-2.5 py-1 text-[11px] font-semibold">KKB Regular</span>
+              </div>
+              <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700">
+                <table class="k-table stack">
+                  <thead>
+                    <tr>
+                      <th>Tenor</th>
+                      <th class="num" id="thTenorRate">Suku Bunga Flat</th>
+                      <th class="num">Angsuran / Bulan</th>
+                      <th class="num" id="thTenorUpfront">Total DP (TDP)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tenorSummaryBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Rincian TDP & biaya kredit -->
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md" aria-label="Rincian TDP dan biaya kredit">
+              <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <svg class="text-brand shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h12l4 4v14H4z"/><path d="M8 11h8M8 15h8M8 7h4"/></svg>
+                <span><span id="detailTitleText">Rincian TDP &amp; Biaya Kredit</span> (<span id="detailTenorSpan">36</span> Bln)</span>
+              </h2>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1 mb-4" id="detailFormulaText">TDP = DP Murni + Premi Asuransi + Biaya Kredit</p>
+              <div class="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700">
+                <table class="k-table hide-ket-sm">
+                  <thead>
+                    <tr>
+                      <th>Komponen Biaya</th>
+                      <th class="num">Nominal</th>
+                      <th class="col-ket">Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tdpTableBody"></tbody>
+                  <tfoot id="tdpTableFoot"></tfoot>
+                </table>
+              </div>
+            </section>
+
+            <!-- Rincian asuransi per tahun (collapsible) -->
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md" aria-label="Rincian premi asuransi per tahun">
+              <button type="button" id="btnToggleInsurance" class="w-full flex items-center justify-between gap-3 text-left select-none"
+                aria-controls="wrapYearlyInsurance" aria-expanded="false">
+                <span class="min-w-0">
+                  <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="text-emerald-600 dark:text-emerald-400 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>
+                    Rincian Asuransi &amp; Depresiasi per Tahun
+                  </span>
+                  <span class="block text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="insSubtitleBadge"></span>
+                </span>
+                <span id="insArrowText" class="text-slate-400 text-sm transition-transform shrink-0" style="transform:rotate(-90deg)" aria-hidden="true">▼</span>
+              </button>
+              <div id="wrapYearlyInsurance" style="display:none;" class="mt-4 overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-700">
+                <table class="k-table stack">
+                  <thead>
+                    <tr>
+                      <th>Tahun</th>
+                      <th class="num">Premi</th>
+                      <th class="num">Pertanggungan</th>
+                      <th class="num">Depresiasi</th>
+                      <th class="col-ket">Coverage</th>
+                      <th class="num">Total Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody id="yearlyInsuranceBody"></tbody>
+                  <tfoot id="yearlyInsuranceFoot"></tfoot>
+                </table>
+              </div>
+            </section>
+
+            <!-- Jadwal angsuran bulanan (collapsible, sama seperti Jadwal Amortisasi KPR) -->
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-all duration-200 hover:shadow-md" aria-label="Jadwal angsuran bulanan">
+              <button type="button" class="w-full flex items-center justify-between gap-3 text-left select-none" onclick="toggleKkbAmort()"
+                aria-controls="kkbAmortWrap" aria-expanded="false" id="kkbAmortToggle">
+                <span class="min-w-0">
+                  <span class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="text-brand shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2h10l4 4v16H5z"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>
+                    <span>Jadwal Angsuran Bulanan (Tenor <span id="amortTenorSpan">36</span> Bulan)</span>
+                  </span>
+                  <span class="block text-[11px] text-slate-400 dark:text-slate-500 mt-1" id="amortSubtitleInfo"></span>
+                </span>
+                <span id="kkbAmortArrow" class="text-slate-400 text-sm transition-transform shrink-0" style="transform:rotate(-90deg)" aria-hidden="true">▼</span>
+              </button>
+              <div id="kkbAmortWrap" class="hidden mt-4 amort-scroll rounded-lg border border-slate-100 dark:border-slate-700">
+                <table class="k-table">
+                  <thead>
+                    <tr>
+                      <th>Bln</th>
+                      <th class="num hide-laptop">Pinjaman Awal</th>
+                      <th class="num">Porsi Pokok</th>
+                      <th class="num">Porsi Bunga</th>
+                      <th class="num">Total Angsuran</th>
+                      <th class="num">Sisa Pokok</th>
+                    </tr>
+                  </thead>
+                  <tbody id="amortizationBody"></tbody>
+                  <tfoot id="amortizationFoot"></tfoot>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
     </section>
 
     <p class="text-center text-xs text-slate-400 dark:text-slate-500 pb-4">Simulasi ini bersifat estimasi untuk edukasi
       debitur. Angka resmi mengacu pada ketentuan bank. <button onclick="resetSaved()"
-        class="underline hover:text-bri dark:hover:text-blue-300 ml-1">Reset data tersimpan</button></p>
+        class="underline hover:text-brand dark:hover:text-blue-300 ml-1">Reset data tersimpan</button></p>
 
   </div>
 
-  <!-- ═══ BOTTOM NAV (HP, gaya BRImo) ═══ -->
+  <!-- ═══ BOTTOM NAV (HP) ═══ -->
   <nav id="bottomNav" aria-label="Jenis simulasi"
     class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700 shadow-[0_-4px_20px_rgba(15,23,42,0.08)] bottom-nav-safe">
     <div id="bottomNavItems" class="grid grid-cols-3 max-w-lg mx-auto px-1.5"></div>
@@ -835,6 +1163,13 @@
   <script src="config.js"></script>
   <script src="script.js"></script>
   <script src="dinamis.js"></script>
+  <!-- KKB (Kredit Kendaraan Bermotor) -->
+  <script src="kkb/js/csv.js?v=1"></script>
+  <script src="kkb/js/vehicles.js?v=1"></script>
+  <script src="kkb/js/config.js?v=1"></script>
+  <script src="kkb/js/rates.js?v=1"></script>
+  <script src="kkb/js/calculator.js?v=1"></script>
+  <script src="kkb/js/app.js?v=1"></script>
 </body>
 
 </html>

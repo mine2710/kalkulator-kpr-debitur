@@ -1,6 +1,6 @@
-# 📘 DOKUMEN HANDOFF SISTEM & LOGIKA KALKULATOR KPR BRI
+# 📘 DOKUMEN HANDOFF SISTEM & LOGIKA KALKULATOR KPR baru
 > **Versi Dokumentasi:** 2.0 (KPR Engine & Unified API)  
-> **Target Aplikasi:** Kalkulator KPR & Analisis Take Over Debitur (BRI)  
+> **Target Aplikasi:** Kalkulator KPR & Analisis Take Over Debitur  
 > **Terakhir Diperbarui:** 11 November 2026  
 > **Penyusun:** Tim Pengembang AI / Advanced Agentic Coding
 
@@ -23,7 +23,7 @@
 
 ## 1. Arsitektur Sistem & Alur Integrasi
 
-Aplikasi Kalkulator KPR BRI dirancang sebagai **Single Page Application (SPA)** yang responsif, modern, dan ringan tanpa dependensi framework berat (*Zero-Build Stack*), dibangun dengan:
+Aplikasi Kalkulator Kredit (KPR & KKB) dirancang sebagai **Single Page Application (SPA)** yang responsif, modern, dan ringan tanpa dependensi framework berat (*Zero-Build Stack*), dibangun dengan:
 * **UI & Styling:** HTML5 murni, TailwindCSS (via CDN), Google Fonts (Inter).
 * **Data Visualization:** Chart.js 4.4 + Chart.js Annotation Plugin (garis titik impas / BEP).
 * **Core Logic:** Vanilla JavaScript ES6+ modular (`script.js`, `dinamis.js`, `config.js`).
@@ -224,10 +224,10 @@ Ditujukan untuk debitur yang KPR lamanya di bank lain sudah memasuki masa bunga 
 2. **Angsuran Eksisting:** Sistem menghitung estimasi angsuran di bank lama dan menyediakan opsi konfirmasi:
    * **Sesuai:** Menggunakan hasil hitungan sistem.
    * **Tidak Sesuai:** Menampilkan field input manual agar debitur dapat memasukkan angka riil angsuran eksistingnya.
-3. **Biaya Tambahan Take Over:** Ditempatkan di bagian bawah kartu Skema Take Over BRI (pilihan persen atau nominal). Nilai ini dihitung pada bulan ke-0.
+3. **Biaya Tambahan Take Over:** Ditempatkan di bagian bawah kartu Skema Take Over (pilihan persen atau nominal). Nilai ini dihitung pada bulan ke-0.
 4. **Ringkasan Perbandingan ("Kondisi Angsuran"):**
-   * Menampilkan perbandingan angsuran bulan ke-1 di BRI vs angsuran eksisting.
-   * Total pembayaran di BRI sudah memperhitungkan biaya take over.
+   * Menampilkan perbandingan angsuran bulan ke-1 di bank baru vs angsuran eksisting.
+   * Total pembayaran di bank baru sudah memperhitungkan biaya take over.
    * Memberikan label status efisiensi: **Hemat Rp ...** atau **Lebih Rp ...**.
 
 ---
@@ -240,15 +240,15 @@ sequenceDiagram
     autonumber
     actor Debitur
     participant Engine as Full Amortization Engine
-    participant BRI as Skema Take Over BRI
+    participant BANK as Skema Take Over
     participant BEP as Titik Impas (BEP) Chart
 
     Debitur->>Engine: Input Plafon Awal, Tenor Awal, Masa Fix, Bunga Fix & Float
     Debitur->>Engine: Input Bulan Take Over (misal bulan ke-36)
     Engine->>Engine: Hitung amortisasi bulan 1 s/d 36
-    Engine-->>BRI: Dihasilkan Saldo Akhir bulan ke-36 = Sisa OS Otomatis
-    BRI->>BRI: Plafon Baru BRI otomatis = Sisa OS (bisa Top Up jika uncheck)
-    BRI->>BEP: Bandingkan kumulatif KPR lama vs KPR BRI
+    Engine-->>BANK: Dihasilkan Saldo Akhir bulan ke-36 = Sisa OS Otomatis
+    BANK->>BANK: Plafon Baru otomatis = Sisa OS (bisa Top Up jika uncheck)
+    BANK->>BEP: Bandingkan kumulatif KPR lama vs KPR baru
     BEP-->>Debitur: Tampilkan titik impas (BEP) bulan ke berapa take over untung
 ```
 
@@ -258,12 +258,12 @@ sequenceDiagram
    * Saldo akhir pada bulan tersebut secara otomatis menjadi **Sisa OS Take Over**.
 2. **Sinkronisasi Plafon Otomatis:**
    * Terdapat toggle *"Plafon Take Over = Sisa OS"*.
-   * Saat aktif (default), plafon yang diajukan ke BRI otomatis sama dengan Sisa OS tersebut.
+   * Saat aktif (default), plafon yang diajukan ke bank baru otomatis sama dengan Sisa OS tersebut.
    * Jika dinonaktifkan, debitur dapat memasukkan plafon baru yang lebih tinggi (fasilitas Top Up pinjaman).
 3. **Analisis Titik Impas (BEP):**
    * Mengakumulasikan biaya total yang dibayarkan di bank lama (bulan take over $\times$ angsuran lama) ditambah biaya take over.
-   * Memetakan garis kumulatif KPR lama vs KPR BRI pada bulan berjalan yang sama.
-   * Menghitung secara eksak di bulan ke berapa biaya take over tertutupi oleh selisih penghematan bunga BRI (Titik Impas / BEP).
+   * Memetakan garis kumulatif KPR lama vs KPR baru pada bulan berjalan yang sama.
+   * Menghitung secara eksak di bulan ke berapa biaya take over tertutupi oleh selisih penghematan bunga (Titik Impas / BEP).
 4. **Tahapan Perubahan Angsuran** (`buildPmtPhases` / `openPmtInfo` di `script.js`, lewat tombol "Lihat Tabel Tahapan Angsuran" di kartu ringkasan "Perubahan Angsuran"; isi kartu tetap selisih bulan pertama):
    * Hanya 2 tahap, mengikuti KPR sebelumnya: **Masa Fix** (sisa masa fix) dan **Masa Float** (sampai KPR lama lunas). Angsuran take over diambil pada bulan pertama tiap tahap; bila berubah di tengah tahap (ganti tahap bunga program), ditulis sebagai catatan "Mulai bln ke-… jadi Rp…".
    * Tiap tahap menampilkan angsuran sebelumnya vs take over beserta selisih /bln (▼ hemat / ▲ lebih).
@@ -272,7 +272,7 @@ sequenceDiagram
 ---
 
 ### 4.4 Modul KPR Dinamis (`#kpr-dinamis`)
-Mengakomodasi produk khusus BRI di mana debitur yang menempatkan dana (CASA atau Deposito) berhak mendapatkan **pengurang suku bunga pinjaman (tiering CSL Usulan Group 80% LS)**.
+Mengakomodasi produk khusus di mana debitur yang menempatkan dana (CASA atau Deposito) berhak mendapatkan **pengurang suku bunga pinjaman (tiering CSL Usulan Group 80% LS)**.
 
 #### A. Mekanisme Tiering & Pengurang Bunga
 Untuk setiap variasi penempatan dana:

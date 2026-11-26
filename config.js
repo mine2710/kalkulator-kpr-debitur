@@ -1,5 +1,5 @@
 /**
- * Konfigurasi API Google Spreadsheet & Keamanan untuk Kalkulator KPR Debitur BRI
+ * Konfigurasi API Google Spreadsheet & Keamanan untuk Kalkulator KPR
  * 
  * Endpoint & Token tersandikan (obfuscated) agar tidak tampil sebagai URL/Token polos di source code.
  * Endpoint ini hanya menerima permintaan via HTTP POST dengan Token yang sah di dalam body/payload.

@@ -129,7 +129,7 @@ function setDinMethod(m) {
   din.method = m; dinSyncMethodUI(); dinSchedule();
 }
 function dinSyncMethodUI() {
-  const on = 'flex-1 px-3 py-2 rounded-md bg-white dark:bg-slate-800 text-bri dark:text-blue-300 shadow-sm transition';
+  const on = 'flex-1 px-3 py-2 rounded-md bg-white dark:bg-slate-800 text-brand dark:text-blue-300 shadow-sm transition';
   const off = 'flex-1 px-3 py-2 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition';
   Object.keys(DIN_METHODS).forEach(k => {
     const b = document.getElementById('dinMethod-' + k);
@@ -275,7 +275,7 @@ function toggleDinAmort() {
 function showAllDinAmort() { din.amortAll = true; if (_dinLast) renderDinAmort(_dinLast.sim); }
 
 // ─── Render: input lists ───
-const DIN_INP = 'num w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:bg-white dark:focus:bg-slate-900 transition';
+const DIN_INP = 'num w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:bg-white dark:focus:bg-slate-900 transition';
 const DIN_LAB = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1';
 
 function renderDinSteps() {
@@ -284,10 +284,10 @@ function renderDinSteps() {
   document.getElementById('dinSteps').innerHTML = din.steps.map((s, i) => {
     const from = cum + 1; cum += s.months;
     return `
-    <div class="flex items-end gap-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3">
+    <div class="flex items-end gap-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-brand rounded-lg p-3">
       <div class="w-16 shrink-0 pb-1">
         <span class="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
-          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap
+          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-brand text-white text-[11px] font-bold">${i + 1}</span> Tahap
         </span>
         <span id="dinStepRange-${i}" class="block mt-1 num text-[10px] text-slate-400 dark:text-slate-500">bln ${from}–${cum}</span>
       </div>
@@ -315,7 +315,7 @@ function renderDinVars() {
       <div class="grid grid-cols-2 gap-2">
         <div class="col-span-2 sm:col-span-1"><label class="${DIN_LAB}" for="dinVarA-${i}">Jumlah dana (Rp)</label><input id="dinVarA-${i}" type="text" inputmode="numeric" value="${formatThousands(v.amount)}" oninput="formatField(this); updateDinVar(${i},'amount',this.value)" class="${DIN_INP}"></div>
         <div class="col-span-2 sm:col-span-1"><label class="${DIN_LAB}" for="dinVarJ-${i}">Jenis dana</label>
-          <select id="dinVarJ-${i}" onchange="updateDinVar(${i},'jenis',this.value)" class="w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri transition">
+          <select id="dinVarJ-${i}" onchange="updateDinVar(${i},'jenis',this.value)" class="w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand transition">
             ${DIN_JENIS.map(j => `<option ${j === v.jenis ? 'selected' : ''}>${j}</option>`).join('')}
           </select></div>
         <div><label class="${DIN_LAB}" for="dinVarS-${i}">Mulai bulan ke</label><input id="dinVarS-${i}" type="number" min="1" step="1" value="${v.start}" oninput="updateDinVar(${i},'start',this.value)" class="${DIN_INP}"></div>
@@ -430,7 +430,7 @@ function renderDinSummary(sim, base, plafon) {
   const whiteCard = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
 
   const card1 = `
-    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--bri-2)),rgb(var(--bri)))">
+    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--brand-2)),rgb(var(--brand)))">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
       <p class="text-blue-100 text-xs font-semibold mb-1">Angsuran KPR (Bulan ke-1)</p>
       <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(Math.round(first))}<span class="text-xs font-normal"> /bln</span></h3>
@@ -443,14 +443,14 @@ function renderDinSummary(sim, base, plafon) {
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
         <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 num">${fmtCompact(sim.totalPayment)}</h3>
       </div>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(plafon)}</span> + Bunga <span class="font-semibold text-bri dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(plafon)}</span> + Bunga <span class="font-semibold text-brand dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
     </div>`;
 
   const card3 = `
     <div class="${whiteCard} flex flex-col justify-between">
       <div>
         <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Bunga</p>
-        <h3 class="text-2xl font-bold text-bri dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
+        <h3 class="text-2xl font-bold text-brand dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
       </div>
       <p class="text-[11px] text-slate-400 dark:text-slate-500">${hemat > 0.5 ? 'Hemat bunga ' + fmtCompact(Math.max(0, hemat)) + (faster > 0 ? ' · ' + monthsToText(faster) + ' lebih cepat' : '') : 'Akumulasi selama ' + sim.paidOff + ' bulan'}</p>
     </div>`;
@@ -462,12 +462,12 @@ function renderDinSummary(sim, base, plafon) {
     const extra = din.method === 'tetap' && faster > 0 ? ` dan kredit lunas <b>${monthsToText(faster)}</b> lebih cepat` : '';
     banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40">✅ Dengan menempatkan dana, total bunga turun <b>${fmtMoney(Math.round(hemat))}</b>${extra} dibanding tanpa dana pengurang.</div>`;
   } else {
-    banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-bri-light dark:bg-blue-900/20 text-bri dark:text-blue-300 border-blue-100 dark:border-blue-900/40">ℹ️ Belum ada dana pengurang yang aktif. Tambahkan variasi dengan rasio dana minimal 10% dari plafon.</div>`;
+    banner.innerHTML = `<div class="rounded-2xl border px-5 py-4 text-sm font-medium bg-brand-light dark:bg-blue-900/20 text-brand dark:text-blue-300 border-blue-100 dark:border-blue-900/40">ℹ️ Belum ada dana pengurang yang aktif. Tambahkan variasi dengan rasio dana minimal 10% dari plafon.</div>`;
   }
 }
 
 function renderDinMetrics(sim, base, plafon, vars) {
-  const blue = { bg: 'bg-bri-light dark:bg-blue-900/20', lc: 'text-bri dark:text-blue-300', vc: 'text-bri dark:text-blue-300', sc: 'text-slate-500 dark:text-slate-400' };
+  const blue = { bg: 'bg-brand-light dark:bg-blue-900/20', lc: 'text-brand dark:text-blue-300', vc: 'text-brand dark:text-blue-300', sc: 'text-slate-500 dark:text-slate-400' };
   const org = { bg: 'bg-orange-50 dark:bg-orange-900/20', lc: 'text-orange-600 dark:text-orange-300', vc: 'text-slate-800 dark:text-slate-100', sc: 'text-slate-500 dark:text-slate-400' };
   const pmts = sim.rows.map(r => r.payment);
   const minP = Math.min(...pmts), maxP = Math.max(...pmts);
@@ -477,12 +477,12 @@ function renderDinMetrics(sim, base, plafon, vars) {
   const basePm = base.rows.map(r => r.payment);
 
   document.getElementById('dinMetrics').innerHTML =
-    metricSection('Dengan Dana Pengurang', 'bg-bri',
+    metricSection('Dengan Dana Pengurang', 'bg-brand',
       bigCell('Total Pembayaran', fmtMoney(Math.round(sim.totalPayment)), Object.assign({ sub: 'Pokok ' + fmtCompact(plafon) + ' + Bunga ' + fmtCompact(sim.totalInterest) }, blue)) +
       bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), blue) +
       bigCell('Rentang Angsuran', fmtCompact(minP) + ' – ' + fmtCompact(maxP), Object.assign({ sub: 'Terendah – tertinggi per bulan' }, blue)) +
       bigCell('Bunga Efektif Rata-rata', fmtPct(avgEff), Object.assign({ sub: 'Bunga dasar rata-rata ' + fmtPct(avgBase) + ' · pengurang aktif ' + monthsActive + ' bln' }, blue)), 'lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4') +
-    metricSection('Tanpa Dana Pengurang (Pembanding)', 'bg-briorange',
+    metricSection('Tanpa Dana Pengurang (Pembanding)', 'bg-brand-orange',
       bigCell('Total Pembayaran', fmtMoney(Math.round(base.totalPayment)), org) +
       bigCell('Total Bunga', fmtMoney(Math.round(base.totalInterest)), org) +
       bigCell('Rentang Angsuran', fmtCompact(Math.min(...basePm)) + ' – ' + fmtCompact(Math.max(...basePm)), Object.assign({ sub: 'Terendah – tertinggi per bulan' }, org)) +
@@ -496,9 +496,9 @@ function renderDinChart(sim, base, plafon) {
 
   const dark = isDark();
   const tick = dark ? '#94a3b8' : '#64748b', grid = dark ? 'rgba(148,163,184,0.14)' : '#eef2f7', legend = dark ? '#cbd5e1' : '#475569';
-  const blue = dark ? '#4AA3E8' : briColor('--bri');
+  const blue = dark ? '#4AA3E8' : brandColor('--brand');
   const ds = [
-    { label: 'Sisa pokok (dengan dana)', data: downsample(saldo, 240), borderColor: blue, backgroundColor: dark ? 'rgba(74,163,232,0.10)' : briColor('--bri-sky', 0.16), borderWidth: 2.5, fill: true, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
+    { label: 'Sisa pokok (dengan dana)', data: downsample(saldo, 240), borderColor: blue, backgroundColor: dark ? 'rgba(74,163,232,0.10)' : brandColor('--brand-sky', 0.16), borderWidth: 2.5, fill: true, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
     { label: 'Sisa pokok (tanpa dana)', data: downsample(saldoBase, 240), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.15, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y' },
     { label: 'Bunga efektif (%)', data: eff, borderColor: '#059669', borderWidth: 2, stepped: true, fill: false, pointRadius: 0, pointHoverRadius: 4, yAxisID: 'y1' },
     { label: 'Bunga dasar (%)', data: baseRate, borderColor: dark ? '#64748b' : '#94a3b8', borderDash: [2, 3], borderWidth: 1.5, stepped: true, fill: false, pointRadius: 0, pointHoverRadius: 3, yAxisID: 'y1' },
@@ -530,12 +530,12 @@ function renderDinPeriods(sim) {
   const body = per.map(p => `
     <tr class="hover:bg-blue-50 dark:hover:bg-slate-700/60 transition-colors">
       <td class="${td}">${p.from === p.to ? p.from : p.from + '–' + p.to} <span class="text-[10px] text-slate-400">(${p.to - p.from + 1} bln)</span></td>
-      <td class="${td} text-center"><span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${p.stage}</span></td>
+      <td class="${td} text-center"><span class="inline-flex items-center justify-center h-5 w-5 rounded bg-brand text-white text-[11px] font-bold">${p.stage}</span></td>
       <td class="${td}">${fmtPct(p.base)}</td>
       <td class="${td} ${p.red < 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400'}">${p.red < 0 ? fmtPct(p.red) : '—'}</td>
       <td class="${td} font-semibold">${fmtPct(p.eff)}</td>
       <td class="${td} font-semibold">${pmtTxt(p)}</td>
-      <td class="${td} text-bri dark:text-blue-300">${fmtMoney(Math.round(p.interest))}</td>
+      <td class="${td} text-brand dark:text-blue-300">${fmtMoney(Math.round(p.interest))}</td>
       <td class="${td}">${fmtMoney(Math.round(p.end))}</td>
     </tr>`).join('');
   document.getElementById('dinPeriodTable').innerHTML = `
@@ -544,10 +544,10 @@ function renderDinPeriods(sim) {
         <tr><th class="px-3 py-3">Bulan</th><th class="px-3 py-3 text-center">Tahap</th><th class="px-3 py-3">Bunga Dasar</th><th class="px-3 py-3">Pengurang</th><th class="px-3 py-3">Bunga Efektif</th><th class="px-3 py-3">Angsuran</th><th class="px-3 py-3">Bunga Dibayar</th><th class="px-3 py-3">Saldo Akhir</th></tr>
       </thead>
       <tbody>${body}
-        <tr class="bg-bri-light dark:bg-slate-700 font-bold">
+        <tr class="bg-brand-light dark:bg-slate-700 font-bold">
           <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600" colspan="5">TOTAL (${sim.paidOff} bln)</td>
           <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.totalPayment))}</td>
-          <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600 text-bri dark:text-blue-300">${fmtMoney(Math.round(sim.totalInterest))}</td>
+          <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600 text-brand dark:text-blue-300">${fmtMoney(Math.round(sim.totalInterest))}</td>
           <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(0)}</td>
         </tr>
       </tbody>
@@ -570,7 +570,7 @@ function renderDinAmort(sim) {
       <td class="${td} font-semibold">${fmtPct(r.eff)}</td>
       <td class="${td}">${fmtMoney(Math.round(r.begin))}</td>
       <td class="${td} font-medium">${fmtMoney(Math.round(r.payment))}</td>
-      <td class="${td} text-bri dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
+      <td class="${td} text-brand dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.principal))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.end))}</td>
     </tr>`;
@@ -580,7 +580,7 @@ function renderDinAmort(sim) {
       <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-[11px] uppercase font-semibold">
         <tr><th class="px-3 py-3">Bln</th><th class="px-3 py-3 text-center">Thp</th><th class="px-3 py-3">Bunga Dasar</th><th class="px-3 py-3">Pengurang</th><th class="px-3 py-3">Efektif</th><th class="px-3 py-3">Saldo Awal</th><th class="px-3 py-3">Angsuran</th><th class="px-3 py-3">Bunga</th><th class="px-3 py-3">Pokok</th><th class="px-3 py-3">Saldo Akhir</th></tr>
       </thead><tbody>${body}</tbody></table>` +
-    (all ? '' : `<div class="text-center my-3"><button type="button" onclick="showAllDinAmort()" class="text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg px-4 py-2 transition">Tampilkan semua ${sim.rows.length} bulan</button></div>`);
+    (all ? '' : `<div class="text-center my-3"><button type="button" onclick="showAllDinAmort()" class="text-xs font-semibold text-brand dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:bg-brand-light dark:hover:bg-slate-700 rounded-lg px-4 py-2 transition">Tampilkan semua ${sim.rows.length} bulan</button></div>`);
 }
 
 // ─── Simpan / pulihkan (localStorage, per perangkat) ───

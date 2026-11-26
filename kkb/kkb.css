@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Tab KKB — komponen yang dibuat oleh kkb/js/app.js
+   Semua aturan dibatasi #kkbApp agar tidak mengganggu tab KPR.
+   Warna mengikuti variabel --brand* di index.html (ikut mode gelap).
+   ═══════════════════════════════════════════════════════════════════ */
+
+#kkbApp {
+  --k-text: #1e293b;
+  --k-text-2: #475569;
+  --k-muted: #94a3b8;
+  --k-border: #f1f5f9;
+  --k-border-2: #e2e8f0;
+  --k-surface: #ffffff;
+  --k-subtle: #f8fafc;
+  --k-field: #eff6ff;
+  --k-field-border: #bfdbfe;
+  --k-brand-soft: #e4effa;
+  --k-brand-text: rgb(var(--brand));
+  --k-ok-bg: #ecfdf5;
+  --k-ok-border: #d1fae5;
+  --k-ok-text: #047857;
+  --k-warn-bg: #fef2f2;
+  --k-warn-border: #fecaca;
+  --k-warn-text: #b91c1c;
+}
+
+.dark #kkbApp {
+  --k-text: #f1f5f9;
+  --k-text-2: #cbd5e1;
+  --k-muted: #94a3b8;
+  --k-border: #334155;
+  --k-border-2: #475569;
+  --k-surface: #1e293b;
+  --k-subtle: rgba(51, 65, 85, 0.5);
+  --k-field: #334155;
+  --k-field-border: #475569;
+  --k-brand-soft: rgba(30, 58, 138, 0.35);
+  --k-brand-text: #93c5fd;
+  --k-ok-bg: rgba(6, 78, 59, 0.3);
+  --k-ok-border: rgba(16, 185, 129, 0.3);
+  --k-ok-text: #6ee7b7;
+  --k-warn-bg: rgba(127, 29, 29, 0.3);
+  --k-warn-border: rgba(248, 113, 113, 0.35);
+  --k-warn-text: #fca5a5;
+}
+
+#kkbApp [hidden] { display: none !important; }
+
+/* ─── Kolom isian ─── */
+#kkbApp .control {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  color: var(--k-text);
+  background: var(--k-field);
+  border: 1px solid var(--k-field-border);
+  border-radius: 0.5rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  font-variant-numeric: tabular-nums;
+}
+#kkbApp select.control { font-weight: 500; cursor: pointer; }
+#kkbApp .control:focus {
+  outline: none;
+  border-color: rgb(var(--brand));
+  box-shadow: 0 0 0 3px rgb(var(--brand) / 0.2);
+}
+#kkbApp .control[aria-invalid="true"] { border-color: #f87171; }
+#kkbApp .control:disabled { opacity: .55; cursor: progress; }
+
+#kkbApp .input-group { position: relative; display: flex; align-items: center; }
+#kkbApp .input-group .addon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--k-brand-text);
+  pointer-events: none;
+}
+#kkbApp .input-group .addon-left { left: 0.75rem; }
+#kkbApp .input-group .addon-right { right: 0.75rem; }
+#kkbApp .input-group.has-left .control { padding-left: 2.5rem; }
+#kkbApp .input-group.has-right .control { padding-right: 2.25rem; }
+
+#kkbApp .hint { margin-top: 0.25rem; font-size: 11px; line-height: 1.45; color: var(--k-muted); }
+#kkbApp .hint strong { color: var(--k-text-2); font-weight: 600; }
+
+/* Tombol cepat harga */
+#kkbApp .chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
+#kkbApp .chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid var(--k-border-2);
+  background: var(--k-surface);
+  color: var(--k-text-2);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+#kkbApp .chip:hover { border-color: rgb(var(--brand)); color: var(--k-brand-text); background: var(--k-brand-soft); }
+
+/* Saklar Persen / Rupiah (sama dengan saklar "Sesuai / Tidak Sesuai" di KPR) */
+#kkbApp .segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--k-border-2);
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dark #kkbApp .segmented { background: rgba(51, 65, 85, 0.7); }
+#kkbApp .segmented button {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.dark #kkbApp .segmented button { color: #94a3b8; }
+#kkbApp .segmented button.active {
+  background: var(--k-surface);
+  color: var(--k-brand-text);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+}
+
+/* Status minimum DP */
+#kkbApp .dp-status {
+  margin-top: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  background: var(--k-ok-bg);
+  border: 1px solid var(--k-ok-border);
+  color: var(--k-ok-text);
+}
+#kkbApp .dp-status.warning { background: var(--k-warn-bg); border-color: var(--k-warn-border); color: var(--k-warn-text); }
+#kkbApp .dp-status-detail { margin-top: 2px; font-size: 10.5px; opacity: .85; }
+
+#kkbApp .info-box {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--k-subtle);
+  border: 1px solid var(--k-border);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+}
+.dark #kkbApp .info-box { color: #94a3b8; }
+
+/* Daftar perluasan jaminan */
+#kkbApp .peril-list { display: flex; flex-direction: column; gap: 0.375rem; }
+#kkbApp .peril-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--k-border-2);
+  background: var(--k-surface);
+  font-size: 0.8125rem;
+  color: var(--k-text-2);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+#kkbApp .peril-item:hover { border-color: rgb(var(--brand) / .5); }
+#kkbApp .peril-item.checked { background: var(--k-brand-soft); border-color: rgb(var(--brand) / .35); color: var(--k-text); }
+#kkbApp .peril-left { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; min-width: 0; }
+#kkbApp .peril-item input { width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: rgb(var(--brand)); cursor: pointer; }
+
+/* ─── Tabel ─── */
+#kkbApp .k-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--k-text-2);
+  font-variant-numeric: tabular-nums;
+}
+#kkbApp .k-table th {
+  padding: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.dark #kkbApp .k-table th { background: rgba(51, 65, 85, 0.5); color: #94a3b8; }
+#kkbApp .k-table td { padding: 0.625rem 0.75rem; border-top: 1px solid var(--k-border); vertical-align: middle; }
+#kkbApp .k-table .num { text-align: right; white-space: nowrap; }
+#kkbApp .k-table .col-ket { padding-left: 1.25rem; }
+#kkbApp .k-table .strong { font-weight: 600; color: var(--k-text); }
+#kkbApp .k-table .text-blue { color: var(--k-brand-text); }
+#kkbApp .k-table .text-dark { color: var(--k-text) !important; font-weight: 700; }
+#kkbApp .k-table .muted { color: var(--k-muted); font-size: 0.75rem; }
+#kkbApp .k-table tbody tr { transition: background .12s ease; }
+#kkbApp .k-table tbody tr:hover { background: rgba(239, 246, 255, .7); }
+.dark #kkbApp .k-table tbody tr:hover { background: rgba(51, 65, 85, .6); }
+
+#kkbApp .k-table tr.subrow td { background: var(--k-subtle); font-size: 0.8125rem; padding-top: .4rem; padding-bottom: .4rem; }
+#kkbApp .k-table tr.subtotal-row td { background: var(--k-brand-soft); }
+#kkbApp .k-table tfoot td {
+  padding: 0.75rem;
+  font-weight: 700;
+  color: var(--k-text);
+  background: #e4effa;
+  border-top: 1px solid var(--k-border-2);
+}
+.dark #kkbApp .k-table tfoot td { background: #334155; }
+
+/* Baris tenor yang bisa dipilih */
+#kkbApp .k-table tr.clickable { cursor: pointer; }
+#kkbApp .k-table tr.selected { background: var(--k-brand-soft); }
+#kkbApp .k-table tr.selected td:first-child { box-shadow: inset 3px 0 0 rgb(var(--brand)); }
+#kkbApp .k-table tr.unavailable { opacity: .45; cursor: not-allowed; }
+#kkbApp .k-table tr[tabindex="0"]:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: -2px; }
+
+#kkbApp .tag {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 1px 0.5rem;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+#kkbApp .tag-orange { background: rgb(var(--brand)); color: #fff; }
+#kkbApp .tag-blue { background: #dbeafe; color: #1e40af; }
+#kkbApp .tag-amber { background: #fef3c7; color: #92400e; }
+#kkbApp .tag-gray { background: #f1f5f9; color: #64748b; }
+.dark #kkbApp .tag-blue { background: rgba(30, 64, 175, .35); color: #bfdbfe; }
+.dark #kkbApp .tag-amber { background: rgba(146, 64, 14, .35); color: #fde68a; }
+.dark #kkbApp .tag-gray { background: #334155; color: #cbd5e1; }
+
+/* Jadwal angsuran: header & total menempel saat digulir */
+#kkbApp .amort-scroll { max-height: 560px; overflow: auto; }
+#kkbApp .amort-scroll thead th { position: sticky; top: 0; z-index: 2; }
+#kkbApp .amort-scroll tfoot td { position: sticky; bottom: 0; z-index: 2; }
+
+@media (max-width: 1023.98px) {
+  #kkbApp .hide-laptop { display: none; }
+}
+
+/* HP: tabel bertanda .stack berubah menjadi kartu per baris */
+@media (max-width: 640px) {
+  #kkbApp .k-table.stack thead { display: none; }
+  #kkbApp .k-table.stack,
+  #kkbApp .k-table.stack tbody,
+  #kkbApp .k-table.stack tfoot,
+  #kkbApp .k-table.stack tr,
+  #kkbApp .k-table.stack td { display: block; width: 100%; }
+  #kkbApp .k-table.stack tr { padding: 0.625rem 0.875rem; border-top: 1px solid var(--k-border); }
+  #kkbApp .k-table.stack td {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.2rem 0;
+    border: 0;
+    text-align: right;
+  }
+  #kkbApp .k-table.stack td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--k-muted);
+    text-align: left;
+  }
+  #kkbApp .k-table.stack td:first-child { display: block; text-align: left; }
+  #kkbApp .k-table.stack td:first-child::before { display: none; }
+  #kkbApp .k-table.stack tr.selected td:first-child { box-shadow: none; }
+  #kkbApp .k-table.stack tr.selected { box-shadow: inset 3px 0 0 rgb(var(--brand)); }
+  #kkbApp .k-table.stack tfoot tr { background: #e4effa; }
+  .dark #kkbApp .k-table.stack tfoot tr { background: #334155; }
+  #kkbApp .k-table.stack tfoot td { background: transparent; border: 0; padding: 0.2rem 0; }
+  #kkbApp .k-table .col-ket { padding-left: 0.75rem; }
+  #kkbApp .hide-sm { display: none !important; }
+  #kkbApp .k-table.hide-ket-sm .col-ket { display: none; }
+}

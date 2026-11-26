@@ -14,3 +14,6 @@ programs.csv
 tiering.csv
 Tambahan/
 *.xlsx
+
+# Data cadangan KKB (sumber utama = Google Spreadsheet), sama seperti programs.csv / tiering.csv
+kkb/database/

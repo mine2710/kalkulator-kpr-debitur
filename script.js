@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════
-//  Kalkulator KPR — logika (dashboard BRI)
+//  Kalkulator KPR — logika
 // ═══════════════════════════════════════════
 
 // Registrasi plugin anotasi Chart.js (garis BEP)
@@ -14,7 +14,9 @@ let state = {
     { months: 36, rate: 6.5, payment: 0 },
     { months: 108, rate: 9.35, payment: 0 },
   ],
-    mode: 'kpr-baru',
+    mode: 'kpr-baru',     // mode KPR terakhir (tetap diingat saat membuka KKB)
+  product: 'kpr',       // produk aktif: 'kpr' | 'kkb'
+  kkbMode: 'kkb-regular', // skema KKB terakhir
   feeMode: 'persen',
   oldPmtCustom: false,
   fixSyncPlafon: true,
@@ -418,13 +420,13 @@ function markManual() {
 function renderSteps() {
   const c = document.getElementById('stepsContainer');
   const n = state.steps.length;
-  const inp = 'num w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-bri focus:bg-white dark:focus:bg-slate-900 transition';
+  const inp = 'num w-full px-2 py-2 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-600 rounded-md text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:bg-white dark:focus:bg-slate-900 transition';
   const lab = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1';
   c.innerHTML = state.steps.map((s, i) => `
-    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-bri rounded-lg p-3 transition-all hover:border-l-sky-500">
+    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 border-l-[3px] border-l-brand rounded-lg p-3 transition-all hover:border-l-sky-500">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
+          <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-brand text-white text-[11px] font-bold">${i + 1}</span> Tahap ${i + 1}
         </span>
         ${n > 1 ? `<button onclick="removeStep(${i})" class="text-slate-400 hover:text-sky-500 text-sm leading-none transition">✕</button>` : ''}
       </div>
@@ -472,7 +474,18 @@ function recalcAll() {
 // ─── Halaman & mode simulasi ───
 // Tab yang disembunyikan sementara (kode tetap ada). Hapus dari daftar ini untuk menampilkan lagi.
 const HIDDEN_MODES = ['kpr-dinamis'];
-const MODE_ORDER = ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'].filter(k => !HIDDEN_MODES.includes(k));
+const PRODUCT_MODES = {
+  kpr: ['kpr-baru', 'to-float', 'to-fix', 'kpr-dinamis'].filter(k => !HIDDEN_MODES.includes(k)),
+  kkb: ['kkb-regular', 'kkb-lnp', 'kkb-karyawan'],
+};
+const MODE_ORDER = PRODUCT_MODES.kpr.concat(PRODUCT_MODES.kkb);
+// Produk utama (tab paling atas di header)
+const PRODUCTS = {
+  kpr: { short: 'KPR', title: 'Kredit Pemilikan Rumah', icon: 'kpr-baru', subtitle: 'Simulasi Pinjaman &amp; Analisis Take Over', modeLabel: 'Program Simulasi KPR' },
+  kkb: { short: 'KKB', title: 'Kredit Kendaraan Bermotor', icon: 'kkb-regular', subtitle: 'Simulasi DP, Asuransi &amp; Angsuran Kendaraan', modeLabel: 'Skema KKB' },
+};
+function productOf(k) { return k && k.indexOf('kkb-') === 0 ? 'kkb' : 'kpr'; }
+function activeMode() { return state.product === 'kkb' ? state.kkbMode : state.mode; }
 const MODES = {
   'kpr-baru': {
     short: 'KPR Baru', icon: '🏠', mainTitle: 'Skema KPR Baru',
@@ -481,7 +494,7 @@ const MODES = {
     who: ['Calon debitur yang akan membeli rumah dengan KPR.', 'Pembelian rumah baru dari developer (<b>KPR New</b>) atau rumah bekas/second dari perorangan (<b>Secondary</b>).'],
     calc: ['Angsuran per bulan di setiap tahap suku bunga.', 'Total bunga, total pembayaran, dan jadwal amortisasi.', '<b>Cek Kemampuan Bayar (RPC)</b>: apakah angsuran masih sesuai pendapatan.'],
     need: ['Jumlah pinjaman (plafon) dan tenor.', 'Program suku bunga yang dipilih.', 'Pendapatan per bulan &amp; angsuran lain yang sedang berjalan.'],
-    ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-bri-light text-bri dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-blue-800', tab: 'bg-bri text-white' },
+    ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-blue-800', tab: 'bg-brand text-white' },
   },
   'to-float': {
     short: 'Pengajuan Takeover KPR', sub: 'Nasabah Sudah Floating Rate', icon: '🔄', mainTitle: 'Skema Take Over',
@@ -490,7 +503,7 @@ const MODES = {
     who: ['Debitur KPR di bank lain yang masa bunga fix-nya sudah berakhir.', 'Bunga yang dibayar saat ini sudah <b>floating</b> (mengikuti suku bunga pasar).'],
     calc: ['Perbandingan angsuran skema sebelumnya vs skema take over.', 'Selisih total pembayaran, sudah termasuk biaya take over.', '<b>Titik impas (BEP)</b>: bulan ke berapa take over mulai lebih ringan.'],
     need: ['Bunga floating saat ini &amp; sisa tenor di bank sebelumnya.', 'Sisa pokok (outstanding) pinjaman.', 'Biaya take over (persen atau nominal).'],
-    ui: { border: 'border-t-briorange', borderL: 'border-l-briorange', badge: 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300', dot: 'bg-briorange', btn: 'bg-orange-600 hover:bg-orange-700', tab: 'bg-orange-600 text-white' },
+    ui: { border: 'border-t-brand-orange', borderL: 'border-l-brand-orange', badge: 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300', dot: 'bg-brand-orange', btn: 'bg-orange-600 hover:bg-orange-700', tab: 'bg-orange-600 text-white' },
   },
   'to-fix': {
     short: 'Pengajuan Takeover KPR', sub: 'Nasabah Masih Fixed Rate', icon: '📌', mainTitle: '② KPR Simulasi Take Over',
@@ -499,7 +512,7 @@ const MODES = {
     who: ['Debitur KPR di bank lain yang masih dalam masa bunga <b>fix</b>.', 'Ingin membandingkan: memindahkan KPR pada bulan tertentu, atau bertahan hingga terkena bunga floating.'],
     calc: ['<b>① KPR Sebelumnya</b>: amortisasi lengkap dari plafon awal, menghasilkan <b>Saldo Akhir (Sisa OS)</b> tepat di bulan take over.', '<b>② KPR Simulasi Take Over</b>: simulasi KPR baru dari Sisa OS tersebut.', 'Perbandingan kumulatif pembayaran &amp; titik impas (BEP) dari Sisa OS pada bulan berjalan yang sama.'],
     need: ['Plafon awal, tenor awal total, dan masa bunga fix awal di bank sebelumnya.', 'Bunga fix saat ini, perkiraan bunga floating, dan bulan take over.', 'Tenor &amp; program KPR yang diajukan.'],
-    ui: { border: 'border-t-bri', borderL: 'border-l-bri', badge: 'bg-blue-50 text-bri dark:bg-slate-700 dark:text-blue-300', dot: 'bg-bri', btn: 'bg-bri hover:bg-bri-dark', tab: 'bg-bri text-white' },
+    ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-blue-50 text-brand dark:bg-slate-700 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-brand-dark', tab: 'bg-brand text-white' },
   },
   'kpr-dinamis': {
     short: 'KPR Dinamis', icon: '📉', mainTitle: 'KPR Dinamis',
@@ -510,6 +523,33 @@ const MODES = {
     need: ['Plafon kredit dan tahapan suku bunga dasar.', 'Jumlah dana, jenis dana, bulan mulai, dan durasi penempatan tiap variasi.'],
     ui: { border: 'border-t-emerald-600', borderL: 'border-l-emerald-600', badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', dot: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700', tab: 'bg-emerald-600 text-white' },
   },
+  'kkb-regular': {
+    short: 'KKB Regular', sub: 'Umum &amp; Wiraswasta', scheme: 'regular', mainTitle: 'KKB Regular',
+    title: 'KKB Regular (Umum &amp; Wiraswasta)',
+    tagline: 'Simulasi kredit kendaraan bermotor untuk nasabah umum, profesional, dan pelaku usaha.',
+    who: ['Nasabah umum, karyawan swasta, profesional, dan wiraswasta.', 'Pembelian <b>mobil baru</b>, <b>mobil bekas</b>, <b>refinancing</b> (dana BPKB), atau <b>mobil niaga</b>.'],
+    calc: ['Angsuran per bulan untuk tenor 12–60 bulan (bunga flat ditampilkan, angsuran dihitung anuitas bunga efektif).', '<b>Total Down Payment (TDP)</b> = DP + premi asuransi + biaya kredit.', 'Premi asuransi per tahun (dengan depresiasi) dan jadwal angsuran bulanan.'],
+    need: ['Jenis pembiayaan, merk &amp; tipe kendaraan.', 'Harga kendaraan (OTR) dan rencana DP.', 'Wilayah &amp; coverage asuransi yang diinginkan.'],
+    ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-blue-800', tab: 'bg-brand text-white' },
+  },
+  'kkb-lnp': {
+    short: 'KKB Prioritas', sub: 'Nasabah Prioritas', scheme: 'lnp', mainTitle: 'KKB Prioritas',
+    title: 'KKB Prioritas (Nasabah Prioritas)',
+    tagline: 'Simulasi kredit kendaraan dengan suku bunga dan biaya khusus untuk nasabah prioritas.',
+    who: ['Nasabah prioritas yang mendapat suku bunga khusus.', 'Pembelian mobil baru, mobil bekas, refinancing, atau mobil niaga.'],
+    calc: ['Angsuran per bulan untuk setiap pilihan tenor.', 'TDP dengan biaya admin &amp; provisi yang lebih ringan (terisi otomatis).', 'Premi asuransi per tahun dan jadwal angsuran bulanan.'],
+    need: ['Jenis pembiayaan, merk &amp; tipe kendaraan.', 'Harga kendaraan (OTR) dan rencana DP.', 'Wilayah &amp; coverage asuransi.'],
+    ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-blue-800', tab: 'bg-brand text-white' },
+  },
+  'kkb-karyawan': {
+    short: 'KKB Karyawan', sub: 'Karyawan &amp; Payroll', scheme: 'karyawan', mainTitle: 'KKB Karyawan',
+    title: 'KKB Karyawan (Karyawan &amp; Payroll)',
+    tagline: 'Simulasi kredit kendaraan untuk pekerja tetap / payroll, BUMN, ASN, dan instansi mitra kerja sama.',
+    who: ['Pekerja tetap dengan gaji melalui payroll.', 'Pegawai BUMN, ASN, dan instansi mitra kerja sama.'],
+    calc: ['Angsuran per bulan dengan suku bunga khusus karyawan.', 'TDP dengan biaya admin &amp; provisi khusus karyawan (terisi otomatis).', 'Premi asuransi per tahun dan jadwal angsuran bulanan.'],
+    need: ['Jenis pembiayaan, merk &amp; tipe kendaraan.', 'Harga kendaraan (OTR) dan rencana DP.', 'Wilayah &amp; coverage asuransi.'],
+    ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-blue-800', tab: 'bg-brand text-white' },
+  },
 };
 function infoList(title, items, dot) {
   return `<div><p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1.5">${title}</p>
@@ -518,12 +558,15 @@ function infoList(title, items, dot) {
 function infoLists(m) {
   return infoList('Untuk siapa', m.who, m.ui.dot) + infoList('Yang dihitung', m.calc, m.ui.dot) + infoList('Data yang disiapkan', m.need, m.ui.dot);
 }
-// ikon garis (stroke) per program, gaya aplikasi BRI
+// ikon garis (stroke) per program
 const MODE_ICONS = {
   'kpr-baru': '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/>',
   'to-float': '<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>',
   'to-fix': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   'kpr-dinamis': '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  'kkb-regular': '<path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5v4h-2"/><path d="M5 17H3v-4h18"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5"/>',
+  'kkb-lnp': '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  'kkb-karyawan': '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>',
 };
 function modeIcon(k, cls) {
   return `<svg class="${cls || 'h-5 w-5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MODE_ICONS[k]}</svg>`;
@@ -531,15 +574,35 @@ function modeIcon(k, cls) {
 function infoIcon(cls) {
   return `<svg class="${cls || 'h-3.5 w-3.5'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`;
 }
+// Tab produk (KPR / KKB) di header. Link menuju mode terakhir masing-masing produk.
+function renderProductTabs() {
+  const el = document.getElementById('productTabs');
+  if (!el) return;
+  el.innerHTML = Object.keys(PRODUCTS).map(p => {
+    const P = PRODUCTS[p], on = p === state.product;
+    const href = p === 'kkb' ? state.kkbMode : state.mode;
+    const cls = on
+      ? 'bg-white dark:bg-slate-700 text-brand dark:text-blue-300 shadow-sm ring-1 ring-slate-200/80 dark:ring-slate-600'
+      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60';
+    return `<a href="#${href}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 transition active:scale-[.98] ${cls}">
+      ${modeIcon(P.icon, 'h-5 w-5 shrink-0')}
+      <span class="min-w-0 text-left leading-tight"><span class="block text-sm font-bold">${P.short}</span><span class="block text-[10px] font-medium truncate ${on ? 'text-slate-500 dark:text-slate-300' : ''}">${P.title}</span></span>
+    </a>`;
+  }).join('');
+  const sub = document.getElementById('appSubtitle');
+  if (sub) sub.innerHTML = PRODUCTS[state.product].subtitle;
+}
 function renderTabs() {
-  document.getElementById('modeTabs').innerHTML = MODE_ORDER.map(k => {
-    const m = MODES[k], on = k === state.mode;
+  renderProductTabs();
+  const am = activeMode(), order = PRODUCT_MODES[state.product];
+  document.getElementById('modeTabs').innerHTML = order.map(k => {
+    const m = MODES[k], on = k === am;
     const tabCls = on
-      ? 'bg-bri text-white shadow-sm'
-      : 'text-slate-600 dark:text-slate-300 hover:bg-bri-light dark:hover:bg-slate-700';
+      ? 'bg-brand text-white shadow-sm'
+      : 'text-slate-600 dark:text-slate-300 hover:bg-brand-light dark:hover:bg-slate-700';
     const infoCls = on
       ? 'text-white/80 hover:text-white hover:bg-white/15'
-      : 'text-slate-400 hover:text-bri dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
+      : 'text-slate-400 hover:text-brand dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-600';
     return `<div class="relative">
       <a href="#${k}" ${on ? 'aria-current="page"' : ''} class="flex items-center justify-center gap-1.5 md:gap-2 rounded-xl px-3 sm:px-4 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-semibold transition ${tabCls}">
         ${modeIcon(k)}<span class="text-center leading-tight">${m.short}${m.sub ? `<span class="block text-[10px] md:text-[11px] font-medium ${on ? 'text-white/80' : 'text-slate-400 dark:text-slate-400'}">${m.sub}</span>` : ''}</span>
@@ -549,38 +612,38 @@ function renderTabs() {
     </div>`;
   }).join('');
 
-  const cur = MODES[state.mode];
+  const cur = MODES[am];
   const mobileBar = document.getElementById('mobileModeBar');
   if (mobileBar) {
     mobileBar.innerHTML = `
       <div class="flex items-center gap-3 min-w-0">
-        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bri-light dark:bg-blue-900/30 text-bri dark:text-blue-300">
-          ${modeIcon(state.mode, 'h-5 w-5')}
+        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-light dark:bg-blue-900/30 text-brand dark:text-blue-300">
+          ${modeIcon(am, 'h-5 w-5')}
         </span>
         <div class="min-w-0">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Program Simulasi</p>
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">${PRODUCTS[state.product].modeLabel}</p>
           <h2 class="text-sm font-bold text-slate-800 dark:text-white leading-snug">${cur.title}</h2>
         </div>
       </div>
-      <button type="button" onclick="openInfo('${state.mode}')" aria-label="Info program ${cur.title}" title="Info program"
-        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 dark:border-slate-600 bg-bri-light/70 dark:bg-slate-700 text-bri dark:text-blue-300 hover:bg-bri hover:text-white active:scale-95 transition">
+      <button type="button" onclick="openInfo('${am}')" aria-label="Info program ${cur.title}" title="Info program"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 dark:border-slate-600 bg-brand-light/70 dark:bg-slate-700 text-brand dark:text-blue-300 hover:bg-brand hover:text-white active:scale-95 transition">
         ${infoIcon('h-5 w-5')}
       </button>`;
   }
 
   const bottomNav = document.getElementById('bottomNavItems');
   if (bottomNav) {
-    bottomNav.innerHTML = MODE_ORDER.map(k => {
-      const m = MODES[k], on = k === state.mode;
+    bottomNav.innerHTML = order.map(k => {
+      const m = MODES[k], on = k === am;
       const linkCls = on
-        ? 'text-bri dark:text-blue-300 font-bold'
+        ? 'text-brand dark:text-blue-300 font-bold'
         : 'text-slate-400 dark:text-slate-400 font-medium hover:text-slate-600 dark:hover:text-slate-200';
       const pillCls = on
-        ? 'bg-bri-light dark:bg-blue-900/40 text-bri dark:text-blue-300'
+        ? 'bg-brand-light dark:bg-blue-900/40 text-brand dark:text-blue-300'
         : 'text-current';
       return `<a href="#${k}" ${on ? 'aria-current="page"' : ''}
         class="relative flex flex-col items-center justify-center gap-1 py-2 px-1 text-[11px] leading-tight transition active:scale-95 ${linkCls}">
-        ${on ? '<span class="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-b-full bg-bri dark:bg-blue-400" aria-hidden="true"></span>' : ''}
+        ${on ? '<span class="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-b-full bg-brand dark:bg-blue-400" aria-hidden="true"></span>' : ''}
         <span class="inline-flex items-center justify-center rounded-xl px-3.5 py-1 transition ${pillCls}">
           ${modeIcon(k, 'h-5 w-5')}
         </span>
@@ -593,7 +656,7 @@ function renderTabs() {
 function openInfo(k) {
   const m = MODES[k];
   document.getElementById('infoBody').innerHTML = `
-    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--bri)),rgb(var(--bri-2)))">
+    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--brand)),rgb(var(--brand-2)))">
       <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${modeIcon(k)}</span>
       <div class="flex-1">
         <h3 id="infoTitle" class="text-base font-bold leading-tight">${m.title}</h3>
@@ -603,7 +666,7 @@ function openInfo(k) {
     </div>
     <div class="space-y-4 px-5 py-5">${infoLists(m)}</div>
     <div class="flex gap-2 px-5 pb-5">
-      ${k !== state.mode ? `<a href="#${k}" onclick="closeInfo()" class="flex-1 text-center rounded-xl bg-bri hover:bg-blue-800 px-4 py-2.5 text-sm font-semibold text-white transition">Buka simulasi</a>` : ''}
+      ${k !== activeMode() ? `<a href="#${k}" onclick="closeInfo()" class="flex-1 text-center rounded-xl bg-brand hover:bg-blue-800 px-4 py-2.5 text-sm font-semibold text-white transition">Buka simulasi</a>` : ''}
       <button type="button" onclick="closeInfo()" class="flex-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Tutup</button>
     </div>`;
   const d = document.getElementById('infoDialog');
@@ -623,12 +686,30 @@ function syncPrincipalInputState() {
   pEl.classList.toggle('cursor-not-allowed', locked);
 }
 
+// Hash URL: #kpr-baru (default), #to-float, #to-fix, #kkb-regular, #kkb-lnp, #kkb-karyawan
+// (#kpr / #kkb = buka produk itu pada mode terakhirnya)
 function route(fromHashChange) {
   const prevMode = state.mode;
   const h = location.hash.replace('#', '');
-  state.mode = MODES[h] && !HIDDEN_MODES.includes(h) ? h : 'kpr-baru';
+  const valid = MODES[h] && !HIDDEN_MODES.includes(h) ? h : null;
+  if (h === 'kkb' || (valid && productOf(valid) === 'kkb')) {
+    state.product = 'kkb';
+    if (valid) state.kkbMode = valid;
+  } else {
+    state.product = 'kpr';
+    state.mode = valid || (h === 'kpr' ? state.mode : 'kpr-baru');
+  }
+  const am = activeMode();
   renderTabs();
-  document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(state.mode)));
+  document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(am)));
+  if (fromHashChange === true && window.innerWidth < 768) {
+    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    window.scrollTo({ top: 0, behavior });
+  }
+  if (state.product === 'kkb') {
+    if (window.KKBApp) window.KKBApp.setScheme(MODES[am].scheme);
+    return;
+  }
   document.getElementById('mainCardTitle').textContent = MODES[state.mode].mainTitle;
   syncPrincipalInputState();
   syncProgramDropdownForMode();
@@ -639,11 +720,15 @@ function route(fromHashChange) {
     updateFeeHint();
     recalcAll();
   }
-  if (fromHashChange === true && window.innerWidth < 768) {
-    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-    window.scrollTo({ top: 0, behavior });
-  }
   try { calculate(); } catch (e) { console.error(e); }
+}
+
+// Tab KKB: buka/tutup jadwal angsuran bulanan (gaya sama dengan Jadwal Amortisasi KPR)
+function toggleKkbAmort() {
+  const wrap = document.getElementById('kkbAmortWrap');
+  const open = wrap.classList.toggle('hidden') === false;
+  document.getElementById('kkbAmortArrow').style.transform = open ? '' : 'rotate(-90deg)';
+  document.getElementById('kkbAmortToggle').setAttribute('aria-expanded', String(open));
 }
 
 // ─── RPC: cek kemampuan bayar (KPR Baru) ───
@@ -747,7 +832,7 @@ function renderRpc(sim) {
   el.innerHTML = `
     <div class="rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/50 dark:bg-sky-900/10 px-3.5 py-2.5 flex items-center justify-between gap-3">
       <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Maksimal Angsuran</span>
-      <span class="num text-sm font-bold text-bri dark:text-blue-300 whitespace-nowrap">${fmtMoney(Math.round(limitToUse))} /bln</span>
+      <span class="num text-sm font-bold text-brand dark:text-blue-300 whitespace-nowrap">${fmtMoney(Math.round(limitToUse))} /bln</span>
     </div>
     <div role="status" class="mt-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed font-medium ${cls}">${msg}${note}</div>`;
 }
@@ -860,7 +945,7 @@ function renderFixOutputs(fx) {
       const endIdx = Math.min(allRows.length, startIdx + 18);
       displayRows = allRows.slice(startIdx, endIdx);
       slicedNote = `<div class="p-2 text-center border-t border-slate-100 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800">
-        <button type="button" onclick="showAllFixAmort()" class="text-[11px] font-semibold text-bri dark:text-blue-300 hover:underline">Tampilkan seluruh ${allRows.length} bulan amortisasi</button>
+        <button type="button" onclick="showAllFixAmort()" class="text-[11px] font-semibold text-brand dark:text-blue-300 hover:underline">Tampilkan seluruh ${allRows.length} bulan amortisasi</button>
       </div>`;
     }
     const trs = displayRows.map(r => {
@@ -907,7 +992,7 @@ function renderFixOutputs(fx) {
       ${row('Angsuran masa float', fx.sisaFloat > 0 ? fmtMoney(fx.floatPmt) + ' /bln' : '—', fx.sisaFloat > 0 ? 'Bunga ' + fmtPct(f.rFloat) + ' (mulai bln ke-' + (f.fixMonths + 1) + ')' : '')}
     </div>
     <button type="button" onclick="toggleFixAmort()"
-      class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-bri dark:text-blue-300 transition">
+      class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-brand dark:text-blue-300 transition">
       <span>${state.fixAmortOpen ? 'Sembunyikan' : 'Lihat'} Tabel Amortisasi KPR Sebelumnya</span>
       <span>${state.fixAmortOpen ? '▲' : '▼'}</span>
     </button>
@@ -924,7 +1009,7 @@ function syncOldPmtCustomUI() {
   const btnMatch = document.getElementById('btnOldPmtMatch');
   const btnCustom = document.getElementById('btnOldPmtCustom');
   if (field) field.classList.toggle('hidden', !isCustom);
-  const activeCls = 'px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-bri dark:text-blue-300 shadow-sm transition';
+  const activeCls = 'px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 text-brand dark:text-blue-300 shadow-sm transition';
   const idleCls = 'px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition';
   if (btnMatch) btnMatch.className = isCustom ? idleCls : activeCls;
   if (btnCustom) btnCustom.className = isCustom ? activeCls : idleCls;
@@ -1069,6 +1154,7 @@ function computeTakeover(principal, sim, prebuiltFx) {
 
 // ─── Main calculate (real-time) ───
 function calculate() {
+  if (state.product === 'kkb') return;
   if (state.mode === 'kpr-dinamis') { if (typeof calcDinamis === 'function') calcDinamis(); return; }
   const s = sym();
   document.getElementById('curr1').textContent = s;
@@ -1123,7 +1209,7 @@ function renderSummaryCards(sim, to, principal) {
   const whiteCard = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5';
 
   let html = `
-    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--bri-2)),rgb(var(--bri)))">
+    <div class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5" style="background:linear-gradient(135deg,rgb(var(--brand-2)),rgb(var(--brand)))">
       <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
       <p class="text-blue-100 text-xs font-semibold mb-1">${to ? 'Angsuran Take Over' : 'Angsuran KPR'} ${multi ? '(Tahap 1)' : ''}</p>
       <h3 class="text-2xl font-bold mb-1 num">${fmtMoney(firstPmt)}<span class="text-xs font-normal"> /bln</span></h3>
@@ -1144,7 +1230,7 @@ function renderSummaryCards(sim, to, principal) {
         <p class="text-[11px] text-slate-400 dark:text-slate-500">Angsuran sebelum: ${fmtMoney(Math.round(to.oldPmt))}/bln</p>`;
     const pmtInfoBtn = _lastPmtPhases
       ? `<button type="button" onclick="openPmtInfo()"
-          class="mt-2 w-full flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold text-bri dark:text-blue-300 transition">
+          class="mt-2 w-full flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold text-brand dark:text-blue-300 transition">
           <span>Lihat Tabel Tahapan Angsuran</span><span>▼</span></button>`
       : '';
     html += `
@@ -1165,12 +1251,12 @@ function renderSummaryCards(sim, to, principal) {
           <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Pembayaran</p>
           <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 num">${fmtCompact(sim.totalPayments)}</h3>
         </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(principal)}</span> + Bunga <span class="font-semibold text-bri dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Pokok <span class="font-semibold text-slate-700 dark:text-slate-200">${fmtCompact(principal)}</span> + Bunga <span class="font-semibold text-brand dark:text-blue-300">${fmtCompact(sim.totalInterest)}</span></p>
       </div>
       <div class="${whiteCard} flex flex-col justify-between">
         <div>
           <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">Total Bunga</p>
-          <h3 class="text-2xl font-bold text-bri dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
+          <h3 class="text-2xl font-bold text-brand dark:text-blue-300 mb-1 num">${fmtCompact(sim.totalInterest)}</h3>
         </div>
         <p class="text-[11px] text-slate-400 dark:text-slate-500">Akumulasi selama ${sim.totalMonths} bulan</p>
       </div>`;
@@ -1205,8 +1291,8 @@ function bigCell(label, value, o) {
     <p class="fit-val font-bold num ${vc}" style="--len:${f.len};--max:1.125rem">${f.s}</p>
     ${o.sub ? `<p class="text-[11px] mt-1 break-words ${sc}">${o.sub}</p>` : ''}</div>`;
 }
-// warna palet BRI dari variabel CSS (ikut mode cerah/gelap)
-function briColor(name, alpha) {
+// warna palet utama dari variabel CSS (ikut mode cerah/gelap)
+function brandColor(name, alpha) {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '8 87 195';
   return alpha === undefined ? `rgb(${v})` : `rgb(${v} / ${alpha})`;
 }
@@ -1222,7 +1308,7 @@ function renderMetrics(sim, to, principal) {
   const lastPmt = steps.length ? steps[steps.length - 1].payment : 0;
   const multi = steps.length > 1;
   const pctBunga = principal > 0 ? sim.totalInterest / principal * 100 : 0;
-  const blue = { bg: 'bg-bri-light dark:bg-blue-900/20', lc: 'text-bri dark:text-blue-300', vc: 'text-bri dark:text-blue-300', sc: 'text-slate-500 dark:text-slate-400' };
+  const blue = { bg: 'bg-brand-light dark:bg-blue-900/20', lc: 'text-brand dark:text-blue-300', vc: 'text-brand dark:text-blue-300', sc: 'text-slate-500 dark:text-slate-400' };
   const org = { bg: 'bg-orange-50 dark:bg-orange-900/20', lc: 'text-orange-600 dark:text-orange-300', vc: 'text-slate-800 dark:text-slate-100', sc: 'text-slate-500 dark:text-slate-400' };
 
   // 1) Skema baru
@@ -1230,7 +1316,7 @@ function renderMetrics(sim, to, principal) {
   const totalBayarSub = to
     ? ('Sudah termasuk Biaya Tambahan Take Over (' + fmtCompact(to.fee) + ')')
     : ('Pokok ' + fmtCompact(principal) + ' + Bunga ' + fmtCompact(sim.totalInterest));
-  let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-bri',
+  let html = metricSection(to ? 'Skema Take Over (Setelah Take Over)' : 'Skema KPR', 'bg-brand',
     bigCell('Total Jangka Waktu', sim.totalMonths + ' bln', Object.assign({ sub: monthsToText(sim.totalMonths) }, blue)) +
     bigCell('Total Pembayaran', fmtMoney(Math.round(totalBayarVal)), Object.assign({ sub: totalBayarSub }, blue)) +
     bigCell('Total Bunga', fmtMoney(Math.round(sim.totalInterest)), blue) +
@@ -1238,7 +1324,7 @@ function renderMetrics(sim, to, principal) {
 
   if (to) {
         // 2) Skema sebelumnya (before)
-    html += metricSection('Skema Sebelumnya (Sebelum Take Over)', 'bg-briorange',
+    html += metricSection('Skema Sebelumnya (Sebelum Take Over)', 'bg-brand-orange',
       bigCell('Total Jangka Waktu Sebelum', to.oldMonths + ' bln', Object.assign({ sub: monthsToText(to.oldMonths) }, org)) +
       bigCell('Total Pembayaran Sebelum', fmtMoney(Math.round(to.oldTotal)), org) +
       bigCell('Total Bunga Sebelum', fmtMoney(Math.round(to.oldTotalBunga)), org) +
@@ -1260,13 +1346,13 @@ function renderMetrics(sim, to, principal) {
 
   // 4) Detail lainnya (sekunder)
   let more =
-    metricCell('IRR Bank (Tahunan)', fmtPct(sim.irrNominal), { vc: 'text-bri dark:text-blue-300' }) +
-    metricCell('IRR Efektif', fmtPct(sim.irrEfektif), { vc: 'text-bri dark:text-blue-300' }) 
+    metricCell('IRR Bank (Tahunan)', fmtPct(sim.irrNominal), { vc: 'text-brand dark:text-blue-300' }) +
+    metricCell('IRR Efektif', fmtPct(sim.irrEfektif), { vc: 'text-brand dark:text-blue-300' }) 
     // +
     // metricCell('Sisa Saldo Akhir', balloon ? fmtCompact(sim.endingBalance) : sym() + ' 0',
     //   balloon ? { vc: 'text-orange-600 dark:text-orange-400' } : { vc: 'text-emerald-600 dark:text-emerald-400' })
       ;
-  if (to) more += metricCell('Biaya Tambahan Take Over', fmtCompact(to.fee), { vc: 'text-bri dark:text-blue-300' });
+  if (to) more += metricCell('Biaya Tambahan Take Over', fmtCompact(to.fee), { vc: 'text-brand dark:text-blue-300' });
   html += `<div class="hidden pt-4 border-t border-slate-100 dark:border-slate-700">
     <p class="text-xs font-bold text-slate-400 dark:text-slate-500 mb-2">Detail Lainnya</p>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">${more}</div></div>`;
@@ -1332,7 +1418,7 @@ function openPmtInfo() {
       <td class="px-2 py-2 whitespace-nowrap text-right font-bold ${s.cls}">${s.txt}</td></tr>`;
   }).join('');
   document.getElementById('infoBody').innerHTML = `
-    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--bri)),rgb(var(--bri-2)))">
+    <div class="flex items-start gap-3 px-5 pt-5 pb-4 text-white rounded-t-2xl" style="background:linear-gradient(135deg,rgb(var(--brand)),rgb(var(--brand-2)))">
       <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">${infoIcon('h-5 w-5')}</span>
       <div class="flex-1">
         <h3 id="infoTitle" class="text-base font-bold leading-tight">Tahapan Perubahan Angsuran</h3>
@@ -1364,7 +1450,7 @@ function renderToBanner(sim, to) {
   let msg, cls;
     if (to.efisiensi > 0) { cls = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40'; msg = `✅ <b>Take over lebih menguntungkan</b> — Anda berpotensi menghemat <b>${fmtMoney(Math.round(to.efisiensi))}</b> dibanding skema sebelumnya.`; }
   else if (to.efisiensi < 0) { cls = 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-900/40'; msg = `ℹ️ <b>Total pembayaran take over lebih tinggi</b> sebesar <b>${fmtMoney(Math.round(Math.abs(to.efisiensi)))}</b>, namun Anda menikmati bunga awal yang lebih ringan di tahun-tahun pertama.`; }
-  else { cls = 'bg-bri-light dark:bg-blue-900/20 text-bri dark:text-blue-300 border-blue-100 dark:border-blue-900/40'; msg = `Total pembayaran skema take over & skema sebelumnya hampir sama.`; }
+  else { cls = 'bg-brand-light dark:bg-blue-900/20 text-brand dark:text-blue-300 border-blue-100 dark:border-blue-900/40'; msg = `Total pembayaran skema take over & skema sebelumnya hampir sama.`; }
     let bep = '';
   if (to.meets.length) {
     const parts = to.meets.map(mp => {
@@ -1407,14 +1493,14 @@ function renderCharts(sim, to) {
   const balBaru = [parseNum(document.getElementById('principal').value)];
   sim.rows.forEach(r => balBaru.push(Math.max(0, r.endBalance)));
 
-  const dsSaldo = [{ label: to ? 'Saldo Take Over' : 'Saldo Pokok', data: downsample(balBaru, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.16), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
+  const dsSaldo = [{ label: to ? 'Saldo Take Over' : 'Saldo Pokok', data: downsample(balBaru, 220), borderColor: brandColor('--brand'), backgroundColor: brandColor('--brand-sky', 0.16), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 }];
   let dsKum = [];
   let annos = {};
 
   if (to) {
     dsSaldo.push({ label: 'Saldo Sebelumnya', data: downsample(to.oldSaldo, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 });
     dsKum = [
-      { label: 'Kumulatif Take Over', data: downsample(to.cumNew, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.14), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
+      { label: 'Kumulatif Take Over', data: downsample(to.cumNew, 220), borderColor: brandColor('--brand'), backgroundColor: brandColor('--brand-sky', 0.14), borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
       { label: 'Kumulatif Sebelumnya', data: downsample(to.cumOld, 220), borderColor: '#F58220', borderDash: [5, 4], borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4 },
     ];
     if (to.meets.length) {
@@ -1439,7 +1525,7 @@ function renderCharts(sim, to) {
     syncTogglePillStyle(2, showBunga);
 
     dsKum = [
-      { label: 'Total Pembayaran (Pokok + Bunga)', data: downsample(cumTotal, 220), borderColor: briColor('--bri'), backgroundColor: briColor('--bri-sky', 0.14), borderWidth: 2.5, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showTotal },
+      { label: 'Total Pembayaran (Pokok + Bunga)', data: downsample(cumTotal, 220), borderColor: brandColor('--brand'), backgroundColor: brandColor('--brand-sky', 0.14), borderWidth: 2.5, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showTotal },
       { label: 'Kumulatif Pokok', data: downsample(cumPokok, 220), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.05)', borderWidth: 2, fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showPokok },
       { label: 'Kumulatif Bunga', data: downsample(cumBunga, 220), borderColor: '#F58220', backgroundColor: 'rgba(245,130,32,0.05)', borderWidth: 2, borderDash: [5, 4], fill: false, tension: 0.2, pointRadius: 0, pointHoverRadius: 4, hidden: !showBunga },
     ];
@@ -1499,20 +1585,20 @@ function renderStepTable(sim) {
   const td = 'px-3 py-2.5 border-t border-slate-100 dark:border-slate-700';
   let rows = sim.stepSummaries.map(r => `
     <tr class="hover:bg-blue-50 dark:hover:bg-slate-700/60 transition-colors">
-      <td class="${td} text-center"><span class="inline-flex items-center justify-center h-5 w-5 rounded bg-bri text-white text-[11px] font-bold">${r.step}</span></td>
+      <td class="${td} text-center"><span class="inline-flex items-center justify-center h-5 w-5 rounded bg-brand text-white text-[11px] font-bold">${r.step}</span></td>
       <td class="${td}">${r.months}</td>
       <td class="${td}">${fmtPct(r.rate)}</td>
       <td class="${td} font-semibold">${fmtMoney(Math.round(r.payment))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.principal))}</td>
-      <td class="${td} text-bri dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
+      <td class="${td} text-brand dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.endBalance))}</td>
     </tr>`).join('');
   rows += `
-    <tr class="bg-bri-light dark:bg-slate-700 font-bold">
+    <tr class="bg-brand-light dark:bg-slate-700 font-bold">
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600" colspan="3">TOTAL</td>
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.totalPayments))}</td>
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(Math.round(sim.totalPayments - sim.totalInterest))}</td>
-      <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600 text-bri dark:text-blue-300">${fmtMoney(Math.round(sim.totalInterest))}</td>
+      <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600 text-brand dark:text-blue-300">${fmtMoney(Math.round(sim.totalInterest))}</td>
       <td class="px-3 py-2.5 border-t border-slate-200 dark:border-slate-600">${fmtMoney(0)}</td>
     </tr>`;
   document.getElementById('stepTable').innerHTML = `
@@ -1529,7 +1615,7 @@ function renderAmort(sim) {
   const showAll = sim.rows.length <= 60;
   const rows = showAll ? sim.rows : sim.rows.slice(0, 36);
   document.getElementById('amortTable').innerHTML = amortTableHtml(rows) +
-    (showAll ? '' : `<div class="text-center mt-3"><button onclick="showFullAmort()" class="text-xs font-semibold text-bri dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:bg-bri-light dark:hover:bg-slate-700 rounded-lg px-4 py-2 transition">Tampilkan semua ${sim.rows.length} bulan</button></div>`);
+    (showAll ? '' : `<div class="text-center mt-3"><button onclick="showFullAmort()" class="text-xs font-semibold text-brand dark:text-blue-300 border border-slate-200 dark:border-slate-600 hover:bg-brand-light dark:hover:bg-slate-700 rounded-lg px-4 py-2 transition">Tampilkan semua ${sim.rows.length} bulan</button></div>`);
 }
 function amortTableHtml(rows) {
   const td = 'px-3 py-2 border-t border-slate-100 dark:border-slate-700';
@@ -1538,7 +1624,7 @@ function amortTableHtml(rows) {
       <td class="${td}">${r.month}</td>
       <td class="${td} text-center"><span class="inline-flex items-center justify-center h-4 w-4 rounded bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-[10px] font-bold">${r.step}</span></td>
       <td class="${td}">${fmtMoney(Math.round(r.beginBalance))}</td>
-      <td class="${td} text-bri dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
+      <td class="${td} text-brand dark:text-blue-300">${fmtMoney(Math.round(r.interest))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.principal))}</td>
       <td class="${td} font-medium">${fmtMoney(Math.round(r.payment))}</td>
       <td class="${td}">${fmtMoney(Math.round(r.endBalance))}</td>
@@ -1642,7 +1728,7 @@ function applySavedProgram() {
 }
 function resetSaved() {
   _stateReady = false;
-  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  try { localStorage.removeItem(STORE_KEY); localStorage.removeItem('kkb-settings-v1'); } catch (e) {}
   if (typeof resetDinamis === 'function') resetDinamis();
   location.reload();
 }

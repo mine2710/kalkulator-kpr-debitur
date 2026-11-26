@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * GOOGLE APPS SCRIPT — UNIFIED API (KKB + KPR BRI)
+ * GOOGLE APPS SCRIPT — UNIFIED API (KKB + KPR)
  * Satu Spreadsheet & Satu Endpoint Web App untuk 2 Aplikasi Sekaligus!
  * ============================================================================
  * 

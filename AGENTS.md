@@ -10,13 +10,17 @@ supaya pemahamannya sama.
 
 ## Proyek singkat
 
-Kalkulator KPR untuk debitur BRI. Web statis tanpa build (HTML + Tailwind CDN + Chart.js + JS biasa).
+**Kalkulator Kredit** (umum, tanpa merek bank) untuk debitur, berisi dua produk: **KPR** dan **KKB**.
+Web statis tanpa build (HTML + Tailwind CDN + Chart.js + JS biasa).
 Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy otomatis dari branch `main`).
 
 | File | Isi |
 |---|---|
-| `index.html` | Semua tampilan, 4 tab. Elemen per tab ditandai `data-modes="kpr-baru to-float to-fix kpr-dinamis"` |
-| `script.js` | KPR Baru, Take Over Float/Fix, pemuat data (API → fallback CSV), helper format & grafik |
+| `index.html` | Semua tampilan. Header berisi tab produk **KPR / KKB**; di bawahnya tab mode produk itu. Elemen per mode ditandai `data-modes="kpr-baru to-float to-fix kpr-dinamis"` / `"kkb-regular kkb-lnp kkb-karyawan"` |
+| `script.js` | KPR Baru, Take Over Float/Fix, pemuat data (API → fallback CSV), helper format & grafik. Juga navigasi produk (`PRODUCTS`, `PRODUCT_MODES`, `route()`) untuk KPR & KKB |
+| `kkb/js/*.js` | Tab KKB (dipindahkan dari repo `kalkulator-KKB-debitur`). `app.js` hanya menyentuh elemen di dalam `#kkbApp`; skema diganti dari tab lewat `window.KKBApp.setScheme()` |
+| `kkb/kkb.css` | Gaya komponen KKB yang dibuat JS (tabel `.k-table`, `.control`, dll.), semua dibatasi `#kkbApp`, ikut mode gelap |
+| `kkb/database/*.csv` | Cadangan lokal data KKB, **tidak ada di GitHub** (di-`.gitignore`) |
 | `dinamis.js` | Tab KPR Dinamis (tiering dana pengurang bunga). Bergantung pada helper global dari `script.js` |
 | `programs.csv` / `tiering.csv` | Cadangan lokal saja, **tidak ada di GitHub** (di-`.gitignore`). Sumber data = Google Spreadsheet (sheet `Programs`, `tiering`). `segments` = `durasi:bunga` dipisah `|` |
 | `google-apps-script/Code.gs` | Backend; token dibaca dari Script Properties |
@@ -29,14 +33,15 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
    dan versi tersandi di `config.js`. Di dokumentasi tulis `<TOKEN>` saja.
 3. **Data jangan masuk GitHub:** `programs.csv`, `tiering.csv`, `Tambahan/`, dan semua `.xlsx` di-`.gitignore`.
    Jangan salin isi tabel suku bunga/tiering ke kode atau dokumen. Sumber data hanya Google Spreadsheet.
-4. **Warna:** pakai kelas Tailwind `bri`, `bri-2`, `bri-sky`, `bri-dark` (variabel CSS `--bri` dst. di `index.html`).
+4. **Warna:** pakai kelas Tailwind `brand`, `brand-2`, `brand-sky`, `brand-dark`, `brand-light`, `brand-orange` (variabel CSS `--brand` dst. di `index.html`).
    Mode cerah: #0857C3 / #307FE2 / #71C5E8. Mode gelap memakai palet lama. Jangan tulis hex biru langsung;
-   di JS grafik pakai `briColor('--bri', alpha)`.
+   di JS grafik pakai `brandColor('--brand', alpha)`.
 5. **Cakupan:** kalau pengguna bilang "khusus tab X", jangan ubah tab lain.
 6. **Tanpa build:** jangan tambah npm/bundler. Library hanya via CDN dengan versi pasti.
 7. **Cek sebelum push:** `node --check script.js dinamis.js`, lalu buka lewat `python -m http.server 8080`
    (bukan klik dua kali `index.html`). Push ke `main` = langsung tayang di web.
 8. **Git:** jangan commit file sementara (`Untitled spreadsheet*.xlsx`, `~$*`). Jangan force-push.
+9. **Tanpa merek:** aplikasi bersifat umum. Jangan menulis kata/logo "BRI" (atau nama bank lain) di tampilan, judul, maupun kode.
 
 ## Keputusan yang sudah disepakati (jangan diubah tanpa tanya pengguna)
 
@@ -69,3 +74,4 @@ Live di GitHub Pages: https://mine2710.github.io/kalkulator-kpr-debitur/ (deploy
 - 2026-11-17 — Claude Code — Take Over Fix: kartu ringkasan "Perubahan Angsuran" tetap menampilkan selisih bulan pertama seperti semula, ditambah tombol "Lihat Tabel Tahapan Angsuran" (gaya sama dengan "Lihat Tabel Amortisasi"; muncul bila angsuran berubah per tahap, mis. bank lama turun saat masuk masa float) yang membuka dialog berisi tabel 2 tahap saja (Masa Fix & Masa Float KPR sebelumnya; perubahan angsuran take over di tengah tahap ditulis sebagai catatan) (keterangan "Kenapa dibuat per tahap" dihapus atas permintaan pengguna). Tab lain tidak diubah.
 - 2026-11-17 — Claude Code — Label tab Take Over diganti: "Take Over Float" → "Pengajuan Takeover KPR" + keterangan "Nasabah Sudah Floating Rate"; "Take Over Fix" → "Pengajuan Takeover KPR" + keterangan "Nasabah Masih Fixed Rate" (field `sub` di `MODES`, tampil di tab atas, bottom nav HP, judul HP & dialog info). Logika tidak diubah.
 - 2026-11-17 — Claude Code — Label tab KPR Baru dikembalikan seperti semula ("KPR Baru" / "KPR Baru (KPR New &amp; Secondary)") atas permintaan pengguna; tab Takeover tetap memakai nama baru.
+- 2026-11-26 — Claude Code — **KPR & KKB digabung** menjadi satu aplikasi "Kalkulator Kredit" (branch `gabung-kpr-kkb`). Header punya tab produk KPR / KKB; KKB punya 3 tab skema (Regular, Prioritas, Karyawan; id internal `lnp` tetap) dengan tab atas, bottom nav HP, dan dialog info yang sama seperti KPR. Kode KKB disalin ke `kkb/`, tampilannya dibuat ulang dengan gaya kartu KPR + mode gelap. Semua logo & kata BRI dihapus (termasuk nama kelas warna: `bri` → `brand`, `briColor` → `brandColor`). Nama skema KKB jadi "KKB Regular/Prioritas/Karyawan". Kunci localStorage KKB baru: `kkb-settings-v1`.

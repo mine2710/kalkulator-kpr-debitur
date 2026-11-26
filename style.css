@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   Kalkulator KPR — Tema BRI Korporat
+   Kalkulator KPR
    ═══════════════════════════════════════════ */
 
 /* ─── tokens (light) ─── */
@@ -10,12 +10,12 @@
   --fg: #16222E;
   --fg-soft: #51606E;
   --fg-muted: #8695A3;
-  --accent: #00529C;          /* BRI blue */
+  --accent: #00529C;
   --accent-light: #E4EFF9;
   --accent-dark: #003C73;
   --accent-grad: linear-gradient(135deg, #00529C 0%, #0072C6 100%);
-  --bri-orange: #F58220;      /* BRI orange */
-  --bri-orange-soft: #FFF2E3;
+  --brand-orange: #F58220;
+  --brand-orange-soft: #FFF2E3;
   --green: #0B8A52;
   --green-bg: #E4F4EC;
   --red: #C8372A;
@@ -46,8 +46,8 @@
     --accent-light: #15283A;
     --accent-dark: #7CC0F0;
     --accent-grad: linear-gradient(135deg, #0A4E8F 0%, #1272BE 100%);
-    --bri-orange: #FF9E3D;
-    --bri-orange-soft: #2A1E0E;
+    --brand-orange: #FF9E3D;
+    --brand-orange-soft: #2A1E0E;
     --green: #3CBE7E;
     --green-bg: #10241B;
     --red: #E8726A;
@@ -76,8 +76,8 @@
   --accent-light: #15283A;
   --accent-dark: #7CC0F0;
   --accent-grad: linear-gradient(135deg, #0A4E8F 0%, #1272BE 100%);
-  --bri-orange: #FF9E3D;
-  --bri-orange-soft: #2A1E0E;
+  --brand-orange: #FF9E3D;
+  --brand-orange-soft: #2A1E0E;
   --green: #3CBE7E;
   --green-bg: #10241B;
   --red: #E8726A;
@@ -109,11 +109,11 @@ body {
 h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 ::selection { background: var(--accent-light); color: var(--accent-dark); }
 
-/* ─── BRI hero header ─── */
+/* ─── hero header ─── */
 .hero {
   background: var(--accent-grad);
   color: #fff;
-  border-bottom: 4px solid var(--bri-orange);
+  border-bottom: 4px solid var(--brand-orange);
   padding-top: calc(28px + env(safe-area-inset-top, 0px));
   padding-bottom: 28px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -144,7 +144,7 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
   display: inline-block; margin-top: 2px;
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: var(--bri-orange); color: #fff;
+  background: var(--brand-orange); color: #fff;
   padding: 2px 10px; border-radius: 20px;
 }
 .hero p { font-size: 14px; color: rgba(255,255,255,0.88); margin: 6px 0 0; max-width: 560px; }
