@@ -382,14 +382,44 @@ function onTierChange() {
     saveState();
   }
 }
+// Program Manual (custom) → tenor terkunci: tampilkan gembok + peringatan "pilih program"
+function updateTenorWarn() {
+  const t = document.getElementById('tenor'), warn = document.getElementById('tenorWarn');
+  if (!t || !warn) return;
+  const locked = t.disabled;
+  warn.classList.toggle('hidden', !locked);
+  document.getElementById('tenorLockIcon').classList.toggle('hidden', !locked);
+  document.getElementById('tenorWrap').title = locked ? 'Pilih Program Suku Bunga terlebih dahulu untuk mengatur tenor' : '';
+  document.getElementById('tenorWrap').style.cursor = locked ? 'pointer' : '';
+  const total = state.steps.reduce((a, s) => a + (Number(s.months) || 0), 0);
+  document.getElementById('tenorWarnTotal').textContent =
+    locked && total > 0 ? `Total tenor dari tahapan saat ini: ${total} bln (${monthsToText(total)}).` : '';
+}
+// arahkan pengguna ke dropdown Program Suku Bunga (dengan sorotan singkat)
+function focusProgramSelect() {
+  const sel = document.getElementById('program');
+  if (!sel) return;
+  const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  sel.scrollIntoView({ behavior, block: 'center' });
+  sel.focus({ preventScroll: true });
+  sel.classList.add('ring-4', 'ring-amber-400/60', 'border-amber-400');
+  clearTimeout(focusProgramSelect._t);
+  focusProgramSelect._t = setTimeout(() => sel.classList.remove('ring-4', 'ring-amber-400/60', 'border-amber-400'), 1600);
+}
+function onTenorLockedClick() {
+  if (document.getElementById('tenor').disabled) focusProgramSelect();
+}
 function updateProgramHint() {
   const p = currentProgram(), hint = document.getElementById('programHint'), t = document.getElementById('tenor');
   if (!p) {
     if (Number(t.value) > 0) state.lastTenor = Math.round(Number(t.value));
-    hint.textContent = ''; t.disabled = true; t.value = ''; t.removeAttribute('min'); t.removeAttribute('max'); return;
+    hint.textContent = ''; t.disabled = true; t.value = ''; t.removeAttribute('min'); t.removeAttribute('max');
+    updateTenorWarn();
+    return;
   }
   const mx = programMaxMonths(p);
   t.disabled = false; t.min = p.min_months; t.max = mx;
+  updateTenorWarn();
   hint.textContent = 'Tenor ' + p.min_months + '–' + mx + ' bln (' + monthsToText(p.min_months) + ' – ' + monthsToText(mx) + ')';
 }
 function applyProgram(tenor) {
@@ -1156,6 +1186,7 @@ function computeTakeover(principal, sim, prebuiltFx) {
 function calculate() {
   if (state.product === 'kkb') return;
   if (state.mode === 'kpr-dinamis') { if (typeof calcDinamis === 'function') calcDinamis(); return; }
+  updateTenorWarn(); // total tenor di peringatan ikut berubah saat tahap diubah manual
   const s = sym();
   document.getElementById('curr1').textContent = s;
   document.getElementById('curr2').textContent = s;
