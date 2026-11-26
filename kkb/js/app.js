@@ -28,8 +28,8 @@
     dpMode: 'pct',
     dpPct: 20,
     dpAmount: 70000000,
-    coverageValue: 'Kombinasi#1',
-    selectedPerils: ['banjir'],
+    coverageValue: 'AllRisk',
+    selectedPerils: [],
     adminFee: 2000000,
     provisiPct: 1.0,
     polisFee: 60000,
@@ -1273,8 +1273,8 @@
         modelValue: 'AVANZA',
         vehiclePrice: 350000000,
         dpMode: 'pct',
-        coverageValue: 'Kombinasi#1',
-        selectedPerils: ['banjir'],
+        coverageValue: 'AllRisk',
+        selectedPerils: [],
         installmentType: 'ADDB',
         selectedTenor: 36
       });
