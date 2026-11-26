@@ -1405,3 +1405,84 @@
   #kkbApp .table.stack td { padding: 4px 0; }
   #kkbApp .form-cols .field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   WARNA MENGIKUTI KPR — hanya warna, tata letak tetap seperti asli.
+   Biru = variabel --brand di index.html (ikut mode cerah/gelap KPR),
+   oranye = #F58220 (brand-orange KPR).
+   ═══════════════════════════════════════════════════════════════════ */
+#kkbApp {
+  --kkb-blue: rgb(var(--brand));
+  --kkb-blue-dark: rgb(var(--brand-dark));
+  --kkb-blue-soft: #e4eff9;
+  --kkb-blue-border: rgb(var(--brand) / 0.28);
+  --kkb-orange: #f58220;
+  --kkb-orange-dark: #d9700f;
+  --kkb-orange-soft: #fff4ec;
+}
+#kkbApp .control:focus,
+#kkbApp .rate-input:focus { border-color: rgb(var(--brand)); box-shadow: 0 0 0 3px rgb(var(--brand) / 0.2); }
+#kkbApp .modal-tab.active { box-shadow: 0 2px 8px rgb(var(--brand) / 0.22); }
+#kkbApp .tag-blue { background: #e4eff9; color: rgb(var(--brand)); }
+#kkbApp .scheme-btn.active:hover { background: rgb(var(--brand-dark)); }
+
+/* ─── Mode gelap (sama dengan palet gelap KPR: slate-900 / slate-800 / slate-700) ─── */
+.dark #kkbApp {
+  --kkb-blue-dark: #93c5fd;            /* dipakai sebagai warna teks biru */
+  --kkb-blue-soft: rgba(30, 58, 138, 0.35);
+  --kkb-blue-border: #475569;
+  --kkb-orange-soft: rgba(245, 130, 32, 0.12);
+  --emerald-soft: rgba(6, 78, 59, 0.3);
+  --danger-soft: rgba(127, 29, 29, 0.3);
+  --bg-surface: #1e293b;
+  --bg-subtle: rgba(51, 65, 85, 0.5);
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --border-strong: #475569;
+}
+.dark #kkbApp .scheme-selector,
+.dark #kkbApp .card,
+.dark #kkbApp .kpi,
+.dark #kkbApp .kpi.primary,
+.dark #kkbApp .kpi.accent,
+.dark #kkbApp .kpi.teal { background: #1e293b; color: var(--text-primary); border-color: #334155; }
+.dark #kkbApp .kpi.primary { border-top-color: rgb(var(--brand-2)); }
+.dark #kkbApp .kpi.accent { border-top-color: #64748b; }
+.dark #kkbApp .kpi.accent .kpi-value { color: var(--text-primary); }
+.dark #kkbApp .scheme-btn.active:hover { background: rgb(var(--brand-2)); }
+
+.dark #kkbApp .control,
+.dark #kkbApp .form-cols .control { background: #334155; border-color: #475569; color: #f1f5f9; color-scheme: dark; }
+.dark #kkbApp .control option { background: #1e293b; color: #f1f5f9; }
+.dark #kkbApp .form-cols .input-group { background: transparent; }
+.dark #kkbApp .form-cols > .form-col { background: rgba(15, 23, 42, 0.35); border-color: #334155; }
+.dark #kkbApp .form-cols .form-section-title,
+.dark #kkbApp .form-cols .advanced-settings .form-section-title { border-bottom-color: #334155; }
+.dark #kkbApp .form-cols .peril-item,
+.dark #kkbApp .form-cols .info-box,
+.dark #kkbApp .form-cols .fee-auto,
+.dark #kkbApp .form-cols .chip { background: #1e293b; border-color: #334155; }
+.dark #kkbApp .form-cols .peril-item.checked { background: var(--kkb-blue-soft); border-color: rgb(var(--brand-2) / 0.5); }
+.dark #kkbApp .dp-status,
+.dark #kkbApp .form-cols .dp-status { background: rgba(30, 58, 138, 0.25); border-color: #334155; color: #93c5fd; }
+.dark #kkbApp .dp-status.warning,
+.dark #kkbApp .form-cols .dp-status.warning,
+.dark #kkbApp .simulation-notice { background: var(--danger-soft); border-color: rgba(248, 113, 113, 0.35); color: #fca5a5; }
+.dark #kkbApp .btn-outline { background: transparent; color: #93c5fd; border-color: #475569; }
+.dark #kkbApp .btn-outline:hover { background: rgba(51, 65, 85, 0.6); border-color: #93c5fd; }
+
+.dark #kkbApp .table th { background: rgba(51, 65, 85, 0.5); }
+.dark #kkbApp .table .text-dark { color: var(--text-primary) !important; }
+.dark #kkbApp .table tr.subrow td { background: rgba(51, 65, 85, 0.3); }
+.dark #kkbApp .table tfoot td { background: #334155; border-top-color: #475569; }
+.dark #kkbApp .table tr.clickable:hover { background: rgba(51, 65, 85, 0.6); }
+.dark #kkbApp .table tr.highlight { background: rgba(245, 130, 32, 0.1); }
+.dark #kkbApp .amort-scroll thead th { background: #283548; }
+.dark #kkbApp .amort-scroll tfoot td { background: #334155; }
+.dark #kkbApp tr.row-coverage-switch { background: rgba(120, 53, 15, 0.25); }
+.dark #kkbApp tr.row-year-end { background: rgba(51, 65, 85, 0.3); }
+.dark #kkbApp .tag-blue { background: rgba(30, 58, 138, 0.35); color: #93c5fd; }
+.dark #kkbApp .tag-amber { background: rgba(146, 64, 14, 0.35); color: #fde68a; }
+.dark #kkbApp .tag-gray { background: #334155; color: #cbd5e1; }
