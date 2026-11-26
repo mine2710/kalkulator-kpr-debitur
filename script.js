@@ -365,6 +365,20 @@ function syncProgramDropdownForMode() {
   if (sel && sel.value !== prevKey) {
     updateProgramHint();
   }
+  ensureTakeoverProgram();
+}
+// Take Over (Float/Fix): bawaan Program Suku Bunga = program pertama, bukan "Manual (custom)".
+// KPR Baru tetap boleh Manual. Pengguna masih bisa memilih Manual sendiri setelahnya.
+function ensureTakeoverProgram() {
+  if (state.mode !== 'to-float' && state.mode !== 'to-fix') return;
+  const sel = document.getElementById('program');
+  if (!sel || sel.value) return;
+  const first = Object.keys(PROGRAMS[activeTier()] || {})[0];
+  if (!first) return;
+  sel.value = first;
+  const p = currentProgram();
+  const cur = Number(document.getElementById('tenor').value) || state.lastTenor;
+  applyProgram(cur > 0 ? cur : programMaxMonths(p));
 }
 function onTierChange() {
   if (state.mode !== 'kpr-baru') return;
@@ -1756,11 +1770,12 @@ function applySavedProgram() {
     if (tierSel) tierSel.value = currentTier;
   }
   populateProgramDropdown();
-  if (!_saved.program) return;
-  const sel = document.getElementById('program');
-  sel.value = _saved.program;
-  if (sel.value !== _saved.program) { sel.value = ''; return; }  // program sudah dihapus dari CSV/Sheet
-  applyProgram(_saved.tenor);
+  if (_saved.program) {
+    const sel = document.getElementById('program');
+    sel.value = _saved.program;
+    if (sel.value === _saved.program) applyProgram(_saved.tenor);
+    else sel.value = '';  // program sudah dihapus dari CSV/Sheet
+  }
 }
 function resetSaved() {
   _stateReady = false;
@@ -1786,6 +1801,7 @@ document.addEventListener('DOMContentLoaded', () => {
   route(false);
   loadPrograms().finally(() => {
     applySavedProgram();
+    ensureTakeoverProgram();
     _stateReady = true;
     saveState();
   });
