@@ -310,8 +310,7 @@
         state.installmentType === 'ADDM'
       );
       const minRate = Math.min.apply(null, Object.values(rates));
-      const metaEl = $(metaIds[sId]);
-      if (metaEl) metaEl.textContent = `${sch.badge} • bunga mulai ${formatPct(minRate)}`;
+      $(metaIds[sId]).textContent = `${sch.badge} • bunga mulai ${formatPct(minRate)}`;
     });
 
     const active = state.schemes[state.schemeId];
@@ -529,11 +528,9 @@
         <td class="muted col-ket">${covLabel} (${active.tenorYears} Tahun • ${state.vehicleType})</td>
       </tr>
       <tr class="subtotal-row" id="btnToggleCreditFees" style="cursor:pointer;" title="Klik untuk menampilkan atau menyembunyikan rincian biaya kredit">
-        <td class="strong">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span>${++rowNo}. Total Biaya Kredit</span>
-            <span class="tag tag-gray" style="cursor:pointer;">${isCollapsed ? '▶ Rincian' : '▼ Tutup'}</span>
-          </div>
+        <td class="strong" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <span>${++rowNo}. Total Biaya Kredit</span>
+          <span class="tag tag-gray" style="font-size:0.68rem; font-weight:600; cursor:pointer;">${isCollapsed ? '▶ Buka Rincian' : '▼ Sembunyikan'}</span>
         </td>
         <td class="num strong">${formatRupiah(fees.totalCreditFees)}</td>
         <td class="col-ket"></td>
@@ -1125,7 +1122,10 @@
 
   function bindEvents() {
     root().querySelectorAll('.scheme-btn').forEach((btn) => {
-      btn.addEventListener('click', () => applySchemeDefaults(btn.getAttribute('data-scheme')));
+      btn.addEventListener('click', () => {
+        applySchemeDefaults(btn.getAttribute('data-scheme'));
+        notifySchemeChange();
+      });
     });
 
     $('inputWilayah').addEventListener('change', (e) => {
@@ -1259,8 +1259,7 @@
         const arrow = $('insArrowText');
         const isHidden = wrap.style.display === 'none';
         wrap.style.display = isHidden ? 'block' : 'none';
-        btnToggleIns.setAttribute('aria-expanded', String(isHidden));
-        if (arrow) arrow.style.transform = isHidden ? '' : 'rotate(-90deg)';
+        if (arrow) arrow.textContent = isHidden ? '▼ Sembunyikan' : '▶ Buka Rincian';
       });
     }
 
@@ -1287,7 +1286,8 @@
       $('inputCoverage').value = state.coverageValue;
       $('inputInstallmentType').value = state.installmentType;
       renderPerilCheckboxes();
-      applySchemeDefaults(state.schemeId); // skema tetap mengikuti tab yang sedang aktif
+      applySchemeDefaults('regular');
+      notifySchemeChange();
     });
 
     // Modal (jika ada tombol & modal di halaman)
@@ -1380,7 +1380,10 @@
     }
   }
 
-  // Dipanggil dari tab KKB (script.js) saat pengguna berpindah skema
+  // Sinkron dengan tab produk KPR / KKB di header (script.js): link tab KKB membuka skema terakhir
+  function notifySchemeChange() {
+    if (typeof global.onKKBSchemeChange === 'function') global.onKKBSchemeChange(state.schemeId);
+  }
   global.KKBApp = {
     setScheme(schemeId) {
       if (SCHEME_IDS.indexOf(schemeId) === -1) return;

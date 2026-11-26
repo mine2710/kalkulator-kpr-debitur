@@ -1,292 +1,1407 @@
-/* ═══════════════════════════════════════════════════════════════════
-   Tab KKB — komponen yang dibuat oleh kkb/js/app.js
-   Semua aturan dibatasi #kkbApp agar tidak mengganggu tab KPR.
-   Warna mengikuti variabel --brand* di index.html (ikut mode gelap).
-   ═══════════════════════════════════════════════════════════════════ */
+/* Tampilan asli Kalkulator KKB (styles.css + simple.css), dibatasi ke #kkbApp
+   agar tidak mengganggu tab KPR. Dibuat otomatis dari CSS asli KKB. */
+/* ==========================================================================
+   KKB Debitur Calculator — Clean, Fluid & Resolution-Adaptive Table UI
+   Palet: Blue (#0A58C2 / #003D82), Orange (#F36F21)
+   ========================================================================== */
 
 #kkbApp {
-  --k-text: #1e293b;
-  --k-text-2: #475569;
-  --k-muted: #94a3b8;
-  --k-border: #f1f5f9;
-  --k-border-2: #e2e8f0;
-  --k-surface: #ffffff;
-  --k-subtle: #f8fafc;
-  --k-field: #eff6ff;
-  --k-field-border: #bfdbfe;
-  --k-brand-soft: #e4effa;
-  --k-brand-text: rgb(var(--brand));
-  --k-ok-bg: #ecfdf5;
-  --k-ok-border: #d1fae5;
-  --k-ok-text: #047857;
-  --k-warn-bg: #fef2f2;
-  --k-warn-border: #fecaca;
-  --k-warn-text: #b91c1c;
+  --kkb-blue: #0a58c2;
+  --kkb-blue-dark: #003d82;
+  --kkb-blue-soft: #eef4fc;
+  --kkb-blue-border: #cfe0f6;
+  --kkb-orange: #f36f21;
+  --kkb-orange-dark: #d45a10;
+  --kkb-orange-soft: #fff4ec;
+  --emerald: #0d9488;
+  --emerald-soft: #e8f7f5;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+
+  --bg-page: #f3f6fb;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 22px 50px rgba(15, 23, 42, 0.22);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
 }
 
-.dark #kkbApp {
-  --k-text: #f1f5f9;
-  --k-text-2: #cbd5e1;
-  --k-muted: #94a3b8;
-  --k-border: #334155;
-  --k-border-2: #475569;
-  --k-surface: #1e293b;
-  --k-subtle: rgba(51, 65, 85, 0.5);
-  --k-field: #334155;
-  --k-field-border: #475569;
-  --k-brand-soft: rgba(30, 58, 138, 0.35);
-  --k-brand-text: #93c5fd;
-  --k-ok-bg: rgba(6, 78, 59, 0.3);
-  --k-ok-border: rgba(16, 185, 129, 0.3);
-  --k-ok-text: #6ee7b7;
-  --k-warn-bg: rgba(127, 29, 29, 0.3);
-  --k-warn-border: rgba(248, 113, 113, 0.35);
-  --k-warn-text: #fca5a5;
+#kkbApp [hidden] {
+  display: none !important;
 }
 
-#kkbApp [hidden] { display: none !important; }
+#kkbApp {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;}
 
-/* ─── Kolom isian ─── */
-#kkbApp .control {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  font-family: inherit;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.25rem;
-  color: var(--k-text);
-  background: var(--k-field);
-  border: 1px solid var(--k-field-border);
-  border-radius: 0.5rem;
-  transition: border-color .15s ease, box-shadow .15s ease;
-  font-variant-numeric: tabular-nums;
-}
-#kkbApp select.control { font-weight: 500; cursor: pointer; }
-#kkbApp .control:focus {
-  outline: none;
-  border-color: rgb(var(--brand));
-  box-shadow: 0 0 0 3px rgb(var(--brand) / 0.2);
-}
-#kkbApp .control[aria-invalid="true"] { border-color: #f87171; }
-#kkbApp .control:disabled { opacity: .55; cursor: progress; }
+/* Fluid container menyesuaikan resolusi layar */
 
-#kkbApp .input-group { position: relative; display: flex; align-items: center; }
-#kkbApp .input-group .addon {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--k-brand-text);
-  pointer-events: none;
-}
-#kkbApp .input-group .addon-left { left: 0.75rem; }
-#kkbApp .input-group .addon-right { right: 0.75rem; }
-#kkbApp .input-group.has-left .control { padding-left: 2.5rem; }
-#kkbApp .input-group.has-right .control { padding-right: 2.25rem; }
+/* ============================ NAVBAR ============================ */
 
-#kkbApp .hint { margin-top: 0.25rem; font-size: 11px; line-height: 1.45; color: var(--k-muted); }
-#kkbApp .hint strong { color: var(--k-text-2); font-weight: 600; }
-
-/* Tombol cepat harga */
-#kkbApp .chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
-#kkbApp .chip {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 0.25rem 0.625rem;
-  border-radius: 999px;
-  border: 1px solid var(--k-border-2);
-  background: var(--k-surface);
-  color: var(--k-text-2);
-  cursor: pointer;
-  transition: all .15s ease;
-}
-#kkbApp .chip:hover { border-color: rgb(var(--brand)); color: var(--k-brand-text); background: var(--k-brand-soft); }
-
-/* Saklar Persen / Rupiah (sama dengan saklar "Sesuai / Tidak Sesuai" di KPR) */
-#kkbApp .segmented {
+/* ============================ BUTTONS ============================ */
+#kkbApp .btn {
   display: inline-flex;
-  flex-shrink: 0;
-  padding: 2px;
-  border-radius: 0.5rem;
-  border: 1px solid var(--k-border-2);
-  background: #f1f5f9;
-  font-size: 11px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13.44px;
   font-weight: 600;
-}
-.dark #kkbApp .segmented { background: rgba(51, 65, 85, 0.7); }
-#kkbApp .segmented button {
-  padding: 0.25rem 0.625rem;
-  border-radius: 0.375rem;
-  color: #64748b;
-  background: transparent;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   white-space: nowrap;
 }
-.dark #kkbApp .segmented button { color: #94a3b8; }
-#kkbApp .segmented button.active {
-  background: var(--k-surface);
-  color: var(--k-brand-text);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+
+#kkbApp .btn-primary {
+  background: var(--kkb-blue);
+  color: #ffffff;
 }
 
-/* Status minimum DP */
-#kkbApp .dp-status {
-  margin-top: 0.625rem;
+#kkbApp .btn-primary:hover {
+  background: var(--kkb-blue-dark);
+}
+
+#kkbApp .btn-outline {
+  background: #ffffff;
+  color: var(--kkb-blue);
+  border-color: var(--kkb-blue-border);
+}
+
+#kkbApp .btn-outline:hover {
+  background: var(--kkb-blue-soft);
+  border-color: var(--kkb-blue);
+}
+
+#kkbApp .btn-disguised {
+  background: transparent;
+  border: 0;
+  padding: 6px;
+  border-radius: 8px;
+  color: #94a3b8;
+  opacity: 0.3;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+#kkbApp .btn-disguised:hover {
+  opacity: 0.8;
+  color: #475569;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+#kkbApp .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+#kkbApp .btn-ghost:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+#kkbApp .btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* ============================ PAGE & SCHEME SELECTOR ============================ */
+
+#kkbApp .scheme-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+#kkbApp .scheme-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  min-width: 0;
+}
+
+#kkbApp .scheme-btn:hover {
+  border-color: var(--kkb-blue-border);
+  box-shadow: var(--shadow-sm);
+}
+
+#kkbApp .scheme-btn.active {
+  border-color: var(--kkb-blue);
+  background: var(--kkb-blue-soft);
+  box-shadow: inset 0 -2px 0 var(--kkb-blue);
+}
+
+#kkbApp .scheme-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--kkb-blue-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15.2px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+#kkbApp .scheme-btn.active .scheme-num {
+  background: var(--kkb-blue);
+  border-color: var(--kkb-blue);
+  color: #ffffff;
+}
+
+#kkbApp .scheme-info {
+  min-width: 0;
+  flex: 1;
+}
+
+#kkbApp .scheme-name {
+  display: block;
+  font-size: 15.2px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+#kkbApp .scheme-meta {
+  display: block;
+  font-size: 12.32px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#kkbApp .scheme-btn.active .scheme-meta {
+  color: var(--kkb-blue-dark);
+  font-weight: 600;
+}
+
+#kkbApp .scheme-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+  position: relative;
+}
+
+#kkbApp .scheme-btn.active .scheme-check {
+  border-color: var(--kkb-blue);
+  background: var(--kkb-blue);
+}
+
+#kkbApp .scheme-btn.active .scheme-check::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ============================ MAIN WORKSPACE ============================ */
+#kkbApp .workspace {
+  display: grid;
+  grid-template-columns: clamp(320px, 25vw, 390px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+#kkbApp .results {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+#kkbApp .split-tables {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+@media (min-width: 1520px) {
+  #kkbApp .split-tables {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+}
+
+/* ============================ CARD ============================ */
+#kkbApp .card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+  overflow: hidden;
+}
+
+#kkbApp .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  background: var(--k-ok-bg);
-  border: 1px solid var(--k-ok-border);
-  color: var(--k-ok-text);
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
-#kkbApp .dp-status.warning { background: var(--k-warn-bg); border-color: var(--k-warn-border); color: var(--k-warn-text); }
-#kkbApp .dp-status-detail { margin-top: 2px; font-size: 10.5px; opacity: .85; }
+
+#kkbApp .card-title {
+  margin: 0;
+  font-size: 15.2px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+#kkbApp .card-subtitle {
+  margin: 2px 0 0;
+  font-size: 12.16px;
+  color: var(--text-muted);
+}
+
+#kkbApp .card-body {
+  padding: 18px;
+}
+
+/* ============================ FORM CONTROLS ============================ */
+#kkbApp .form-section + .form-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+#kkbApp .form-section-title {
+  margin: 0 0 11px;
+  font-size: 11.68px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kkb-blue);
+}
+
+#kkbApp .field {
+  margin-bottom: 12px;
+}
+
+#kkbApp .field:last-child {
+  margin-bottom: 0;
+}
+
+#kkbApp .field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 10px;
+}
+
+#kkbApp .field-row > .field {
+  margin-bottom: 12px;
+}
+
+#kkbApp .label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.8px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+#kkbApp .control {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14.08px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  height: 39px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#kkbApp .control:focus {
+  outline: none;
+  border-color: var(--kkb-blue);
+  box-shadow: 0 0 0 3px rgba(10, 88, 194, 0.12);
+}
+
+#kkbApp .input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#kkbApp .input-group .addon {
+  position: absolute;
+  font-size: 12.8px;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+#kkbApp .input-group .addon-left {
+  left: 11px;
+}
+
+#kkbApp .input-group .addon-right {
+  right: 11px;
+}
+
+#kkbApp .input-group.has-left .control {
+  padding-left: 34px;
+}
+
+#kkbApp .input-group.has-right .control {
+  padding-right: 30px;
+}
+
+#kkbApp .hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+#kkbApp .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+#kkbApp .chip {
+  font-family: inherit;
+  font-size: 11.68px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+#kkbApp .chip:hover {
+  border-color: var(--kkb-blue);
+  color: var(--kkb-blue);
+  background: var(--kkb-blue-soft);
+}
+
+#kkbApp .segmented {
+  display: inline-flex;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+  flex-wrap: wrap;
+}
+
+#kkbApp .segmented button {
+  font-family: inherit;
+  font-size: 11.84px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#kkbApp .segmented button.active {
+  background: var(--kkb-blue);
+  color: #ffffff;
+}
+
+#kkbApp .dp-status {
+  margin-top: 8px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  font-size: 12.16px;
+  background: var(--emerald-soft);
+  border: 1px solid #b7e6df;
+  color: #115e59;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#kkbApp .dp-status.warning {
+  background: var(--danger-soft);
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+#kkbApp .dp-status-detail {
+  font-size: 11.2px;
+  opacity: 0.88;
+  margin-top: 2px;
+}
 
 #kkbApp .info-box {
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background: var(--k-subtle);
-  border: 1px solid var(--k-border);
-  font-size: 11px;
-  line-height: 1.5;
-  color: #64748b;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--kkb-orange);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
 }
-.dark #kkbApp .info-box { color: #94a3b8; }
 
-/* Daftar perluasan jaminan */
-#kkbApp .peril-list { display: flex; flex-direction: column; gap: 0.375rem; }
+#kkbApp .peril-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 #kkbApp .peril-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--k-border-2);
-  background: var(--k-surface);
-  font-size: 0.8125rem;
-  color: var(--k-text-2);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all .15s ease;
+  font-size: 12.8px;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-#kkbApp .peril-item:hover { border-color: rgb(var(--brand) / .5); }
-#kkbApp .peril-item.checked { background: var(--k-brand-soft); border-color: rgb(var(--brand) / .35); color: var(--k-text); }
-#kkbApp .peril-left { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; min-width: 0; }
-#kkbApp .peril-item input { width: 15px; height: 15px; margin: 0; flex-shrink: 0; accent-color: rgb(var(--brand)); cursor: pointer; }
 
-/* ─── Tabel ─── */
-#kkbApp .k-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.875rem;
-  color: var(--k-text-2);
-  font-variant-numeric: tabular-nums;
+#kkbApp .peril-item:hover {
+  border-color: var(--kkb-blue-border);
 }
-#kkbApp .k-table th {
-  padding: 0.75rem;
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 11px;
+
+#kkbApp .peril-item.checked {
+  background: var(--kkb-blue-soft);
+  border-color: var(--kkb-blue-border);
+}
+
+#kkbApp .peril-item input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--kkb-blue);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+#kkbApp .peril-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .02em;
+  min-width: 0;
+}
+
+#kkbApp .peril-rate {
+  font-family: var(--font-mono);
+  font-size: 11.2px;
+  color: var(--kkb-blue);
   white-space: nowrap;
 }
-.dark #kkbApp .k-table th { background: rgba(51, 65, 85, 0.5); color: #94a3b8; }
-#kkbApp .k-table td { padding: 0.625rem 0.75rem; border-top: 1px solid var(--k-border); vertical-align: middle; }
-#kkbApp .k-table .num { text-align: right; white-space: nowrap; }
-#kkbApp .k-table .col-ket { padding-left: 1.25rem; }
-#kkbApp .k-table .strong { font-weight: 600; color: var(--k-text); }
-#kkbApp .k-table .text-blue { color: var(--k-brand-text); }
-#kkbApp .k-table .text-dark { color: var(--k-text) !important; font-weight: 700; }
-#kkbApp .k-table .muted { color: var(--k-muted); font-size: 0.75rem; }
-#kkbApp .k-table tbody tr { transition: background .12s ease; }
-#kkbApp .k-table tbody tr:hover { background: rgba(239, 246, 255, .7); }
-.dark #kkbApp .k-table tbody tr:hover { background: rgba(51, 65, 85, .6); }
 
-#kkbApp .k-table tr.subrow td { background: var(--k-subtle); font-size: 0.8125rem; padding-top: .4rem; padding-bottom: .4rem; }
-#kkbApp .k-table tr.subtotal-row td { background: var(--k-brand-soft); }
-#kkbApp .k-table tfoot td {
-  padding: 0.75rem;
-  font-weight: 700;
-  color: var(--k-text);
-  background: #e4effa;
-  border-top: 1px solid var(--k-border-2);
+#kkbApp .fee-auto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border-strong);
+  font-size: 12.8px;
 }
-.dark #kkbApp .k-table tfoot td { background: #334155; }
 
-/* Baris tenor yang bisa dipilih */
-#kkbApp .k-table tr.clickable { cursor: pointer; }
-#kkbApp .k-table tr.selected { background: var(--k-brand-soft); }
-#kkbApp .k-table tr.selected td:first-child { box-shadow: inset 3px 0 0 rgb(var(--brand)); }
-#kkbApp .k-table tr.unavailable { opacity: .45; cursor: not-allowed; }
-#kkbApp .k-table tr[tabindex="0"]:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: -2px; }
+#kkbApp .fee-auto strong {
+  font-family: var(--font-mono);
+  color: var(--kkb-blue-dark);
+  white-space: nowrap;
+}
+
+/* ============================ KPI SUMMARY ============================ */
+#kkbApp .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+#kkbApp .kpi {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+
+#kkbApp .kpi.primary {
+  background: linear-gradient(135deg, #003d82 0%, #0a58c2 100%);
+  border: none;
+  color: #ffffff;
+}
+
+#kkbApp .kpi.accent {
+  border-top: 3px solid #334155;
+}
+
+#kkbApp .kpi.accent .kpi-value {
+  color: #0f172a;
+}
+
+#kkbApp .kpi.teal {
+  border-top: 3px solid var(--emerald);
+}
+
+#kkbApp .kpi-label {
+  font-size: 11.84px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.84;
+}
+
+#kkbApp .kpi-value {
+  margin-top: 4px;
+  font-size: clamp(19.2px, 1.5vw, 24px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#kkbApp .kpi-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.84;
+}
+
+/* ============================ TABLES (FOCUS UTAMA) ============================ */
+#kkbApp .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#kkbApp .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.44px;
+  font-variant-numeric: tabular-nums;
+}
+
+#kkbApp .table th {
+  background: #f4f7fb;
+  color: var(--text-secondary);
+  font-size: 11.68px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding: 11px 16px;
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+
+#kkbApp .table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+#kkbApp .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#kkbApp .table .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+
+#kkbApp .table .col-ket {
+  padding-left: 24px;
+}
+
+#kkbApp .table .strong {
+  font-weight: 600;
+}
+
+#kkbApp .table .text-blue {
+  color: var(--kkb-blue-dark);
+}
+
+#kkbApp .table .text-dark {
+  color: #0f172a !important;
+  font-weight: 600;
+}
+
+#kkbApp .table .text-orange {
+  color: var(--kkb-orange-dark);
+}
+
+#kkbApp .table .muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#kkbApp .table tr.subrow td {
+  background: #fafcff;
+  font-size: 12.64px;
+  color: var(--text-secondary);
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+#kkbApp .table tr.subtotal-row td {
+  background: var(--kkb-blue-soft);
+  font-weight: 700;
+}
+
+#kkbApp .table tfoot td {
+  background: var(--kkb-orange-soft);
+  font-weight: 800;
+  border-top: 1.5px solid #fed7aa;
+  border-bottom: none;
+  padding: 12px 16px;
+}
+
+/* Tenor rows */
+#kkbApp .table tr.clickable {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+#kkbApp .table tr.clickable:hover {
+  background: #f6faff;
+}
+
+#kkbApp .table tr.selected {
+  background: var(--kkb-blue-soft);
+}
+
+#kkbApp .table tr.selected td:first-child {
+  box-shadow: inset 4px 0 0 var(--kkb-orange);
+}
+
+#kkbApp .table tr.unavailable {
+  opacity: 0.45;
+}
 
 #kkbApp .tag {
   display: inline-block;
-  margin-left: 0.25rem;
-  padding: 1px 0.5rem;
+  font-size: 10.72px;
+  font-weight: 800;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
   vertical-align: middle;
   white-space: nowrap;
 }
-#kkbApp .tag-orange { background: rgb(var(--brand)); color: #fff; }
-#kkbApp .tag-blue { background: #dbeafe; color: #1e40af; }
-#kkbApp .tag-amber { background: #fef3c7; color: #92400e; }
-#kkbApp .tag-gray { background: #f1f5f9; color: #64748b; }
-.dark #kkbApp .tag-blue { background: rgba(30, 64, 175, .35); color: #bfdbfe; }
-.dark #kkbApp .tag-amber { background: rgba(146, 64, 14, .35); color: #fde68a; }
-.dark #kkbApp .tag-gray { background: #334155; color: #cbd5e1; }
 
-/* Jadwal angsuran: header & total menempel saat digulir */
-#kkbApp .amort-scroll { max-height: 560px; overflow: auto; }
-#kkbApp .amort-scroll thead th { position: sticky; top: 0; z-index: 2; }
-#kkbApp .amort-scroll tfoot td { position: sticky; bottom: 0; z-index: 2; }
-
-@media (max-width: 1023.98px) {
-  #kkbApp .hide-laptop { display: none; }
+#kkbApp .tag-orange {
+  background: var(--kkb-orange);
+  color: #ffffff;
 }
 
-/* HP: tabel bertanda .stack berubah menjadi kartu per baris */
+#kkbApp .tag-blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+#kkbApp .tag-amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+#kkbApp .tag-gray {
+  background: #f1f5f9;
+  color: var(--text-muted);
+}
+
+/* Amortization scroll */
+#kkbApp .amort-scroll {
+  max-height: 580px;
+  overflow: auto;
+}
+
+#kkbApp .amort-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f4f7fb;
+}
+
+#kkbApp .amort-scroll tfoot td {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #f1f5f9;
+  border-top: 1.5px solid var(--border-strong);
+}
+
+#kkbApp .table-amort th, #kkbApp .table-amort td {
+  padding: 10px 12px;
+}
+
+#kkbApp .annot {
+  font-size: 12.48px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@media (max-width: 1500px) {
+  #kkbApp .hide-laptop {
+    display: none;
+  }
+}
+
+#kkbApp .annot-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: #cbd5e1;
+  vertical-align: middle;
+}
+
+#kkbApp tr.row-start .annot-dot, #kkbApp tr.row-year-start .annot-dot {
+  background: var(--kkb-blue);
+}
+
+#kkbApp tr.row-coverage-switch {
+  background: #fffbeb;
+}
+
+#kkbApp tr.row-coverage-switch .annot-dot {
+  background: var(--kkb-orange);
+}
+
+#kkbApp tr.row-year-end {
+  background: #fafbfc;
+}
+
+#kkbApp tr.row-year-end .annot-dot, #kkbApp tr.row-milestone .annot-dot {
+  background: var(--emerald);
+}
+
+#kkbApp tr.row-finish {
+  background: var(--emerald-soft);
+}
+
+#kkbApp tr.row-finish .annot-dot {
+  background: var(--emerald);
+}
+
+#kkbApp .progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 11.68px;
+  font-weight: 600;
+}
+
+#kkbApp .progress-bar {
+  width: 56px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#kkbApp .progress-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--kkb-blue), var(--emerald));
+}
+
+/* ============================ MODAL REFERENSI (TERBUKA PENUH TANPA POTONGAN) ============================ */
+#kkbApp .modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 2.5vw, 28px);
+  z-index: 100;
+}
+
+#kkbApp .modal.open {
+  display: flex;
+}
+
+#kkbApp .modal-dialog {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  width: min(1180px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+#kkbApp .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+}
+
+#kkbApp .modal-header h3 {
+  margin: 0;
+  font-size: 16.32px;
+  color: var(--kkb-blue-dark);
+}
+
+#kkbApp .modal-header p {
+  margin: 2px 0 0;
+  font-size: 12.32px;
+  color: var(--text-muted);
+}
+
+#kkbApp .modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+#kkbApp .modal-close:hover {
+  background: var(--bg-subtle);
+}
+
+/* Semua tab modal terlihat sekaligus (wrap, tidak tersembunyi) */
+#kkbApp .modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+#kkbApp .modal-tab {
+  font-family: inherit;
+  font-size: 12.8px;
+  font-weight: 700;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+#kkbApp .modal-tab:hover {
+  border-color: var(--kkb-blue-border);
+  color: var(--kkb-blue);
+}
+
+#kkbApp .modal-tab.active {
+  background: var(--kkb-blue);
+  border-color: var(--kkb-blue);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(10, 88, 194, 0.22);
+}
+
+#kkbApp .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 22px 24px;
+}
+
+#kkbApp .modal-section + .modal-section {
+  margin-top: 22px;
+}
+
+#kkbApp .modal-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+#kkbApp .modal-section-head h4 {
+  margin: 0;
+  font-size: 14.4px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+#kkbApp .modal-section-head p {
+  margin: 2px 0 0;
+  font-size: 12.16px;
+  color: var(--text-muted);
+}
+
+#kkbApp .bordered {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+#kkbApp .rate-input {
+  width: 100%;
+  max-width: 112px;
+  padding: 6px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 13.28px;
+  font-weight: 600;
+}
+
+#kkbApp .rate-input:focus {
+  outline: none;
+  border-color: var(--kkb-blue);
+  box-shadow: 0 0 0 3px rgba(10, 88, 194, 0.12);
+}
+
+#kkbApp .table tr.highlight {
+  background: #fff8f1;
+}
+
+#kkbApp .table tr.highlight td:first-child {
+  box-shadow: inset 4px 0 0 var(--kkb-orange);
+}
+
+#kkbApp .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+/* Static settings and result sections. */
+#kkbApp .scheme-num, #kkbApp .scheme-check {
+  display: none;
+}
+
+#kkbApp button:focus-visible, #kkbApp tr[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--kkb-blue);
+  outline-offset: -2px;
+}
+
+#kkbApp .advanced-settings > .form-section-title {
+  margin-bottom: 4px;
+}
+
+#kkbApp .advanced-settings .details-body {
+  padding-top: 16px;
+}
+
+#kkbApp .result-details .split-tables {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+#kkbApp .result-details .split-tables > .card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#kkbApp .simulation-notice {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--danger-soft);
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  font-size: 12.8px;
+}
+
+#kkbApp .table tr.unavailable {
+  cursor: not-allowed;
+}
+
+/* ============================ RESPONSIVE BREAKPOINTS ============================ */
+@media (max-width: 1160px) {
+  #kkbApp .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #kkbApp .form-card .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+  }
+
+  #kkbApp .form-card .form-grid > .form-section + .form-section {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+@media (max-width: 920px) {
+  #kkbApp .scheme-selector {
+    gap: 6px;
+  }
+
+  #kkbApp .scheme-btn {
+    padding: 10px;
+  }
+
+  #kkbApp .scheme-name {
+    font-size: 12px;
+  }
+
+  #kkbApp .scheme-meta {
+    display: none;
+  }
+
+  #kkbApp .kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  #kkbApp .form-card .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #kkbApp .modal-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  
+}
+
 @media (max-width: 640px) {
-  #kkbApp .k-table.stack thead { display: none; }
-  #kkbApp .k-table.stack,
-  #kkbApp .k-table.stack tbody,
-  #kkbApp .k-table.stack tfoot,
-  #kkbApp .k-table.stack tr,
-  #kkbApp .k-table.stack td { display: block; width: 100%; }
-  #kkbApp .k-table.stack tr { padding: 0.625rem 0.875rem; border-top: 1px solid var(--k-border); }
-  #kkbApp .k-table.stack td {
+  #kkbApp {
+    font-size: 13px;}
+
+  
+
+  #kkbApp .field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #kkbApp .modal-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #kkbApp .table.stack thead {
+    display: none;
+  }
+
+  #kkbApp .table.stack, #kkbApp .table.stack tbody, #kkbApp .table.stack tr, #kkbApp .table.stack td, #kkbApp .table.stack tfoot {
+    display: block;
+    width: 100%;
+  }
+
+  #kkbApp .table.stack tr {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #kkbApp .table.stack td {
     display: flex;
     justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.2rem 0;
-    border: 0;
+    gap: 12px;
+    padding: 4px 0;
+    border: none;
     text-align: right;
   }
-  #kkbApp .k-table.stack td::before {
+
+  #kkbApp .table.stack td::before {
     content: attr(data-label);
-    font-size: 11px;
+    font-size: 11.52px;
     font-weight: 600;
-    color: var(--k-muted);
+    color: var(--text-muted);
     text-align: left;
   }
-  #kkbApp .k-table.stack td:first-child { display: block; text-align: left; }
-  #kkbApp .k-table.stack td:first-child::before { display: none; }
-  #kkbApp .k-table.stack tr.selected td:first-child { box-shadow: none; }
-  #kkbApp .k-table.stack tr.selected { box-shadow: inset 3px 0 0 rgb(var(--brand)); }
-  #kkbApp .k-table.stack tfoot tr { background: #e4effa; }
-  .dark #kkbApp .k-table.stack tfoot tr { background: #334155; }
-  #kkbApp .k-table.stack tfoot td { background: transparent; border: 0; padding: 0.2rem 0; }
-  #kkbApp .k-table .col-ket { padding-left: 0.75rem; }
-  #kkbApp .hide-sm { display: none !important; }
-  #kkbApp .k-table.hide-ket-sm .col-ket { display: none; }
+
+  #kkbApp .table.stack td:first-child {
+    font-size: 14.4px;
+  }
+
+  #kkbApp .table.stack td:first-child::before {
+    display: none;
+  }
+
+  #kkbApp .table.stack tr.selected td:first-child {
+    box-shadow: none;
+  }
+
+  #kkbApp .table.stack tr.selected {
+    box-shadow: inset 4px 0 0 var(--kkb-orange);
+  }
+
+  #kkbApp .hide-sm {
+    display: none;
+  }
+}
+
+/* Match the companion KPR calculator without changing calculation components. */
+#kkbApp {
+  --kkb-blue: #00529c;
+  --kkb-blue-dark: #003c73;
+  --kkb-blue-soft: #e4eff9;
+  --kkb-orange: #f58220;
+  --bg-page: #e3eefb;
+  --border: #edf1f5;
+  --border-strong: #dce3ec;
+  --text-primary: #1e293b;
+  --radius-lg: 16px;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Inter', system-ui, sans-serif;
+}
+
+#kkbApp .btn-disguised {
+  background: transparent;
+  border: 0;
+  padding: 6px;
+  border-radius: 8px;
+  color: #94a3b8;
+  opacity: 0.3;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+#kkbApp .btn-disguised:hover {
+  opacity: 0.8;
+  color: #475569;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+#kkbApp .scheme-selector {
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+#kkbApp .scheme-btn {
+  justify-content: center;
+  text-align: center;
+  border: 0;
+  border-radius: 11px;
+  padding: 12px;
+  background: transparent;
+}
+
+#kkbApp .scheme-btn.active {
+  background: var(--kkb-blue);
+  box-shadow: none;
+}
+
+#kkbApp .scheme-btn.active .scheme-name { color: white; }
+#kkbApp .scheme-name { font-size: 14px; font-weight: 600; }
+#kkbApp .scheme-meta { display: none; }
+#kkbApp .scheme-btn:hover { box-shadow: none; background: var(--kkb-blue-soft); }
+#kkbApp .scheme-btn.active:hover { background: var(--kkb-blue-dark); }
+#kkbApp .workspace { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+#kkbApp .results { gap: 24px; }
+
+/* Form di atas: 3 panel sejajar & seimbang (kiri Pembiayaan-DP, tengah Asuransi, kanan Biaya Kredit) */
+#kkbApp .form-card .card-header { padding: 18px 24px 14px; }
+#kkbApp .form-card .form-grid.form-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+#kkbApp .form-cols > .form-col {
+  min-width: 0;
+  padding: 18px 20px;
+  background: #f8fafd;
+  border: 1px solid #e5edf6;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+}
+#kkbApp .form-cols > .form-col > .form-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+#kkbApp .form-cols .form-section-title, #kkbApp .form-cols .advanced-settings .form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5edf6;
+  font-size: 13.6px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+#kkbApp .col-step {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--kkb-blue);
+  color: #ffffff;
+  font-size: 11.52px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#kkbApp .form-cols .control, #kkbApp .form-cols .input-group { background: #ffffff; }
+#kkbApp .form-cols .peril-item { background: #ffffff; padding: 9px 11px; }
+#kkbApp .form-cols .peril-item.checked { background: var(--kkb-blue-soft); }
+#kkbApp .form-cols .info-box { background: #ffffff; border: 1px solid #e5edf6; margin-top: 8px; padding: 9px 11px; line-height: 1.45; }
+#kkbApp .form-cols .fee-auto { background: #ffffff; border: 1px solid #cfe2f5; border-radius: 10px; padding: 11px 13px; }
+#kkbApp .form-cols .dp-status { background: #ffffff; border: 1px solid #cfe2f5; margin-top: 8px; }
+#kkbApp .form-cols .field { margin-bottom: 14px; }
+#kkbApp .form-cols .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#kkbApp .form-cols .field-bottom { margin-top: auto; margin-bottom: 0; }
+#kkbApp .form-cols .chips { margin-top: 8px; gap: 6px; }
+#kkbApp .form-cols .chip { background: #ffffff; padding: 4px 9px; font-size: 11.2px; }
+
+/* Ringkasan: tabel tenor & rincian TDP berdampingan di layar lebar */
+#kkbApp .summary-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 1100px) {
+  #kkbApp .summary-split { grid-template-columns: minmax(0, 1fr); }
+}
+#kkbApp .card-header { padding: 20px 24px; border-bottom: 0; }
+#kkbApp .card-body { padding: 0 24px 24px; }
+#kkbApp .card-title { font-weight: 700; font-size: 16px; }
+#kkbApp .card-subtitle { margin-top: 5px; line-height: 1.5; }
+#kkbApp .form-section-title { text-transform: none; letter-spacing: 0; font-size: 13.6px; font-weight: 600; color: var(--text-primary); }
+#kkbApp .form-section + .form-section { border-top-style: solid; margin-top: 24px; padding-top: 20px; }
+#kkbApp .label { font-size: 12px; font-weight: 500; flex-wrap: wrap; }
+#kkbApp .control { height: 42px; border-radius: 10px; font-size: 13.6px; font-weight: 500; background: #f8fafc; }
+#kkbApp .btn { border-radius: 10px; font-weight: 500; }
+#kkbApp .hint { font-size: 11.2px; line-height: 1.6; }
+#kkbApp .info-box { border-left: 0; border-radius: 8px; color: var(--text-muted); }
+#kkbApp .peril-item { padding: 8px 10px; }
+#kkbApp .peril-left { font-weight: 500; }
+#kkbApp .dp-status { background: #f0f7fc; border-color: #dceaf7; color: var(--kkb-blue-dark); }
+#kkbApp .dp-status.warning { background: var(--danger-soft); border-color: #fecaca; color: #991b1b; }
+#kkbApp .kpi-grid { gap: 12px; }
+#kkbApp .kpi, #kkbApp .kpi.primary, #kkbApp .kpi.accent, #kkbApp .kpi.teal {
+  padding: 20px;
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--kkb-blue);
+}
+#kkbApp .kpi.accent { border-top-color: #334155; }
+#kkbApp .kpi.accent .kpi-value { color: #0f172a; }
+#kkbApp .kpi.teal { border-top-color: var(--emerald); }
+#kkbApp .kpi-label { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; opacity: 1; color: var(--text-muted); }
+#kkbApp .kpi-value { font-size: clamp(16px, 1.4vw, 21.6px); font-weight: 700; margin-top: 8px; }
+#kkbApp .kpi-sub { font-size: 10.88px; color: var(--text-muted); opacity: 1; line-height: 1.6; }
+#kkbApp .table { font-size: 12.8px; }
+#kkbApp .table th { font-size: 11.2px; text-transform: none; letter-spacing: 0; font-weight: 600; background: #f8fafc; }
+#kkbApp .table th, #kkbApp .table td { padding: 12px 16px; }
+#kkbApp .table td.num { font-variant-numeric: tabular-nums; letter-spacing: -0.015em; }
+#kkbApp .table tfoot td { background: #f8fafc; border-top: 1px solid var(--border-strong); font-weight: 700; }
+#kkbApp .table .text-orange { color: var(--kkb-blue-dark); }
+#kkbApp .table .text-dark { color: #0f172a !important; font-weight: 600; }
+#kkbApp .card-header-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+#kkbApp .result-details .split-tables > .card + .card { border-top: 1px solid var(--border); }
+#kkbApp .result-details .split-tables .card-title { font-size: 13.6px; }
+
+@media (max-width: 1160px) {
+  #kkbApp .workspace { grid-template-columns: minmax(0, 1fr); }
+  #kkbApp .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Tablet: Pembiayaan & Asuransi berdampingan, Biaya Kredit di bawah selebar penuh */
+@media (max-width: 1080px) {
+  #kkbApp .form-card .form-grid.form-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  #kkbApp .form-cols > .form-col:nth-child(3) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 720px) {
+  #kkbApp .form-card .form-grid.form-cols { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  #kkbApp .form-cols > .form-col, #kkbApp .form-cols > .form-col:nth-child(3) { padding: 16px; grid-column: auto; }
+}
+
+@media (max-width: 640px) {
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  #kkbApp .scheme-selector { margin-bottom: 16px; }
+  #kkbApp .scheme-btn { padding: 10px 6px; }
+  #kkbApp .scheme-name { font-size: 12.48px; }
+  #kkbApp .results, #kkbApp .workspace { gap: 16px; }
+  #kkbApp .card-header { padding: 18px; }
+  #kkbApp .card-body { padding: 0 18px 18px; }
+  #kkbApp .kpi-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  #kkbApp .kpi, #kkbApp .kpi.primary, #kkbApp .kpi.accent, #kkbApp .kpi.teal { padding: 16px 18px; }
+  #kkbApp .kpi-value { font-size: 21.6px; margin-top: 4px; }
+  #kkbApp .table.stack td { padding: 4px 0; }
+  #kkbApp .form-cols .field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }

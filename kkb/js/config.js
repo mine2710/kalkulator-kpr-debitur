@@ -1,7 +1,7 @@
 /**
  * Konfigurasi Data, Tabel Referensi & Skema Produk KKB
  * Mencakup:
- * 1. Tiga Skema Fitur: KKB Regular, KKB Prioritas, KKB Karyawan
+ * 1. Tiga Skema Fitur: KKB Regular, KKB LNP, KKB Karyawan
  * 2. Wilayah (1, 2, 3), Jenis Pembiayaan, Golongan Kendaraan Asuransi
  *    Referensi merk, model, dan minimum DP berada di vehicles.js.
  * 3. Tabel Biaya Fidusia
@@ -249,7 +249,7 @@
 
     lnp: {
       id: 'lnp',
-      name: 'KKB Prioritas',
+      name: 'KKB LNP',
       badge: 'Nasabah Prioritas',
       tagline: 'Program khusus nasabah prioritas dengan rate khusus & keringanan biaya.',
       highlights: [

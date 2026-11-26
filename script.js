@@ -563,8 +563,8 @@ const MODES = {
     ui: { border: 'border-t-brand', borderL: 'border-l-brand', badge: 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300', dot: 'bg-brand', btn: 'bg-brand hover:bg-blue-800', tab: 'bg-brand text-white' },
   },
   'kkb-lnp': {
-    short: 'KKB Prioritas', sub: 'Nasabah Prioritas', scheme: 'lnp', mainTitle: 'KKB Prioritas',
-    title: 'KKB Prioritas (Nasabah Prioritas)',
+    short: 'KKB LNP', sub: 'Nasabah Prioritas', scheme: 'lnp', mainTitle: 'KKB LNP',
+    title: 'KKB LNP (Nasabah Prioritas)',
     tagline: 'Simulasi kredit kendaraan dengan suku bunga dan biaya khusus untuk nasabah prioritas.',
     who: ['Nasabah prioritas yang mendapat suku bunga khusus.', 'Pembelian mobil baru, mobil bekas, refinancing, atau mobil niaga.'],
     calc: ['Angsuran per bulan untuk setiap pilihan tenor.', 'TDP dengan biaya admin &amp; provisi yang lebih ringan (terisi otomatis).', 'Premi asuransi per tahun dan jadwal angsuran bulanan.'],
@@ -731,6 +731,10 @@ function route(fromHashChange) {
   }
   const am = activeMode();
   renderTabs();
+  // KKB memakai tampilan aslinya (pilihan skema di dalam halaman), jadi tab mode & navigasi bawah KPR disembunyikan
+  const isKkb = state.product === 'kkb';
+  ['modeTabs', 'mobileModeBar', 'bottomNav'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = isKkb ? 'none' : ''; });
+  document.body.classList.toggle('no-bottom-nav', isKkb);
   document.querySelectorAll('[data-modes]').forEach(el => el.classList.toggle('hidden', !el.dataset.modes.split(' ').includes(am)));
   if (fromHashChange === true && window.innerWidth < 768) {
     const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
@@ -753,13 +757,14 @@ function route(fromHashChange) {
   try { calculate(); } catch (e) { console.error(e); }
 }
 
-// Tab KKB: buka/tutup jadwal angsuran bulanan (gaya sama dengan Jadwal Amortisasi KPR)
-function toggleKkbAmort() {
-  const wrap = document.getElementById('kkbAmortWrap');
-  const open = wrap.classList.toggle('hidden') === false;
-  document.getElementById('kkbAmortArrow').style.transform = open ? '' : 'rotate(-90deg)';
-  document.getElementById('kkbAmortToggle').setAttribute('aria-expanded', String(open));
-}
+// Skema KKB dipilih dari tombol di halaman KKB → ingat & perbarui URL (tanpa memicu route ulang)
+window.onKKBSchemeChange = function (schemeId) {
+  const k = 'kkb-' + schemeId;
+  if (!MODES[k]) return;
+  state.kkbMode = k;
+  if (state.product === 'kkb' && location.hash !== '#' + k) history.replaceState(null, '', '#' + k);
+  renderProductTabs();
+};
 
 // ─── RPC: cek kemampuan bayar (KPR Baru) ───
 // rasio maksimal angsuran terhadap pendapatan: <15jt 50%, 15–25jt 55%, >25jt 60%
