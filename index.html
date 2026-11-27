@@ -387,13 +387,15 @@
                     (bulan)</label>
                   <!-- Saat program Manual (custom), tenor terkunci; klik kotak ini → diarahkan ke dropdown program -->
                   <div class="relative" id="tenorWrap" onclick="onTenorLockedClick()">
-                    <input type="number" id="tenor" step="1" disabled onchange="onTenorChange()" placeholder="Pilih program"
+                    <input type="number" id="tenor" step="1" disabled onchange="onTenorChange()" oninput="checkTenorRange()" placeholder="Pilih program"
                       class="num w-full px-3 py-2.5 bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg text-base font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition disabled:pointer-events-none disabled:pr-9 disabled:bg-amber-50 disabled:border-amber-200 disabled:border-dashed disabled:placeholder:text-amber-700/80 disabled:placeholder:font-semibold disabled:placeholder:text-xs dark:disabled:bg-amber-900/15 dark:disabled:border-amber-800/60 dark:disabled:placeholder:text-amber-300/80">
                     <svg id="tenorLockIcon" class="hidden pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-600 dark:text-amber-400"
                       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
                     </svg>
                   </div>
+                  <!-- Pemberitahuan kecil: tenor di luar rentang program -->
+                  <p id="tenorRangeWarn" role="alert" class="hidden mt-1 text-[11px] leading-snug font-medium text-red-600 dark:text-red-400"></p>
                 </div>
               </div>
               <!-- Peringatan: tenor belum bisa diisi karena program masih Manual (custom) -->

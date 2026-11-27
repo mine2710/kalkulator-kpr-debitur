@@ -425,6 +425,7 @@ function onTenorLockedClick() {
 }
 function updateProgramHint() {
   const p = currentProgram(), hint = document.getElementById('programHint'), t = document.getElementById('tenor');
+  setTenorRangeWarn('');
   if (!p) {
     if (Number(t.value) > 0) state.lastTenor = Math.round(Number(t.value));
     hint.textContent = ''; t.disabled = true; t.value = ''; t.removeAttribute('min'); t.removeAttribute('max');
@@ -453,7 +454,35 @@ function onProgramChange() {
   const cur = Number(document.getElementById('tenor').value) || state.lastTenor;
   applyProgram(cur > 0 ? cur : programMaxMonths(p));
 }
-function onTenorChange() { applyProgram(document.getElementById('tenor').value); }
+// Pemberitahuan kecil di bawah kolom Tenor bila bulan tidak sesuai rentang program
+function setTenorRangeWarn(msg) {
+  const w = document.getElementById('tenorRangeWarn');
+  if (!w) return;
+  w.textContent = msg || '';
+  w.classList.toggle('hidden', !msg);
+  const t = document.getElementById('tenor');
+  if (t) t.classList.toggle('!border-red-400', !!msg);
+}
+function tenorRangeText(p) {
+  const mx = programMaxMonths(p);
+  return p.min_months + '–' + mx + ' bln (' + monthsToText(p.min_months) + ' – ' + monthsToText(mx) + ')';
+}
+// saat mengetik: beri tahu bila di luar rentang program
+function checkTenorRange() {
+  const p = currentProgram(), t = document.getElementById('tenor');
+  if (!p || !t || t.value === '') { setTenorRangeWarn(''); return; }
+  const v = Number(t.value), mx = programMaxMonths(p);
+  setTenorRangeWarn(v < p.min_months || v > mx
+    ? `Tenor ${v} bln tidak sesuai program. Harus ${tenorRangeText(p)}.` : '');
+}
+function onTenorChange() {
+  const p = currentProgram(), t = document.getElementById('tenor');
+  const raw = t.value === '' ? NaN : Number(t.value);
+  applyProgram(t.value);
+  if (p && Number.isFinite(raw) && (raw < p.min_months || raw > programMaxMonths(p))) {
+    setTenorRangeWarn(`Tenor ${raw} bln tidak sesuai program (${tenorRangeText(p)}), disesuaikan menjadi ${t.value} bln.`);
+  }
+}
 // ubah manual tahap → lepas dari program
 function markManual() {
   const sel = document.getElementById('program');
